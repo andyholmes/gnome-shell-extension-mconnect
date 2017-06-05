@@ -8,7 +8,8 @@ mconnect into Gnome Shell, in the most native way possible.
 
 ### mconnect
 
-As of June 5, 2017, this extension currently relies on the [dbus-support](https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support)
+As of June 5, 2017, this extension currently relies on the
+[dbus-support](https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support)
 branch(es) of mconnect. First build mconnect (see repository for dependencies):
 
     git clone https://github.com/bboozzoo/mconnect.git --branch bboozzoo/dbus-support
