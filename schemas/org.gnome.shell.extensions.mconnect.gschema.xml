@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+  <schema path="/org/gnome/shell/extensions/mconnect/" id="org.gnome.shell.extensions.mconnect">
+    <key type="b" name="debug">
+      <default>true</default>
+      <summary>Print debug messages to log.</summary>
+      <description>Enables printing verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
+    </key>
+  </schema>
+</schemalist>
