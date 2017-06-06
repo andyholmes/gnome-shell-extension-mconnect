@@ -6,5 +6,15 @@
       <summary>Print debug messages to log.</summary>
       <description>Enables printing verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
+    <key type="b" name="start-daemon">
+      <default>true</default>
+      <summary>Start the daemon.</summary>
+      <description>Whether to start the daemon if it's found not to be running.</description>
+    </key>
+    <key type="b" name="wait-daemon">
+      <default>false</default>
+      <summary>Wait for the daemon to start by itself.</summary>
+      <description>Whether to wait for the daemon to start itself or give up.</description>
+    </key>
   </schema>
 </schemalist>

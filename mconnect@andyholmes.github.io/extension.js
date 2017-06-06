@@ -10,7 +10,6 @@ const PopupMenu = imports.ui.popupMenu;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
-//const Telepathy = imports.ui.components.telepathyClient
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
@@ -18,7 +17,8 @@ const { log, debug, getSettings } = Me.imports.utils;
 const MConnect = Me.imports.mconnect;
 
 
-// FIXME: reuse ui.components.telepathyClient if possible
+// TODO: reuse ui.components.telepathyClient if possible
+//const Telepathy = imports.ui.components.telepathyClient
 //const MessageWidget = new Lang.Class({
 //    Name: "Indicator.menu",
 //    Extends: Telepathy.NotificationBanner,
@@ -105,38 +105,18 @@ const Extension = new Lang.Class({
     Name: 'mconnect.Extension',
 
     _init: function () {
-        debug('initializing');
-        
         this._settings = getSettings();
         
         // Init a DeviceManager
         this.manager = new MConnect.DeviceManager();        
         this.devices = this.manager.devices;
         
-        // Init indicators for reachable devices
-        for (let devicePath in this.devices) {
-            let device = this.devices[devicePath];
-            
-            if (device.active) {
-                this._addIndicator(devicePath);
-            };
-        };
-        
         // Signal Callbacks
-        //this.manager.connect('manager::signal', Lang.bind(this, this._managerCallback));
+        this.manager.connect('daemon-connected', Lang.bind(this, this._daemonConnected));
+        this.manager.connect('daemon-disconnected', Lang.bind(this, this._daemonDisconnected));
     },
     
     // Private Methods
-    _removeIndicator: function (devicePath) {
-        debug('_removeIndicator() called on ' + devicePath);
-        
-        if (Main.panel.statusArea[devicePath]) {
-            let indicator = Main.panel.statusArea[devicePath];
-            indicator.disable();
-            indicator.destroy();
-        };
-    },
-    
     _addIndicator: function (devicePath) {
         debug('_addIndicator() called on ' + devicePath);
         
@@ -147,10 +127,40 @@ const Extension = new Lang.Class({
         };
     },
     
+    _removeIndicator: function (devicePath) {
+        debug('_removeIndicator() called on ' + devicePath);
+        
+        if (Main.panel.statusArea[devicePath]) {
+            let indicator = Main.panel.statusArea[devicePath];
+            indicator.disable();
+            indicator.destroy();
+        };
+    },
+    
     // Callbacks
-    //_managerCallback: function (manager, data) {
-    //    debug('_managerCallback "' + data + '"');
-    //},
+    _daemonConnected: function (manager, devices) {
+        // TODO: GSettings option for what states to show devices
+        // TODO: GSettings option for indicator when no device present
+        this.devices = devices;
+        
+        for (let devicePath in this.devices) {
+            let device = this.devices[devicePath];
+            
+            if (device.active) {
+                this._addIndicator(devicePath);
+            };
+        };
+    },
+    
+    _daemonDisconnected: function (manager, devicePaths) {
+        // FIXME: passing devicePaths through like this seems sketchy
+        debug('removing all indicators');
+        for (let devicePath in devicePaths) {
+            this._removeIndicator(devicePaths[devicePath]);
+        };
+        
+        this.devices = null;
+    },
     
     // Extension stuff?
     enable: function () {
@@ -160,22 +170,19 @@ const Extension = new Lang.Class({
     }
 });
 
-
+// TODO: figure out how to use these proper
 function init() {
-    // FIXME
-    debug('initializing');
+    debug('initializing extension');
     
     return new Extension();
 }
  
 function enable() {
-    // FIXME
-    debug('enabling');
+    debug('enabling extension');
 }
  
 function disable() {
-    // FIXME
-    debug('disabling');
+    debug('disabling extension');
 }
 
 

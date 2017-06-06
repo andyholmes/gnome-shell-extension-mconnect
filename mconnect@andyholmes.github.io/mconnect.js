@@ -3,6 +3,7 @@
 // Imports
 const Lang = imports.lang;
 const Main = imports.ui.main;
+const Util = imports.misc.util;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -13,7 +14,8 @@ const Signals = imports.signals
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const { log, debug, getSettings } = Me.imports.utils;
 
-const IFACE_DEVICE = '\
+// DBus Interface
+const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
 <node> \
@@ -28,11 +30,9 @@ const IFACE_DEVICE = '\
     <property type="b" name="IsActive" access="readwrite"/> \
   </interface> \
 </node> \
-';
+');
 
-const DeviceProxy = Gio.DBusProxy.makeProxyWrapper(IFACE_DEVICE);
-
-const IFACE_MANAGER = '\
+const ManagerProxy = Gio.DBusProxy.makeProxyWrapper('\
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
 <node> \
@@ -45,10 +45,10 @@ const IFACE_MANAGER = '\
     </method> \
   </interface> \
 </node> \
-';
+');
 
-const ManagerProxy = Gio.DBusProxy.makeProxyWrapper(IFACE_MANAGER);
 
+const _settings = getSettings();
 
 // A DBus Interface wrapper for mconnect.Device
 const Device = new Lang.Class({
@@ -56,7 +56,13 @@ const Device = new Lang.Class({
     
     _init: function (devicePath) {
         // Create proxy wrapper for DBus Interface
-        this.proxy = new DeviceProxy(Gio.DBus.session, 'org.mconnect', devicePath);
+        try {
+            this.proxy = new DeviceProxy(Gio.DBus.session,
+                                         'org.mconnect',
+                                         devicePath);
+        } catch (e) {
+            debug('DeviceProxy Error: ' + e);
+        };
         
         // Properties
         Object.defineProperty(this, 'id', {
@@ -133,8 +139,14 @@ const DeviceManager = new Lang.Class({
     devices: {},
     
     _init: function () {
-        // Create proxy wrapper for DBus Interface
-        this.proxy = new ManagerProxy(Gio.DBus.session, 'org.mconnect', '/org/mconnect/manager');
+        // Connect to DBus
+        let watcher = Gio.bus_watch_name(
+            Gio.BusType.SESSION,
+            'org.mconnect',
+            Gio.BusNameWatcherFlags.NONE,
+            Lang.bind(this, this._daemonAppeared),
+            Lang.bind(this, this._daemonVanished)
+        );
         
         // Properties
         //Object.defineProperty(this, 'name', {
@@ -144,12 +156,21 @@ const DeviceManager = new Lang.Class({
         
         // Signals
         //this.proxy.connectSignal('managerSignal', Lang.bind(this, this._managerSignal));
-        
-        //
-        this._initDevices();
     },
     
     // Private Methods
+    _initDaemon: function () {
+        // Start the mconnect daemon
+        log('spawning mconnect daemon');
+        
+        try {
+            Util.spawnCommandLine('mconnect -d');
+            this.usleep(10000); // 10ms
+        } catch (e) {
+            debug('_initDaemon: ' + e);
+        };
+    },
+    
     _initDevice: function (devicePath) {
         debug('initializing device at ' + devicePath);
         
@@ -157,7 +178,7 @@ const DeviceManager = new Lang.Class({
     },
     
     _initDevices: function () {
-        // Populate this.devices with Device Objects
+        // Populate this.devices with Device objects
         debug('initializing devices');
         
         for (let devicePath of this._ListDevices()) {
@@ -166,11 +187,33 @@ const DeviceManager = new Lang.Class({
     },
     
     // Callbacks
-    //_managerSignal: function (proxy, sender, user_data) {
-    //    debug('re-emitting manager:_managerSignal as manager::signal');
-    //    
-    //    this.emit('manager::signal', user_data[0]);
-    //},
+    _daemonAppeared: function (conn, name, name_owner, user_data) {
+        // The DBus interface has appeared, setup
+        try {
+            // Create proxy wrapper for DBus Interface
+            this.proxy = new ManagerProxy(Gio.DBus.session,
+                                          'org.mconnect',
+                                          '/org/mconnect/manager');
+            this._initDevices();
+            this.emit('daemon-connected', this.devices)
+        } catch (e) {
+            throw new Error(e);
+        };
+    },
+    
+    _daemonVanished: function (conn, name, name_owner, user_data) {
+        // The DBus interface has vanished, clean up
+        this.emit('daemon-disconnected', Object.keys(this.devices))
+        debug('daemon-disconnected emitted');
+        this.proxy = null;
+        this.devices = {};
+        
+        if (_settings.get_boolean('start-daemon')) {
+            this._initDaemon();
+        } else if (!_settings.get_boolean('wait-daemon')) {
+            throw new Error('no daemon and not allowed to start or wait');
+        };
+    },
     
     // Methods: remove the DBus cruft
     _AllowDevice: function (devicePath) {
