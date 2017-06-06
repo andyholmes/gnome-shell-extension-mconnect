@@ -100,132 +100,117 @@ const Indicator = new Lang.Class({
 });
 
 
-// A Re-Wrapper for mconnect.DeviceManager
-const Extension = new Lang.Class({
-    Name: 'Extension',
-
-    _init: function () {
-        // Watch for DBus service
-        this.watchdog = Gio.bus_watch_name(
-            Gio.BusType.SESSION,
-            'org.mconnect',
-            Gio.BusNameWatcherFlags.NONE,
-            Lang.bind(this, this._daemonAppeared),
-            Lang.bind(this, this._daemonVanished)
-        );
-        
-        // Settings callback
-        Settings.connect(
-            'changed',
-            Lang.bind(this, this._settingsChanged)
-        );
-        
-        // Signal Callbacks
-        //this.manager.connect('manager::signal', Lang.bind(this, this._managerCallback));
-    },
-    
-    // Private Methods
-    _addIndicator: function (devicePath) {
-        debug('_addIndicator() called on ' + devicePath);
-        
-        if (!Main.panel.statusArea[devicePath]) {
-            let device = this.manager.devices[devicePath];
-            let indicator = new Indicator(device);
-            Main.panel.addToStatusArea(devicePath, indicator);
-        };
-    },
-    
-    _removeIndicator: function (devicePath) {
-        debug('_removeIndicator() called on ' + devicePath);
-        
-        if (Main.panel.statusArea[devicePath]) {
-            let indicator = Main.panel.statusArea[devicePath];
-            indicator.disable();
-        };
-    },
-    
-    // Callbacks
-    _daemonAppeared: function (conn, name, name_owner, user_data) {
-        // The DBus interface has appeared, setup
-        debug('_daemonAppeared() called');
-        
-        try {
-            this.manager = new MConnect.DeviceManager();
-        
-            // TODO: GSettings option for what states to show devices
-            // TODO: GSettings option for indicator when no device present
-            for (let devicePath in this.manager.devices) {
-                let device = this.manager.devices[devicePath];
-                
-                if (device.active) {
-                    this._addIndicator(devicePath);
-                };
-            };
-        } catch (e) {
-            throw new Error(e);
-        };
-    },
-    
-    _daemonVanished: function (conn, name, name_owner, user_data) {
-        // The DBus interface has vanished
-        debug('_daemonVanished() called');
-        
-        // If a manager is initialized, clear it
-        if (this.manager != null) {
-            let devicePaths = Object.keys(this.manager.devices);
-        
-            for (let devicePath in devicePaths) {
-                this._removeIndicator(devicePaths[devicePath]);
-            };
-        
-            this.manager.devices = {};
-            this.manager.proxy = null;
-            this.manager = null;
-        }
-        
-        if (Settings.get_boolean('start-daemon')) {
-            MConnect.startDaemon();
-        };
-    },
-    
-    _settingsChanged: function (settings, key, user_data) {
-        // If 'start-daemon' was enabled and mconnect is not running, start it
-        if (key == 'start-daemon') {
-            debug('start-daemon changed');
-            
-            if (Settings.get_boolean(key) && this.manager == null) {
-                MConnect.startDaemon();
-            };
-        };
-    },
-    
-    // Extension stuff?
-    enable: function () {
-    },
-    
-    disable: function () {
-    }
-});
-
 // TODO: figure out how to use these proper
 function init() {
     debug('initializing extension');
     
     // ?
-}
+};
  
 function enable() {
     debug('enabling extension');
     
-    var extension = new Extension();
-    return extension;
-}
+    // Watch for DBus service
+    var watchdog = Gio.bus_watch_name(
+        Gio.BusType.SESSION,
+        'org.mconnect',
+        Gio.BusNameWatcherFlags.NONE,
+        _daemonAppeared,
+        _daemonVanished
+    );
+    
+    // Settings callback
+    Settings.connect('changed', _settingsChanged);
+    //this.manager.connect('manager::signal', Lang.bind(this, this._managerCallback));
+};
  
 function disable() {
     debug('disabling extension');
     
-    extension = null;
-}
+    //
+    if (manager != null) {
+        let devicePaths = Object.keys(manager.devices);
+    
+        for (let devicePath in devicePaths) {
+            _removeIndicator(devicePaths[devicePath]);
+        };
+    
+        manager.devices = {};
+        manager.proxy = null;
+        manager = null;
+    };
+};
+    
+// Private Methods
+function _addIndicator(devicePath) {
+    debug('_addIndicator() called on ' + devicePath);
+    
+    if (!Main.panel.statusArea[devicePath]) {
+        let device = manager.devices[devicePath];
+        let indicator = new Indicator(device);
+        Main.panel.addToStatusArea(devicePath, indicator);
+    };
+};
+
+function _removeIndicator(devicePath) {
+    debug('_removeIndicator() called on ' + devicePath);
+    
+    if (Main.panel.statusArea[devicePath]) {
+        let indicator = Main.panel.statusArea[devicePath];
+        indicator.disable();
+    };
+};
+
+// DBus Watchdog Callbacks
+function _daemonAppeared(conn, name, name_owner, user_data) {
+    // The DBus interface has appeared, setup
+    debug('_daemonAppeared() called');
+    
+    var manager = new MConnect.DeviceManager();
+
+    // TODO: GSettings option for what states to show devices
+    // TODO: GSettings option for indicator when no device present
+    for (let devicePath in manager.devices) {
+        let device = manager.devices[devicePath];
+        
+        if (device.active) {
+            _addIndicator(devicePath);
+        };
+    };
+};
+
+function _daemonVanished(conn, name, name_owner, user_data) {
+    // The DBus interface has vanished
+    debug('_daemonVanished() called');
+    
+    // If a manager is initialized, clear it
+    if (this.manager != null) {
+        let devicePaths = Object.keys(this.manager.devices);
+    
+        for (let devicePath in devicePaths) {
+            this._removeIndicator(devicePaths[devicePath]);
+        };
+    
+        this.manager.devices = {};
+        this.manager.proxy = null;
+        this.manager = null;
+    }
+    
+    if (Settings.get_boolean('start-daemon')) {
+        MConnect.startDaemon();
+    };
+};
+
+function _settingsChanged(settings, key, user_data) {
+    // If 'start-daemon' was enabled and mconnect is not running, start it
+    if (key == 'start-daemon') {
+        debug('start-daemon changed');
+        
+        if (Settings.get_boolean(key) && this.manager == null) {
+            MConnect.startDaemon();
+        };
+    };
+};
 
 
 
