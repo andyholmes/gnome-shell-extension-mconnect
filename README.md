@@ -34,7 +34,7 @@ complete and useful. To follow along now you may:
 
 To update you may:
 
-    cd gnome-shell-extension-connect
+    cd gnome-shell-extension-mconnect
     git pull
     glib-compile-schemas mconnect@andyholmes.github.io/
     
