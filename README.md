@@ -32,12 +32,27 @@ complete and useful. To follow along now you may:
     ln -sf gnome-shell-extension-mconnect/mconnect@andyholmes.github.io ~/.local/share/gnome-shell/extensions/mconnect@andyholmes.github.io
     glib-compile-schemas gnome-shell-extension-mconnect/mconnect@andyholmes.github.io/
 
-Then enable the extension.
+To update you may:
+
+    cd gnome-shell-extension-connect
+    git pull
+    glib-compile-schemas mconnect@andyholmes.github.io/
     
 
-## Configuration
+## Preferences
 
-The extension itself currently has no configuration options.
+The following options are available in the extension preferences:
+
+* **start-daemon** - Start the daemon automatically
+
+    If true the daemon will be automatically started and restarted if it stops.
+    If false the extension will wait for the daemon to be started.
+    
+* **debug** - Print debug messages to the log
+    
+    If true the extension will print verbosely to the log. See 'journalctl
+    /usr/bin/gnome-shell -f -o cat' for output.
+    
 
 ## Usage
 

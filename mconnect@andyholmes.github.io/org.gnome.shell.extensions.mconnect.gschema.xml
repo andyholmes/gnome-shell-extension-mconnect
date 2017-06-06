@@ -4,12 +4,12 @@
     <key type="b" name="debug">
       <default>true</default>
       <summary>Print debug messages to log</summary>
-      <description>Enables printing verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
+      <description>If true the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
     <key type="b" name="start-daemon">
       <default>true</default>
       <summary>Start the daemon automatically</summary>
-      <description>Whether to start the daemon if it's found not to be running.</description>
+      <description>If true the daemon will be automatically started and restarted if it stops. If false the extension will wait for the daemon to be started.</description>
     </key>
   </schema>
 </schemalist>
