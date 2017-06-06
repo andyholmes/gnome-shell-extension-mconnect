@@ -102,7 +102,7 @@ const Indicator = new Lang.Class({
 
 // A Re-Wrapper for mconnect.DeviceManager
 const Extension = new Lang.Class({
-    Name: 'MConnect.Extension',
+    Name: 'Extension',
 
     _init: function () {
         // Watch for DBus service
@@ -112,6 +112,12 @@ const Extension = new Lang.Class({
             Gio.BusNameWatcherFlags.NONE,
             Lang.bind(this, this._daemonAppeared),
             Lang.bind(this, this._daemonVanished)
+        );
+        
+        // Settings callback
+        Settings.connect(
+            'changed',
+            Lang.bind(this, this._settingsChanged)
         );
         
         // Signal Callbacks
@@ -161,10 +167,10 @@ const Extension = new Lang.Class({
     },
     
     _daemonVanished: function (conn, name, name_owner, user_data) {
-        // The DBus interface has vanished, clean up
+        // The DBus interface has vanished
         debug('_daemonVanished() called');
         
-        //
+        // If a manager is initialized, clear it
         if (this.manager != null) {
             let devicePaths = Object.keys(this.manager.devices);
         
@@ -182,6 +188,17 @@ const Extension = new Lang.Class({
         };
     },
     
+    _settingsChanged: function (settings, key, user_data) {
+        // If 'start-daemon' was enabled and mconnect is not running, start it
+        if (key == 'start-daemon') {
+            debug('start-daemon changed');
+            
+            if (Settings.get_boolean(key) && this.manager == null) {
+                MConnect.startDaemon();
+            };
+        };
+    },
+    
     // Extension stuff?
     enable: function () {
     },
@@ -194,15 +211,20 @@ const Extension = new Lang.Class({
 function init() {
     debug('initializing extension');
     
-    return new Extension();
+    // ?
 }
  
 function enable() {
     debug('enabling extension');
+    
+    var extension = new Extension();
+    return extension;
 }
  
 function disable() {
     debug('disabling extension');
+    
+    extension = null;
 }
 
 
