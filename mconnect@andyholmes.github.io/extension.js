@@ -13,7 +13,7 @@ const GObject = imports.gi.GObject;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, getSettings } = Me.imports.utils;
+const { log, debug, Settings } = Me.imports.prefs;
 const MConnect = Me.imports.mconnect;
 
 
@@ -94,7 +94,7 @@ const Indicator = new Lang.Class({
         if (active) {
             this.icon.icon_name = type + '-trusted';
         } else {
-            this.icon.icon_name = type + '-connected';
+            this.icon.icon_name = type + '-disconnected';
         };
     }
 });
@@ -102,18 +102,20 @@ const Indicator = new Lang.Class({
 
 // A Re-Wrapper for mconnect.DeviceManager
 const Extension = new Lang.Class({
-    Name: 'mconnect.Extension',
+    Name: 'MConnect.Extension',
 
     _init: function () {
-        this._settings = getSettings();
-        
-        // Init a DeviceManager
-        this.manager = new MConnect.DeviceManager();        
-        this.devices = this.manager.devices;
+        // Watch for DBus service
+        this.watchdog = Gio.bus_watch_name(
+            Gio.BusType.SESSION,
+            'org.mconnect',
+            Gio.BusNameWatcherFlags.NONE,
+            Lang.bind(this, this._daemonAppeared),
+            Lang.bind(this, this._daemonVanished)
+        );
         
         // Signal Callbacks
-        this.manager.connect('daemon-connected', Lang.bind(this, this._daemonConnected));
-        this.manager.connect('daemon-disconnected', Lang.bind(this, this._daemonDisconnected));
+        //this.manager.connect('manager::signal', Lang.bind(this, this._managerCallback));
     },
     
     // Private Methods
@@ -121,7 +123,7 @@ const Extension = new Lang.Class({
         debug('_addIndicator() called on ' + devicePath);
         
         if (!Main.panel.statusArea[devicePath]) {
-            let device = this.devices[devicePath];
+            let device = this.manager.devices[devicePath];
             let indicator = new Indicator(device);
             Main.panel.addToStatusArea(devicePath, indicator);
         };
@@ -133,33 +135,51 @@ const Extension = new Lang.Class({
         if (Main.panel.statusArea[devicePath]) {
             let indicator = Main.panel.statusArea[devicePath];
             indicator.disable();
-            indicator.destroy();
         };
     },
     
     // Callbacks
-    _daemonConnected: function (manager, devices) {
-        // TODO: GSettings option for what states to show devices
-        // TODO: GSettings option for indicator when no device present
-        this.devices = devices;
+    _daemonAppeared: function (conn, name, name_owner, user_data) {
+        // The DBus interface has appeared, setup
+        debug('_daemonAppeared() called');
         
-        for (let devicePath in this.devices) {
-            let device = this.devices[devicePath];
-            
-            if (device.active) {
-                this._addIndicator(devicePath);
+        try {
+            this.manager = new MConnect.DeviceManager();
+        
+            // TODO: GSettings option for what states to show devices
+            // TODO: GSettings option for indicator when no device present
+            for (let devicePath in this.manager.devices) {
+                let device = this.manager.devices[devicePath];
+                
+                if (device.active) {
+                    this._addIndicator(devicePath);
+                };
             };
+        } catch (e) {
+            throw new Error(e);
         };
     },
     
-    _daemonDisconnected: function (manager, devicePaths) {
-        // FIXME: passing devicePaths through like this seems sketchy
-        debug('removing all indicators');
-        for (let devicePath in devicePaths) {
-            this._removeIndicator(devicePaths[devicePath]);
-        };
+    _daemonVanished: function (conn, name, name_owner, user_data) {
+        // The DBus interface has vanished, clean up
+        debug('_daemonVanished() called');
         
-        this.devices = null;
+        //
+        if (this.manager != null) {
+            let devicePaths = Object.keys(this.manager.devices);
+        
+            for (let devicePath in devicePaths) {
+                this._removeIndicator(devicePaths[devicePath]);
+            };
+        
+            this.manager.devices = {};
+            this.manager.proxy = null;
+            this.manager = null;
+        }
+        
+        if (Settings.get_boolean('start-daemon')) {
+            MConnect.startDaemon();
+        };
     },
     
     // Extension stuff?

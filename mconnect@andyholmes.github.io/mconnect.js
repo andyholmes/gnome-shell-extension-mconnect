@@ -12,7 +12,7 @@ const Signals = imports.signals
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, getSettings } = Me.imports.utils;
+const { log, debug, Settings } = Me.imports.prefs;
 
 // DBus Interface
 const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
@@ -28,6 +28,8 @@ const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
     <property type="b" name="IsPaired" access="readwrite"/> \
     <property type="b" name="Allowed" access="readwrite"/> \
     <property type="b" name="IsActive" access="readwrite"/> \
+    <property type="as" name="IncomingCapabilities" access="readwrite"/> \
+    <property type="as" name="OutgoingCapabilities" access="readwrite"/> \
   </interface> \
 </node> \
 ');
@@ -48,21 +50,29 @@ const ManagerProxy = Gio.DBusProxy.makeProxyWrapper('\
 ');
 
 
-const _settings = getSettings();
+// module Methods
+function startDaemon() {
+    // Start the mconnect daemon
+    log('spawning mconnect daemon');
+    
+    try {
+        Util.spawnCommandLine('mconnect -d');
+        this.usleep(10000); // 10ms
+    } catch (e) {
+        debug('startDaemon: ' + e);
+    };
+};
+
 
 // A DBus Interface wrapper for mconnect.Device
 const Device = new Lang.Class({
-    Name: "Device",
+    Name: "MConnect.Device",
     
     _init: function (devicePath) {
         // Create proxy wrapper for DBus Interface
-        try {
-            this.proxy = new DeviceProxy(Gio.DBus.session,
-                                         'org.mconnect',
-                                         devicePath);
-        } catch (e) {
-            debug('DeviceProxy Error: ' + e);
-        };
+        this.proxy = new DeviceProxy(Gio.DBus.session,
+                                     'org.mconnect',
+                                     devicePath);
         
         // Properties
         Object.defineProperty(this, 'id', {
@@ -103,23 +113,35 @@ const Device = new Lang.Class({
         
         Object.defineProperty(this, 'allowed', {
             get: function () { return this.proxy.Allowed; },
-            set: function (name) { return name; }
+            set: function (arg) { return arg; }
         });
         debug('allowed: ' + this.allowed);
         
         Object.defineProperty(this, 'active', {
             get: function () { return this.proxy.Allowed; },
-            set: function (name) { return name; }
+            set: function (arg) { return arg; }
         });
         debug('active: ' + this.active);
         
+        Object.defineProperty(this, 'incomingCapabilities', {
+            get: function () { return this.proxy.IncomingCapabilities; },
+            set: function (arg) { return arg; }
+        });
+        debug('incomingCapabilities: ' + this.incomingCapabilities);
+        
+        Object.defineProperty(this, 'outgoingCapabilities', {
+            get: function () { return this.proxy.OutgoingCapabilities; },
+            set: function (arg) { return arg; }
+        });
+        debug('outgoingCapabilities: ' + this.outgoingCapabilities);
+        
         // Signals
-        //this.proxy.connectSignal('deviceSignal', Lang.bind(this, this._deviceSignal));
+        //this.proxy.connectSignal('dbusSignal', Lang.bind(this, this._dbusSignal));
     },
     
     // Callbacks
-    //_deviceSignal: function (proxy, sender, user_data) {
-    //    debug('re-emitting device:_deviceSignal as device::signal');
+    //_dbusSignal: function (proxy, sender, user_data) {
+    //    debug('re-emitting device:_dbusSignal as device::signal');
     //    
     //    this.emit('device::signal', user_data[0]);
     //},
@@ -134,19 +156,15 @@ Signals.addSignalMethods(Device.prototype);
 
 // A DBus Interface wrapper for mconnect.DeviceManager
 const DeviceManager = new Lang.Class({
-    Name: "DeviceManager",
+    Name: "MConnect.DeviceManager",
     
     devices: {},
     
     _init: function () {
-        // Connect to DBus
-        let watcher = Gio.bus_watch_name(
-            Gio.BusType.SESSION,
-            'org.mconnect',
-            Gio.BusNameWatcherFlags.NONE,
-            Lang.bind(this, this._daemonAppeared),
-            Lang.bind(this, this._daemonVanished)
-        );
+        // Create proxy wrapper for DBus Interface
+        this.proxy = new ManagerProxy(Gio.DBus.session,
+                                      'org.mconnect',
+                                      '/org/mconnect/manager');
         
         // Properties
         //Object.defineProperty(this, 'name', {
@@ -155,20 +173,10 @@ const DeviceManager = new Lang.Class({
         //});
         
         // Signals
-        //this.proxy.connectSignal('managerSignal', Lang.bind(this, this._managerSignal));
-    },
-    
-    // Private Methods
-    _initDaemon: function () {
-        // Start the mconnect daemon
-        log('spawning mconnect daemon');
+        //this.proxy.connectSignal('dbusSignal', Lang.bind(this, this._dbusSignal));
         
-        try {
-            Util.spawnCommandLine('mconnect -d');
-            this.usleep(10000); // 10ms
-        } catch (e) {
-            debug('_initDaemon: ' + e);
-        };
+        //
+        this._initDevices();
     },
     
     _initDevice: function (devicePath) {
@@ -187,33 +195,11 @@ const DeviceManager = new Lang.Class({
     },
     
     // Callbacks
-    _daemonAppeared: function (conn, name, name_owner, user_data) {
-        // The DBus interface has appeared, setup
-        try {
-            // Create proxy wrapper for DBus Interface
-            this.proxy = new ManagerProxy(Gio.DBus.session,
-                                          'org.mconnect',
-                                          '/org/mconnect/manager');
-            this._initDevices();
-            this.emit('daemon-connected', this.devices)
-        } catch (e) {
-            throw new Error(e);
-        };
-    },
-    
-    _daemonVanished: function (conn, name, name_owner, user_data) {
-        // The DBus interface has vanished, clean up
-        this.emit('daemon-disconnected', Object.keys(this.devices))
-        debug('daemon-disconnected emitted');
-        this.proxy = null;
-        this.devices = {};
-        
-        if (_settings.get_boolean('start-daemon')) {
-            this._initDaemon();
-        } else if (!_settings.get_boolean('wait-daemon')) {
-            throw new Error('no daemon and not allowed to start or wait');
-        };
-    },
+    //_dbusSignal: function (proxy, sender, user_data) {
+    //    debug('re-emitting device:_dbusSignal as device::signal');
+    //    
+    //    this.emit('device::signal', user_data[0]);
+    //},
     
     // Methods: remove the DBus cruft
     _AllowDevice: function (devicePath) {
@@ -229,7 +215,4 @@ const DeviceManager = new Lang.Class({
 });
 
 Signals.addSignalMethods(DeviceManager.prototype);
-
-
-
 

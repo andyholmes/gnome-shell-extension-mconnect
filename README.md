@@ -30,7 +30,7 @@ complete and useful. To follow along now you may:
 
     git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
     ln -sf gnome-shell-extension-mconnect/mconnect@andyholmes.github.io ~/.local/share/gnome-shell/extensions/mconnect@andyholmes.github.io
-    glib-compile-schemas gnome-shell-extension-mconnect/mconnect@andyholmes.github.io/schemas
+    glib-compile-schemas gnome-shell-extension-mconnect/mconnect@andyholmes.github.io/
 
 Then enable the extension.
     

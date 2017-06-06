@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
-  <object class="GtkNotebook" id="settings_notebook">
+  <object class="GtkNotebook" id="preferences_notebook">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
     <property name="margin_left">6</property>
@@ -43,11 +43,11 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="wait_daemon_label">
+          <object class="GtkLabel" id="debug_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">start</property>
-            <property name="label" translatable="yes">Wait for mconnect to start itself</property>
+            <property name="label" translatable="yes">Print debug messages to log</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -55,7 +55,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSwitch" id="wait_daemon">
+          <object class="GtkSwitch" id="debug">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="halign">end</property>
@@ -68,10 +68,10 @@
       </object>
     </child>
     <child type="tab">
-      <object class="GtkLabel" id="behaviour_label">
+      <object class="GtkLabel" id="settings_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Behaviour</property>
+        <property name="label" translatable="yes">Settings</property>
       </object>
       <packing>
         <property name="tab_fill">False</property>
