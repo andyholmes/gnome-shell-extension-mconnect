@@ -34,6 +34,30 @@ const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
 </node> \
 ');
 
+const BatteryProxy = Gio.DBusProxy.makeProxyWrapper('\
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
+<node> \
+  <interface name="org.mconnect.Device.Battery"> \
+    <signal name="Battery"> \
+      <arg type="u" name="level"/> \
+      <arg type="b" name="charging"/> \
+    </signal> \
+  </interface> \
+</node> \
+');
+
+const PingProxy = Gio.DBusProxy.makeProxyWrapper('\
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
+<node> \
+  <interface name="org.mconnect.Device.Ping"> \
+    <signal name="Ping"> \
+    </signal> \
+  </interface> \
+</node> \
+');
+
 const ManagerProxy = Gio.DBusProxy.makeProxyWrapper('\
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \

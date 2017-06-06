@@ -104,7 +104,6 @@ const Indicator = new Lang.Class({
 let manager;
 let watchdog;
 
-
 // TODO: figure out how to use these proper
 function init() {
     debug('initializing extension');
@@ -116,7 +115,7 @@ function enable() {
     debug('enabling extension');
     
     // Watch for DBus service
-    var watchdog = Gio.bus_watch_name(
+    watchdog = Gio.bus_watch_name(
         Gio.BusType.SESSION,
         'org.mconnect',
         Gio.BusNameWatcherFlags.NONE,
@@ -124,12 +123,19 @@ function enable() {
         daemonVanished
     );
     
-    // Settings callback
+    // Watch 'start-daemon' setting
     Settings.connect('changed', settingsChanged);
 };
  
 function disable() {
     debug('disabling extension');
+    
+    // Stop watching for DBus Service
+    Gio.bus_unwatch_name(watchdog);
+    
+    // Stop watching 'start-daemon' setting
+    // ERROR: gsignal.c:2641: instance '0x55d236fa6610' has no handler with id '9223372036854775808'
+    //Settings.disconnect('start-daemon');
     
     //
     if (manager != null) {
