@@ -47,7 +47,24 @@ const Indicator = new Lang.Class({
         this.activeChanged(this.device, this.device.active);
         
         //// Name Item
-        this.menuDeviceItem = new PopupMenu.PopupMenuItem(this.device.name, {activate: true, reactive: true});
+        let batteryIcon = this._getBatteryIcon();
+        
+        this.menuDeviceItem = new PopupMenu.PopupImageMenuItem(
+            this.device.name,
+            batteryIcon,
+            {activate: true, reactive: true}
+        );
+        this.device.connect(
+            'battery',
+            Lang.bind(
+                this,
+                function (device, user_data) {
+                    batteryIcon = this._getBatteryIcon(user_data);
+                    
+                    this.menuDeviceItem.setIcon(batteryIcon);
+                }
+            )
+        );
         this.menuDeviceItem.connect(
             'activate',
             Lang.bind(
@@ -58,23 +75,35 @@ const Indicator = new Lang.Class({
             )
         );
         this.menu.addMenuItem(this.menuDeviceItem);
-        
-        //// SMS Item
-        this.menuSMSItem = new PopupMenu.PopupMenuItem("Send SMS..", {activate: false, reactive: true});
-        this.menu.addMenuItem(this.menuSMSItem);
+    },
 
-        //// Ping Item
-        this.menuPingItem = new PopupMenu.PopupMenuItem("Send Ping..", {activate: true, reactive: true});
-        this.menuPingItem.connect(
-            'activate',
-            Lang.bind(
-                this,
-                function (deviceItem) {
-                    //this.menuPingDialog.open();
-                }
-            )
-        );
-        this.menu.addMenuItem(this.menuPingItem);
+    _getBatteryIcon: function (user_data = null) {
+        let icon;
+        
+        switch (true) {
+            case (user_data == null):
+                return 'battery-missing-symbolic'
+            case (user_data[0] == 100):
+                icon = 'battery-full';
+                break;
+            case (user_data[0] > 20):
+                icon = 'battery-good';
+                break;
+            case (user_data[0] <= 20):
+                icon = 'battery-good';
+                break;
+            case (user_data[0] == 0):
+                icon = 'battery-empty';
+                break;
+        };
+        
+        if (user_data[1]) {
+            icon = icon + '-charging';
+        };
+        
+        debug('battery icon: ' + icon + '-symbolic');
+        
+        return icon + '-symbolic';
     },
     
     disable: function () {
@@ -209,6 +238,8 @@ function daemonVanished(conn, name, name_owner, user_data) {
     // Start the manager
     if (Settings.get_boolean('start-daemon')) {
         MConnect.startDaemon();
+    } else {
+        log('waiting for daemon');
     };
 };
 
@@ -217,7 +248,7 @@ function settingsChanged(settings, key, user_data) {
     if (key == 'start-daemon') {
         debug('start-daemon changed');
         
-        if (Settings.get_boolean(key) && this.manager == null) {
+        if (Settings.get_boolean(key) && manager == null) {
             MConnect.startDaemon();
         };
     };
