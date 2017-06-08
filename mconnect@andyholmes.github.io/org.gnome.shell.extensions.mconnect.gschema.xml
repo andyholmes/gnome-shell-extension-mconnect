@@ -2,7 +2,7 @@
 <schemalist gettext-domain="gnome-shell-extensions">
   <schema path="/org/gnome/shell/extensions/mconnect/" id="org.gnome.shell.extensions.mconnect">
     <key type="b" name="debug">
-      <default>true</default>
+      <default>false</default>
       <summary>Print debug messages to log</summary>
       <description>If true the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
@@ -20,6 +20,21 @@
       <default>false</default>
       <summary>Show per-device indicators</summary>
       <description>If true, show an indicator for each device. If false, devices will be available in the user menu.</description>
+    </key>
+    <key type="b" name="show-inactive">
+      <default>false</default>
+      <summary>Show inactive devices</summary>
+      <description>If true, devices will be shown in the interface even if they are inactive.</description>
+    </key>
+    <key type="b" name="show-unallowed">
+      <default>false</default>
+      <summary>Show unallowed devices</summary>
+      <description>If true, devices will be shown in the interface even if they are unallowed.</description>
+    </key>
+    <key type="b" name="show-unpaired">
+      <default>false</default>
+      <summary>Show unpaired devices</summary>
+      <description>If true, devices will be shown in the interface even if they are unpaired.</description>
     </key>
   </schema>
 </schemalist>

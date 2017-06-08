@@ -51,8 +51,7 @@ function buildPrefsWidget() {
     let settingName;
     let settingLabel;
     
-    // Settings panel
-    
+    // Appearance Page
     settingName = 'menu-always';
     settingLabel = builder.get_object(settingName + '-label');
     settingLabel.set_label(Schema.get_key(settingName).get_summary());
@@ -69,6 +68,31 @@ function buildPrefsWidget() {
                   'active',
                   Gio.SettingsBindFlags.DEFAULT);
                   
+    settingName = 'show-inactive';
+    settingLabel = builder.get_object(settingName + '-label');
+    settingLabel.set_label(Schema.get_key(settingName).get_summary());
+    Settings.bind(settingName,
+                  builder.get_object(settingName),
+                  'active',
+                  Gio.SettingsBindFlags.DEFAULT);
+                  
+    settingName = 'show-unallowed';
+    settingLabel = builder.get_object(settingName + '-label');
+    settingLabel.set_label(Schema.get_key(settingName).get_summary());
+    Settings.bind(settingName,
+                  builder.get_object(settingName),
+                  'active',
+                  Gio.SettingsBindFlags.DEFAULT);
+                  
+    settingName = 'show-unpaired';
+    settingLabel = builder.get_object(settingName + '-label');
+    settingLabel.set_label(Schema.get_key(settingName).get_summary());
+    Settings.bind(settingName,
+                  builder.get_object(settingName),
+                  'active',
+                  Gio.SettingsBindFlags.DEFAULT);
+                  
+    // Settings Page
     settingName = 'start-daemon';
     settingLabel = builder.get_object(settingName + '-label');
     settingLabel.set_label(Schema.get_key(settingName).get_summary());
@@ -86,7 +110,14 @@ function buildPrefsWidget() {
                   Gio.SettingsBindFlags.DEFAULT);
 
     // About Panel
-    builder.get_object('extension_version').set_label(Me.metadata.version.toString());
+    builder.get_object('extension-name').set_label(Me.metadata.name.toString());
+    builder.get_object('extension-description').set_label(Me.metadata.description.toString());
+    builder.get_object('extension-url').set_label(Me.metadata.url.toString());
+    builder.get_object('extension-version').set_label(Me.metadata.version.toString());
+    
+    let email = Me.metadata['author-email'].toString()
+    let author = Me.metadata['author'].toString() + ' (<a href="mailto:' + email + '">' + email + '</a>)';
+    builder.get_object('extension-author').set_label(author);
     
     widget.show_all();
     

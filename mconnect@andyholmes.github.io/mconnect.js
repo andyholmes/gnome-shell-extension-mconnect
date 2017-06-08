@@ -95,7 +95,7 @@ const Device = new Lang.Class({
     Name: "MConnect.Device",
     
     _init: function (busPath) {
-        // Create proxy wrapper for DBus Interface
+        // Create proxy for the DBus Interface
         this.proxy = new DeviceProxy(Gio.DBus.session, 'org.mconnect', busPath);
         
         // Properties
@@ -226,6 +226,12 @@ const Device = new Lang.Class({
             
             this.plugins.ping = plugin;
         };
+    },
+    
+    destroy: function () {
+        // FIXME
+        delete this.proxy;
+        delete this.plugins;
     }
 });
 
@@ -252,18 +258,25 @@ const DeviceManager = new Lang.Class({
         
         // Signals
         //this.proxy.connectSignal('dbusSignal', Lang.bind(this, this._dbusSignal));
-        // FIXME: will be dbus signal
-        this.connect('deviceAdded', Lang.bind(this, this._initDevice));
+        this.connect('deviceAdded', Lang.bind(this, this._addDevice)); // TODO: will be dbus signal later
         
         //
         this._initDevices();
     },
     
-    _initDevice: function (manager, signal, busPath) {
+    _addDevice: function (manager, signal, busPath) {
         debug('CALLBACK: DeviceManager.deviceAdded: ' + busPath);
         
         this.devices[busPath] = new Device(busPath);
-        this.emit('device-added', this.devices[busPath]);
+        this.emit('device-added', null, this.devices[busPath]);
+    },
+    
+    _removeDevice: function (manager, signal, busPath) {
+        debug('CALLBACK: DeviceManager.deviceRemoved: ' + busPath);
+        
+        this.devices[busPath].destroy();
+        delete this.devices[busPath];
+        this.emit('device-removed', null, this.devices[busPath]);
     },
     
     _initDevices: function () {
@@ -276,8 +289,13 @@ const DeviceManager = new Lang.Class({
         };
     },
     
-    _destroy: function () {
+    destroy: function () {
         // FIXME: cleanup
+        this.disconnect('deviceAdded'); // TODO: will be dbus signal later
+        
+        for (let busPath in this.devices) {
+            this._removeDevice(busPath);
+        };
     },
     
     // Callbacks
@@ -289,13 +307,12 @@ const DeviceManager = new Lang.Class({
     
     // Methods: remove the DBus cruft
     _AllowDevice: function (busPath) {
-        // Params: String device, Returns: null
-        return this.proxy.AllowDeviceSync(string)[0];
+        // Add device at DBus path *busPath*
+        return this.proxy.AllowDeviceSync(busPath)[0];
     },
     
     _ListDevices: function () {
-        // Params: null, Returns: Array objectPaths
-        // NOTE: DBus returns nested arrays
+        // Return an Array of DBus paths to managed devices
         return this.proxy.ListDevicesSync()[0];
     }
 });

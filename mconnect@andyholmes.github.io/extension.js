@@ -11,7 +11,6 @@ const Util = imports.misc.util;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
-const Signals = imports.signals;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
@@ -71,9 +70,12 @@ function getDeviceIcon(device) {
         default:
             icon = device.type;
     };
-   
+    
+    // FIXME: still not clear on the distinction here
     if (device.active) {
         return icon + '-connected';
+    } else if (device.allowed || device.paired) {
+        return icon + '-trusted';
     } else {
         return icon + '-disconnected';
     };
@@ -81,7 +83,6 @@ function getDeviceIcon(device) {
 
 function getDeviceMenu(device) {
     // Return a PopupMenu.PopupMenu, relevant for the device
-    
     let menu = new PopupMenu.PopupMenu();
         
     // Menu Items
@@ -101,7 +102,6 @@ function getDeviceMenu(device) {
             this,
             function (device, user_data) {
                 batteryIcon = getBatteryIcon(user_data);
-                
                 menuDeviceItem.setIcon(batteryIcon);
             }
         )
@@ -114,6 +114,7 @@ function getDeviceMenu(device) {
             this,
             function (deviceItem) {
                 //
+                alert('foo');
             }
         )
     );
@@ -125,8 +126,6 @@ function getDeviceMenu(device) {
 
 
 // A Re-Wrapper for MConnect.Device representing a device in Menu.panel.statusArea
-//
-// Hierarchy:
 // 
 // PanelMenu.Button (Extends PanelMenu.ButtonBox)
 //    -> St.Bin (this.container)
@@ -147,11 +146,12 @@ const StatusIndicator = new Lang.Class({
         this.icon.icon_name = getDeviceIcon(device);
         
         // Menu
-        this.menu = getDeviceMenu(device);
+        let menu = getDeviceMenu(device);
+        this.setMenu(menu);
     }
 });
 
-//
+// The main extension hub.
 //
 // PanelMenu.SystemIndicator
 //     -> St.BoxLayout (this.indicators)
@@ -160,10 +160,6 @@ const StatusIndicator = new Lang.Class({
 const SystemIndicator = new Lang.Class({
     Name: 'MConnect.Indicator',
     Extends: PanelMenu.SystemIndicator,
-    
-    _userMenu: Main.panel.statusArea.aggregateMenu.menu,
-    _userMenuTray: Main.panel.statusArea.aggregateMenu._indicators,
-    _statusArea: Main.panel.statusArea,
 
     _init: function(manager) {
         this.parent();
@@ -171,46 +167,70 @@ const SystemIndicator = new Lang.Class({
         this.manager = manager;
         
         // Icon
-        let indicator = this._addIndicator();
-        indicator.icon_name = 'smartphone-symbolic';
-        this._userMenuTray.insert_child_at_index(this.indicators, 0);
+        this._indicator = this._addIndicator();
+        this._indicator.icon_name = 'smartphone-symbolic';
+        let userMenuTray = Main.panel.statusArea.aggregateMenu._indicators;
+        userMenuTray.insert_child_at_index(this.indicators, 0);
         
         // Extension Menu
+        //
+        // PopupSubMenuMenuItem
+        //     -> St.BoxLayout (this.actor)
+        //         -> St.Icon (this.icon)
+        //         -> St.Label (this.label)
+        //     -> PopupSubMenu (this.menu)
+        //         -> PopupSubMenuMenuItem (this.item)
+        //             -> 
+        //
         this.item = new PopupMenu.PopupSubMenuMenuItem('Mobile Devices', true);
         this.item.icon.icon_name = 'smartphone-symbolic';
+        this.menu.addMenuItem(this.item);
+        this._menu = this.item.menu;
         
         // Extension Menu // TODO: dynamic start-daemon item
         
         // Extension Menu // Settings Item
-        this.item.menu.addAction(
-            'Settings',
+        this._menu.addAction(
+            'Mobile Settings',
             function () {
                 Util.spawn(["gnome-shell-extension-prefs", Me.metadata.uuid]);
             }
         );
-        this.menu.addMenuItem(this.item);
-        this._userMenu.addMenuItem(this.menu, 4);
+        
+        //
+        Main.panel.statusArea.aggregateMenu.menu.addMenuItem(this.menu, 4);
         
         // Signals
         Settings.connect('changed::menu-always', Lang.bind(this, this._sync));
         Settings.connect('changed::per-device-indicators', Lang.bind(this, this._sync));
-
-        // TODO: investigate what this does
-        //Main.sessionMode.connect('updated', Lang.bind(this, this._sessionUpdated));
-        //this._sessionUpdated();
+        Settings.connect('changed::show-inactive', Lang.bind(this, this._sync));
+        Settings.connect('changed::show-unallowed', Lang.bind(this, this._sync));
+        Settings.connect('changed::show-unpaired', Lang.bind(this, this._sync));
+        Main.sessionMode.connect('updated', Lang.bind(this, this._sessionUpdated));
         
-        // Finish by calling this._sync()
+        // Sync the UI
         this._sync();
+        this._sessionUpdated();
     },
 
-    // TODO: Original subclass methods
-    _sessionUpdated: function() {
+    _sessionUpdated: function(sessionMode) {
+        // Keep menu disabled when desktop locked
         let sensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
         this.menu.setSensitive(sensitive);
     },
     
     // UI Settings callbacks
-    _sync: function (settings, key, user_data) {
+    _getDeviceVisible: function (device) {
+        let visible;
+        
+        visible = Settings.get_boolean('show-inactive') ? true : device.active;
+        visible = Settings.get_boolean('show-unpaired') ? true : device.paired;
+        visible = Settings.get_boolean('show-unallowed') ? true : device.allowed;
+        
+        return visible;
+    },
+    
+    _sync: function () {
         // TODO: GSettings option for what states to show devices
         // TODO: GSettings option for indicator when no device present
         debug('_sync() called');
@@ -222,28 +242,21 @@ const SystemIndicator = new Lang.Class({
             this.menu.actor.visible = false;
         };
         
-        // FIXME: ugly
-        let devices;
-        
-        if (!this.manager) {
-            devices = {};
-        } else {
-            devices = this.manager.devices;
-        };
+        let devices = this.manager ? this.manager.devices : {};
         
         // Indicator visibility
         if (Settings.get_boolean('per-device-indicators')) {
             for (let busPath in devices) {
-                this._statusArea[busPath].actor.visible = true;
+                Main.panel.statusArea[busPath].actor.visible = this._getDeviceVisible(devices[busPath]);
             };
             
-            this.indicators.get_first_child().visible = false;
+            this._indicator.visible = false;
         } else {
-            for (let busPath in devices) {
-                this._statusArea[busPath].actor.visible = false;
-            };
+            this._indicator.visible = true;
             
-            this.indicators.get_first_child().visible = true;
+            for (let busPath in devices) {
+                Main.panel.statusArea[busPath].actor.visible = false;
+            };
         };
     },
     
@@ -261,13 +274,31 @@ const SystemIndicator = new Lang.Class({
         
         Main.panel.addToStatusArea(device.busPath, indicator);
         indicator.emit('menu-set', null); // FIXME menus
+        
+        // Set the menu item label if only one device
+        if (Object.keys(manager.devices).length == 1) {
+            this.label.text = device.name;
+        };
     },
     
     removeDevice: function (device) {
-        // TODO: userMenu submenus, use as a callback?
+        // TODO: userMenu submenus
         debug('removeDevice() called on device at ' + device.busPath);
         
-        this._statusArea[device.busPath].destroy();
+        Main.panel.statusArea[device.busPath].destroy();
+    },
+    
+    destroy: function () {
+        //
+        for (let busPath in this.manager.devices) {
+            this.removeDevice(this.manager.devices[busPath]);
+        };
+        
+        this.item.destroy();
+        this.menu.destroy();
+
+        this.manager.destroy();
+        this.manager = null;
     }
 });
 
@@ -276,17 +307,16 @@ const SystemIndicator = new Lang.Class({
 var systemIndicator;
 var watchdog;
 
-// TODO: figure out how to use these proper
 function init() {
     debug('initializing extension');
     
-    // System Indicator
-    debug('enabling SystemIndicator');
-    systemIndicator = new SystemIndicator();
+    // TODO: localization
 };
  
 function enable() {
     debug('enabling extension');
+    
+    systemIndicator = new SystemIndicator();
     
     // Watch for DBus service
     watchdog = Gio.bus_watch_name(
@@ -320,24 +350,18 @@ function disable() {
     // ERROR: gsignal.c:2641: instance '0x55d236fa6610' has no handler with id '9223372036854775808'
     //Settings.disconnect('start-daemon');
     
-    // FIXME: not sure this is good enough
-    if (systemIndicator.manager != null) {
-        for (let busPath in systemIndicator.manager.devices) {
-            systemIndicator.removeDevice(manager.devices[busPath]);
-        };
-
-        systemIndicator.manager = null; // FIXME
-    };
+    //
+    systemIndicator.destroy();
 };
 
 // DBus Watchdog Callbacks
 function daemonAppeared(conn, name, name_owner, user_data) {
-    // The DBus interface has appeared, setup
+    // The DBus interface has appeared
     debug('daemonAppeared() called');
     
+    // Initialize the manager and add current devices
     systemIndicator.manager = new MConnect.DeviceManager();
     
-    // Add current devices
     for (let busPath in systemIndicator.manager.devices) {
         systemIndicator.addDevice(
             systemIndicator.manager,
@@ -346,10 +370,15 @@ function daemonAppeared(conn, name, name_owner, user_data) {
         );
     };
     
-    // Watch for new devices
+    // Watch for new and removed devices
     systemIndicator.manager.connect(
         'device-added',
         Lang.bind(systemIndicator, systemIndicator.addDevice)
+    );
+    
+    systemIndicator.manager.connect(
+        'device-removed',
+        Lang.bind(systemIndicator, systemIndicator.removeDevice)
     );
 };
 
@@ -357,17 +386,13 @@ function daemonVanished(conn, name, name_owner, user_data) {
     // The DBus interface has vanished
     debug('daemonVanished() called');
     
-    // If a manager is initialized, clear it
+    // If a manager is initialized, destroy it
     if (systemIndicator.manager != null) {
-    
-        for (let busPath in systemIndicator.manager.devices) {
-            systemIndicator.removeDevice(systemIndicator.manager.devices[busPath]);
-        };
-    
-        systemIndicator.manager = null;
+        systemIndicator.manager.destroy();
+        delete systemIndicator.manager;
     };
     
-    //
+    // Sync the UI
     systemIndicator._sync();
     
     // Start the daemon or wait for it to start

@@ -2,9 +2,11 @@
     "name": "mconnect",
     "description": "Integrate mconnect into Gnome Shell",
     "extension-id": "mconnect",
-    "shell-version": ["3.24.1"], 
+    "shell-version": ["3.24", "3.24.1"], 
     "url": "https://github.com/andyholmes/mconnect",
     "uuid": "mconnect@andyholmes.github.io",
     "version": 1,
-    "settings-schema": "org.gnome.shell.extensions.mconnect"
+    "settings-schema": "org.gnome.shell.extensions.mconnect",
+    "author": "Andy Holmes",
+    "author-email": "andrew.g.r.holmes@gmail.com"
 }
