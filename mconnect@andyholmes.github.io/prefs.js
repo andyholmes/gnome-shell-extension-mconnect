@@ -46,21 +46,42 @@ function buildPrefsWidget() {
     let builder = new Gtk.Builder();
     builder.add_from_file(Me.path + '/prefs.ui');
 
-    let widget = builder.get_object('preferences_notebook');
+    let widget = builder.get_object('preferences-notebook');
+    
+    let settingName;
+    let settingLabel;
     
     // Settings panel
-    let startDaemonLabel = builder.get_object('start_daemon_label');
-    startDaemonLabel.set_label(Schema.get_key('start-daemon').get_summary());
-    Settings.bind('start-daemon',
-                  builder.get_object('start_daemon'),
+    
+    settingName = 'menu-always';
+    settingLabel = builder.get_object(settingName + '-label');
+    settingLabel.set_label(Schema.get_key(settingName).get_summary());
+    Settings.bind(settingName,
+                  builder.get_object(settingName),
                   'active',
                   Gio.SettingsBindFlags.DEFAULT);
                   
+    settingName = 'per-device-indicators';
+    settingLabel = builder.get_object(settingName + '-label');
+    settingLabel.set_label(Schema.get_key(settingName).get_summary());
+    Settings.bind(settingName,
+                  builder.get_object(settingName),
+                  'active',
+                  Gio.SettingsBindFlags.DEFAULT);
                   
-    let debugLabel = builder.get_object('debug_label');
-    debugLabel.set_label(Schema.get_key('debug').get_summary());
-    Settings.bind('debug',
-                  builder.get_object('debug'),
+    settingName = 'start-daemon';
+    settingLabel = builder.get_object(settingName + '-label');
+    settingLabel.set_label(Schema.get_key(settingName).get_summary());
+    Settings.bind(settingName,
+                  builder.get_object(settingName),
+                  'active',
+                  Gio.SettingsBindFlags.DEFAULT);
+                  
+    settingName = 'debug';
+    settingLabel = builder.get_object(settingName + '-label');
+    settingLabel.set_label(Schema.get_key(settingName).get_summary());
+    Settings.bind(settingName,
+                  builder.get_object(settingName),
                   'active',
                   Gio.SettingsBindFlags.DEFAULT);
 

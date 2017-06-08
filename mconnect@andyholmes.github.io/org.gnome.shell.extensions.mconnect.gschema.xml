@@ -11,5 +11,15 @@
       <summary>Start the daemon automatically</summary>
       <description>If true the daemon will be automatically started and restarted if it stops. If false the extension will wait for the daemon to be started.</description>
     </key>
+    <key type="b" name="menu-always">
+      <default>true</default>
+      <summary>Always show in user menu</summary>
+      <description>Remain in the user menu even if mconnect is not running.</description>
+    </key>
+    <key type="b" name="per-device-indicators">
+      <default>false</default>
+      <summary>Show per-device indicators</summary>
+      <description>If true, show an indicator for each device. If false, devices will be available in the user menu.</description>
+    </key>
   </schema>
 </schemalist>

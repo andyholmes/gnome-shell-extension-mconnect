@@ -8,7 +8,7 @@ const Util = imports.misc.util;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
-const Signals = imports.signals
+const Signals = imports.signals;
 
 
 // Local Imports
@@ -252,15 +252,18 @@ const DeviceManager = new Lang.Class({
         
         // Signals
         //this.proxy.connectSignal('dbusSignal', Lang.bind(this, this._dbusSignal));
+        // FIXME: will be dbus signal
+        this.connect('deviceAdded', Lang.bind(this, this._initDevice));
         
         //
         this._initDevices();
     },
     
-    _initDevice: function (busPath) {
-        debug('initializing device at ' + busPath);
+    _initDevice: function (manager, signal, busPath) {
+        debug('CALLBACK: DeviceManager.deviceAdded: ' + busPath);
         
         this.devices[busPath] = new Device(busPath);
+        this.emit('device-added', this.devices[busPath]);
     },
     
     _initDevices: function () {
@@ -268,8 +271,13 @@ const DeviceManager = new Lang.Class({
         debug('initializing devices');
         
         for (let busPath of this._ListDevices()) {
-            this._initDevice(busPath);
+            // emulate DBus signal
+            this.emit('deviceAdded', null, busPath);
         };
+    },
+    
+    _destroy: function () {
+        // FIXME: cleanup
     },
     
     // Callbacks

@@ -6,10 +6,12 @@ const Main = imports.ui.main;
 const St = imports.gi.St;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Util = imports.misc.util;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
+const Signals = imports.signals;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
@@ -27,8 +29,110 @@ const MConnect = Me.imports.mconnect;
 //    },
 //});
 
-// A Re-Wrapper for MConnect.Device
-const Indicator = new Lang.Class({
+
+// Useful UI Functions
+function getBatteryIcon(level_state = [null, null]) {
+    // Return an icon name, relevant to battery level and state (charging/not)
+    // Also a callback for 'battery' signal
+    let icon;
+    
+    switch (true) {
+        case (level_state[0] == null):
+            return 'battery-missing-symbolic'
+        case (level_state[0] == 100):
+            icon = 'battery-full';
+            break;
+        case (level_state[0] > 20):
+            icon = 'battery-good';
+            break;
+        case (level_state[0] <= 20):
+            icon = 'battery-good';
+            break;
+        case (level_state[0] == 0):
+            icon = 'battery-empty';
+            break;
+    };
+    
+    if (level_state[1]) {
+        icon = icon + '-charging';
+    };
+    
+    return icon + '-symbolic';
+};
+    
+function getDeviceIcon(device) {
+    // Return an icon name, relevant to the device
+    let icon;
+    
+    switch (device.type) {
+        case 'phone':
+            icon = 'smartphone';
+            break;
+        default:
+            icon = device.type;
+    };
+   
+    if (device.active) {
+        return icon + '-connected';
+    } else {
+        return icon + '-disconnected';
+    };
+};
+
+function getDeviceMenu(device) {
+    // Return a PopupMenu.PopupMenu, relevant for the device
+    
+    let menu = new PopupMenu.PopupMenu();
+        
+    // Menu Items
+    //// Name Item
+    let batteryIcon = getBatteryIcon(device);
+    
+    let menuDeviceItem = new PopupMenu.PopupImageMenuItem(
+        device.name,
+        batteryIcon,
+        {activate: true, reactive: true}
+    );
+    
+    // Connect to 'Device.battery' signal
+    device.connect(
+        'battery',
+        Lang.bind(
+            this,
+            function (device, user_data) {
+                batteryIcon = getBatteryIcon(user_data);
+                
+                menuDeviceItem.setIcon(batteryIcon);
+            }
+        )
+    );
+    
+    // Connect to 'activate' signal
+    menuDeviceItem.connect(
+        'activate',
+        Lang.bind(
+            this,
+            function (deviceItem) {
+                //
+            }
+        )
+    );
+    
+    menu.addMenuItem(menuDeviceItem);
+    
+    return menu
+};
+
+
+// A Re-Wrapper for MConnect.Device representing a device in Menu.panel.statusArea
+//
+// Hierarchy:
+// 
+// PanelMenu.Button (Extends PanelMenu.ButtonBox)
+//    -> St.Bin (this.container)
+//        -> StBox (this.actor)
+//    -> PopupMenu.PopupMenu (this.menu)
+const StatusIndicator = new Lang.Class({
     Name: "Indicator.menu",
     Extends: PanelMenu.Button,
     
@@ -37,107 +141,148 @@ const Indicator = new Lang.Class({
         
         this.device = device;
         
-        // Signals
-        //this.device.connect('changed::active', Lang.bind(this, this.activeChanged));
-        
-        // Popup Menu Items
-        //// Indicator Icon
+        // Device Icon
         this.icon = new St.Icon({ icon_name: 'smartphone-disconnected', style_class: "system-status-icon"});
         this.actor.add_actor(this.icon);
-        this.activeChanged(this.device, this.device.active);
+        this.icon.icon_name = getDeviceIcon(device);
         
-        //// Name Item
-        let batteryIcon = this._getBatteryIcon();
+        // Menu
+        this.menu = getDeviceMenu(device);
+    }
+});
+
+//
+//
+// PanelMenu.SystemIndicator
+//     -> St.BoxLayout (this.indicators)
+//         -> St.Icon
+//     -> PopupMenu.PopupMenuSection (this.menu)
+const SystemIndicator = new Lang.Class({
+    Name: 'MConnect.Indicator',
+    Extends: PanelMenu.SystemIndicator,
+    
+    _userMenu: Main.panel.statusArea.aggregateMenu.menu,
+    _userMenuTray: Main.panel.statusArea.aggregateMenu._indicators,
+    _statusArea: Main.panel.statusArea,
+
+    _init: function(manager) {
+        this.parent();
         
-        this.menuDeviceItem = new PopupMenu.PopupImageMenuItem(
-            this.device.name,
-            batteryIcon,
-            {activate: true, reactive: true}
+        this.manager = manager;
+        
+        // Icon
+        let indicator = this._addIndicator();
+        indicator.icon_name = 'smartphone-symbolic';
+        this._userMenuTray.insert_child_at_index(this.indicators, 0);
+        
+        // Extension Menu
+        this.item = new PopupMenu.PopupSubMenuMenuItem('Mobile Devices', true);
+        this.item.icon.icon_name = 'smartphone-symbolic';
+        
+        // Extension Menu // TODO: dynamic start-daemon item
+        
+        // Extension Menu // Settings Item
+        this.item.menu.addAction(
+            'Settings',
+            function () {
+                Util.spawn(["gnome-shell-extension-prefs", Me.metadata.uuid]);
+            }
         );
-        this.device.connect(
-            'battery',
-            Lang.bind(
-                this,
-                function (device, user_data) {
-                    batteryIcon = this._getBatteryIcon(user_data);
-                    
-                    this.menuDeviceItem.setIcon(batteryIcon);
-                }
-            )
-        );
-        this.menuDeviceItem.connect(
-            'activate',
-            Lang.bind(
-                this,
-                function (deviceItem) {
-                    //
-                }
-            )
-        );
-        this.menu.addMenuItem(this.menuDeviceItem);
+        this.menu.addMenuItem(this.item);
+        this._userMenu.addMenuItem(this.menu, 4);
+        
+        // Signals
+        Settings.connect('changed::menu-always', Lang.bind(this, this._sync));
+        Settings.connect('changed::per-device-indicators', Lang.bind(this, this._sync));
+
+        // TODO: investigate what this does
+        //Main.sessionMode.connect('updated', Lang.bind(this, this._sessionUpdated));
+        //this._sessionUpdated();
+        
+        // Finish by calling this._sync()
+        this._sync();
     },
 
-    _getBatteryIcon: function (user_data = null) {
-        let icon;
-        
-        switch (true) {
-            case (user_data == null):
-                return 'battery-missing-symbolic'
-            case (user_data[0] == 100):
-                icon = 'battery-full';
-                break;
-            case (user_data[0] > 20):
-                icon = 'battery-good';
-                break;
-            case (user_data[0] <= 20):
-                icon = 'battery-good';
-                break;
-            case (user_data[0] == 0):
-                icon = 'battery-empty';
-                break;
-        };
-        
-        if (user_data[1]) {
-            icon = icon + '-charging';
-        };
-        
-        debug('battery icon: ' + icon + '-symbolic');
-        
-        return icon + '-symbolic';
+    // TODO: Original subclass methods
+    _sessionUpdated: function() {
+        let sensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
+        this.menu.setSensitive(sensitive);
     },
     
-    disable: function () {
-        this.menu.removeAll();
-        this.destroy();
-    },
-    
-    // Callbacks
-    activeChanged: function (device, active) {
-        // FIXME: not a DBus signal yet
-        if (device.type == 'phone') {
-            var type = 'smartphone';
+    // UI Settings callbacks
+    _sync: function (settings, key, user_data) {
+        // TODO: GSettings option for what states to show devices
+        // TODO: GSettings option for indicator when no device present
+        debug('_sync() called');
+        
+        // User Menu visibility
+        if (Settings.get_boolean('menu-always') || this.manager != null) {
+            this.menu.actor.visible = true;
         } else {
-            var type = device.type;
+            this.menu.actor.visible = false;
         };
         
-        if (active) {
-            this.icon.icon_name = type + '-trusted';
+        // FIXME: ugly
+        let devices;
+        
+        if (!this.manager) {
+            devices = {};
         } else {
-            this.icon.icon_name = type + '-disconnected';
+            devices = this.manager.devices;
         };
+        
+        // Indicator visibility
+        if (Settings.get_boolean('per-device-indicators')) {
+            for (let busPath in devices) {
+                this._statusArea[busPath].actor.visible = true;
+            };
+            
+            this.indicators.get_first_child().visible = false;
+        } else {
+            for (let busPath in devices) {
+                this._statusArea[busPath].actor.visible = false;
+            };
+            
+            this.indicators.get_first_child().visible = true;
+        };
+    },
+    
+    addDevice: function (manager, signal, device) {
+        // TODO: userMenu submenu per device
+        debug('addDevice() called on device at ' + device.busPath);
+        
+        let indicator = new StatusIndicator(device);
+        
+        if (Settings.get_boolean('per-device-indicators')) {
+            indicator.actor.visible = true;
+        } else {
+            indicator.actor.visible = false;
+        };
+        
+        Main.panel.addToStatusArea(device.busPath, indicator);
+        indicator.emit('menu-set', null); // FIXME menus
+    },
+    
+    removeDevice: function (device) {
+        // TODO: userMenu submenus, use as a callback?
+        debug('removeDevice() called on device at ' + device.busPath);
+        
+        this._statusArea[device.busPath].destroy();
     }
 });
 
 
 //
-let manager;
-let watchdog;
+var systemIndicator;
+var watchdog;
 
 // TODO: figure out how to use these proper
 function init() {
     debug('initializing extension');
     
-    // ?
+    // System Indicator
+    debug('enabling SystemIndicator');
+    systemIndicator = new SystemIndicator();
 };
  
 function enable() {
@@ -153,7 +298,16 @@ function enable() {
     );
     
     // Watch 'start-daemon' setting
-    Settings.connect('changed', settingsChanged);
+    Settings.connect(
+        'changed::start-daemon',
+        function (settings, key, user_data) {
+            debug('SIGNAL: changed::start-daemon');
+            
+            if (Settings.get_boolean(key) && systemIndicator.manager == null) {
+                MConnect.startDaemon();
+            };
+        }
+    );
 };
  
 function disable() {
@@ -166,37 +320,13 @@ function disable() {
     // ERROR: gsignal.c:2641: instance '0x55d236fa6610' has no handler with id '9223372036854775808'
     //Settings.disconnect('start-daemon');
     
-    //
-    if (manager != null) {
-        let devicePaths = Object.keys(manager.devices);
-    
-        for (let devicePath in devicePaths) {
-            removeIndicator(devicePaths[devicePath]);
+    // FIXME: not sure this is good enough
+    if (systemIndicator.manager != null) {
+        for (let busPath in systemIndicator.manager.devices) {
+            systemIndicator.removeDevice(manager.devices[busPath]);
         };
-    
-        manager.devices = {};
-        manager.proxy = null;
-        manager = null;
-    };
-};
-    
-// Methods
-function addIndicator(devicePath) {
-    debug('addIndicator() called on ' + devicePath);
-    
-    if (!Main.panel.statusArea[devicePath]) {
-        let device = manager.devices[devicePath];
-        let indicator = new Indicator(device);
-        Main.panel.addToStatusArea(devicePath, indicator);
-    };
-};
 
-function removeIndicator(devicePath) {
-    debug('removeIndicator() called on ' + devicePath);
-    
-    if (Main.panel.statusArea[devicePath]) {
-        let indicator = Main.panel.statusArea[devicePath];
-        indicator.disable();
+        systemIndicator.manager = null; // FIXME
     };
 };
 
@@ -205,17 +335,22 @@ function daemonAppeared(conn, name, name_owner, user_data) {
     // The DBus interface has appeared, setup
     debug('daemonAppeared() called');
     
-    manager = new MConnect.DeviceManager();
-
-    // TODO: GSettings option for what states to show devices
-    // TODO: GSettings option for indicator when no device present
-    for (let devicePath in manager.devices) {
-        let device = manager.devices[devicePath];
-        
-        if (device.active) {
-            addIndicator(devicePath);
-        };
+    systemIndicator.manager = new MConnect.DeviceManager();
+    
+    // Add current devices
+    for (let busPath in systemIndicator.manager.devices) {
+        systemIndicator.addDevice(
+            systemIndicator.manager,
+            'device-added',
+            systemIndicator.manager.devices[busPath]
+        );
     };
+    
+    // Watch for new devices
+    systemIndicator.manager.connect(
+        'device-added',
+        Lang.bind(systemIndicator, systemIndicator.addDevice)
+    );
 };
 
 function daemonVanished(conn, name, name_owner, user_data) {
@@ -223,34 +358,23 @@ function daemonVanished(conn, name, name_owner, user_data) {
     debug('daemonVanished() called');
     
     // If a manager is initialized, clear it
-    if (manager != null) {
-        let devicePaths = Object.keys(manager.devices);
+    if (systemIndicator.manager != null) {
     
-        for (let devicePath in devicePaths) {
-            removeIndicator(devicePaths[devicePath]);
+        for (let busPath in systemIndicator.manager.devices) {
+            systemIndicator.removeDevice(systemIndicator.manager.devices[busPath]);
         };
     
-        manager.devices = {};
-        manager.proxy = null;
-        manager = null;
-    }
+        systemIndicator.manager = null;
+    };
     
-    // Start the manager
+    //
+    systemIndicator._sync();
+    
+    // Start the daemon or wait for it to start
     if (Settings.get_boolean('start-daemon')) {
         MConnect.startDaemon();
     } else {
         log('waiting for daemon');
-    };
-};
-
-function settingsChanged(settings, key, user_data) {
-    // If 'start-daemon' was enabled and mconnect is not running, start it
-    if (key == 'start-daemon') {
-        debug('start-daemon changed');
-        
-        if (Settings.get_boolean(key) && manager == null) {
-            MConnect.startDaemon();
-        };
     };
 };
 
