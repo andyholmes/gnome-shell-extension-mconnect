@@ -132,9 +132,9 @@ const Battery = new Lang.Class({
         this.proxy.connectSignal("Battery", Lang.bind(this, this._Battery));
     },
     
-    // Callbacks
+    // MConnect Callbacks
     _Battery: function (proxy, sender, level_charging) {
-        debug("mconnect._Battery(): " + level_charging);
+        debug("mconnect.Battery._Battery(): " + level_charging);
                     
         this._level = level_charging[0];
         this._charging = level_charging[1];
@@ -172,9 +172,9 @@ const Ping = new Lang.Class({
         this.proxy.connectSignal("Ping", Lang.bind(this, this._Ping));
     },
     
-    // Callbacks
+    // MConnect Callbacks
     _Ping: function (proxy, sender) {
-        debug("mconnect._Ping()");
+        debug("mconnect.Ping._Ping()");
         
         // have the device re-emit the signal
         this.device.emit("received::ping", null);
@@ -228,7 +228,7 @@ const Device = new Lang.Class({
         //this.proxy.connectSignal("initPlugins", Lang.bind(this, this._initPlugins));
     },
     
-    // Callbacks
+    // MConnect Callbacks
     _initPlugins: function (proxy, sender, cb_data) {
         // NOTE: not actually a signal yet
         debug("mconnect.Device._initPlugins()");
@@ -240,6 +240,8 @@ const Device = new Lang.Class({
                 this.plugins[pluginName] = new Plugins[pluginName](this);
             }
         }
+        
+        this.emit("changed::plugins", null);
     },
     
     // Public Methods
@@ -292,10 +294,10 @@ const DeviceManager = new Lang.Class({
         //this.proxy.connectSignal("deviceVisibilityChanged", Lang.bind(this, this._deviceVisibilityChanged));
     },
     
-    // Callbacks
+    // MConnect Callbacks
     _deviceAdded: function (manager, signal_id, busPath) {
         // NOTE: not actually a signal yet
-        debug("mconnect.DeviceManager.deviceAdded(): " + busPath);
+        debug("mconnect.DeviceManager._deviceAdded(" + busPath + ")");
         
         this.devices[busPath] = new Device(busPath);
         this.emit("device::added", null, busPath);
@@ -303,7 +305,7 @@ const DeviceManager = new Lang.Class({
     
     _deviceRemoved: function (manager, signal_id, busPath) {
         // NOTE: not actually a signal yet
-        debug("mconnect.DeviceManager.deviceRemoved(): " + busPath);
+        debug("mconnect.DeviceManager._deviceRemoved(" + busPath + ")");
         
         this.devices[busPath].destroy();
         delete this.devices[busPath];

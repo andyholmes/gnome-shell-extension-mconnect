@@ -77,14 +77,14 @@ const DeviceMenu = new Lang.Class({
     
     // Callbacks
     _battery: function (device, signal_id, level_state) {
-        // FIXME: called 5+ times per signal
         // Set the icon name, relevant to battery level and charging state
-        debug("Signal Callback: DeviceMenu._battery(): " + level_state);
+        debug("extension.DeviceMenu._battery(" + level_state + ")");
         
-        let icon;
-        
+        // Battery plugin disabled
+        if (!this.device.plugins.battery) {
+            level_state = [ -1, false ];
         // Try the get data from the device itself
-        if (!level_state) {
+        } else if (!level_state) {
             level_state = [
                 this.device.plugins.battery.level,
                 this.device.plugins.battery.charging
@@ -92,7 +92,9 @@ const DeviceMenu = new Lang.Class({
         }
         
         // Pretty much how upower does it
-        if (level_state[0] == -1) { // Default for mconnect right now
+        let icon;
+        
+        if (level_state[0] == -1) {
             icon = "battery-missing";
         } else if (level_state[0] < 3) {
             icon = level_state[1] ? "battery-empty-charging" : "battery-empty";
@@ -161,19 +163,21 @@ const DeviceIndicator = new Lang.Class({
         });
         this.actor.add_actor(this.icon);
         
+        // Set icon
         this._status();
         
-        // FIXME: Device Menu
         let menu = new DeviceMenu(device);
-        //menu._setParent(this.actor);
         this.menu.addMenuItem(menu);
         
         // Signals
         this.device.connect("changed::active", Lang.bind(this, this._status));
+        this.device.connect("changed::trusted", Lang.bind(this, this._status));
     },
     
     // Callbacks
     _status: function (device, signal_id, cb_data) {
+        debug("extension.DeviceMenu._status(" + cb_data + ")");
+        
         let icon = this.device.type;
         
         switch (true) {
@@ -207,6 +211,7 @@ const SystemIndicator = new Lang.Class({
         this.parent();
         
         this.manager = null;
+        this._pauseSync = false;
         this.backend = Settings.get_boolean("use-kdeconnect") ? Me.imports.kdeconnect : Me.imports.mconnect;
         
         // device submenus
@@ -277,7 +282,7 @@ const SystemIndicator = new Lang.Class({
     _isVisible: function (device) {
         // Return boolean whether user considers device visible or not
         // FIXME: dun broken son
-        debug("SystemIndicator._isVisible()");
+        debug("extension.SystemIndicator._isVisible(" + device.busPath + ")");
         
         let visible = [];
         
@@ -290,13 +295,14 @@ const SystemIndicator = new Lang.Class({
                 visible.push(device.paired);
         }
         
-        return (!visible.indexOf(false) > -1);
+        return (visible.indexOf(false) < 0);
     },
     
     _sync: function () {
-        debug("SystemIndicator._sync()");
+        debug("extension.SystemIndicator._sync()");
         
         if (this._pauseSync) {
+            debug("extension.SystemIndicator._sync(): paused; skipping");
             return;
         }
         
@@ -329,15 +335,16 @@ const SystemIndicator = new Lang.Class({
         }
     },
     
+    // DBus Callbacks
     _daemonAppeared: function (conn, name, name_owner, cb_data) {
         // The DBus interface has appeared
-        debug("SystemIndicator._daemonAppeared()");
+        debug("extension.SystemIndicator._daemonAppeared()");
         
         // Initialize the manager and add current devices
         this.manager = new this.backend.DeviceManager();
         
         for (let busPath in this.manager.devices) {
-            systemIndicator.addDevice(this.manager, null, busPath);
+            systemIndicator._deviceAdded(this.manager, null, busPath);
         }
         
         // Sync the UI
@@ -346,18 +353,18 @@ const SystemIndicator = new Lang.Class({
         // Watch for new and removed devices
         this.manager.connect(
             "device::added",
-            Lang.bind(this, this.addDevice)
+            Lang.bind(this, this._deviceAdded)
         );
         
         this.manager.connect(
             "device::removed",
-            Lang.bind(this, this.removeDevice)
+            Lang.bind(this, this._deviceRemoved)
         );
     },
     
     _daemonVanished: function (conn, name, name_owner, cb_data) {
         // The DBus interface has vanished
-        debug("SystemIndicator.daemonVanished()");
+        debug("extension.SystemIndicator._daemonVanished()");
         
         // Stop watching for new and remove devices
         // TODO: JS ERROR: Error: No signal connection device::added found
@@ -384,8 +391,8 @@ const SystemIndicator = new Lang.Class({
         }
     },
     
-    addDevice: function (manager, signal_id, busPath) {
-        debug("Signal Callback: SystemIndicator.addDevice: " + busPath);
+    _deviceAdded: function (manager, signal_id, busPath) {
+        debug("extension.SystemIndicator._deviceAdded(" + busPath + ")");
         
         let device = manager.devices[busPath];
         
@@ -400,8 +407,8 @@ const SystemIndicator = new Lang.Class({
         this._sync();
     },
     
-    removeDevice: function (manager, signal_id, busPath) {
-        debug("Signal Callback: SystemIndicator.removeDevice: " + busPath);
+    _deviceRemoved: function (manager, signal_id, busPath) {
+        debug("extension.SystemIndicator._deviceRemoved(" + busPath + ")");
         
         // Per-device indicator
         Main.panel.statusArea[busPath].destroy();
@@ -412,6 +419,7 @@ const SystemIndicator = new Lang.Class({
         this._sync();
     },
     
+    // Public Methods
     destroy: function () {
         this._pauseSync = true;
         this.manager.destroy();

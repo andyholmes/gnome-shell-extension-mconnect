@@ -186,7 +186,9 @@ function startDaemon() {
     log("spawning kdeconnect daemon");
     
     try {
-        Util.spawnCommandLine("kdeconnectd");
+        // FIXME: not working
+        //Util.spawnCommandLine("kdeconnectd");
+        debug('not supported');
         GLib.usleep(10000); // 10ms
     } catch (e) {
         debug("kdeconnect.startDaemon: " + e);
@@ -241,26 +243,26 @@ const Battery = new Lang.Class({
         );
     },
     
-    // Callbacks
+    // KDE Connect Callbacks
     _chargeChanged: function (proxy, sender, level) {
-        debug("kdeconnect._chargeChanged(): " + level[0]);
+        debug("kdeconnect.Battery._chargeChanged(): " + level[0]);
         
-        // re-pack cb_data like an mconnect battery update
+        // re-pack like an mconnect battery update
         let level_charging = [level[0], this.charging];
         // have the device re-emit the signal
         this.device.emit("changed::battery", null, level_charging);
     },
     
     _stateChanged: function (proxy, sender, charging) {
-        debug("kdeconnect._stateChanged(): " + charging[0]);
+        debug("kdeconnect.Battery._stateChanged(): " + charging[0]);
         
-        // re-pack cb_data like an mconnect battery update
+        // re-pack like an mconnect battery update
         let level_charging = [this.level, charging[0]];
         // have the device re-emit the signal
         this.device.emit("changed::battery", null, level_charging);
     },
     
-    // Methods
+    // KDE Connect Methods
     _charge: function () {
         // Returns an integer percentage of the device"s battery remaining
         debug("kdeconnect.Battery._charge()");
@@ -376,7 +378,7 @@ const Device = new Lang.Class({
         this.proxy.connectSignal("trustedChanged", Lang.bind(this, this._trustedChanged));
     },
     
-    // Callbacks
+    // KDE Connect Callbacks
     _nameChanged: function (proxy, sender, name) {
         debug("kdeconnect.Device._nameChanged(): " + name[0]);
         
@@ -537,7 +539,7 @@ const DeviceManager = new Lang.Class({
     
     _deviceAdded: function (proxy, sender, deviceId) {
         // deviceAdded returns a nested array, so that how we do it now
-        debug("kdeconnect.DeviceManager._deviceAdded(): " + deviceId[0]);
+        debug("kdeconnect.DeviceManager._deviceAdded(" + deviceId[0] + ")");
         
         // KDE Connect organizes by device ID, we go by DBus path
         let busPath = "/modules/kdeconnect/devices/" + deviceId[0];
@@ -547,7 +549,8 @@ const DeviceManager = new Lang.Class({
     },
     
     _deviceRemoved: function (proxy, sender, deviceId) {
-        debug("kdeconnect.DeviceManager._deviceRemoved(): " + deviceId[0]);
+        // deviceRemoved returns a nested array, so that how we do it here too
+        debug("kdeconnect.DeviceManager._deviceRemoved(" + deviceId[0] + ")");
         
         // KDE Connect organizes by device ID, we go by DBus path
         let busPath = "/modules/kdeconnect/devices/" + deviceId[0];
