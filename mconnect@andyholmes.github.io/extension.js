@@ -41,20 +41,14 @@ const DeviceMenu = new Lang.Class({
                                                            can_focus: false });
         
         // Send SMS Action
-        this._smsAction = this._createActionButton("user-available-symbolic");
-        this._smsAction.connect("clicked", Lang.bind(this, this._sync));
-        this.actionBar.actor.add(this._smsAction, { expand: true, x_fill: false });
+        this.smsAction = this._createActionButton("user-available-symbolic");
+        this.smsAction.connect("clicked", Lang.bind(this, this._sync));
+        this.actionBar.actor.add(this.smsAction, { expand: true, x_fill: false });
         
         // Find my phone Action
-        this._findAction = this._createActionButton("find-location-symbolic");
-        this._findAction.connect(
-            "clicked", 
-            Lang.bind(
-                this.device.plugins.findmyphone,
-                this.device.plugins.findmyphone.find
-            )
-        );
-        this.actionBar.actor.add(this._findAction, { expand: true, x_fill: false });
+        this.findAction = this._createActionButton("find-location-symbolic");
+        this.findAction.connect("clicked", Lang.bind(this, this._findmyphone));
+        this.actionBar.actor.add(this.findAction, { expand: true, x_fill: false });
         
         // Menu Items // Settings Item
 //        this._setAction = this._createActionButton("preferences-system-symbolic");
@@ -81,37 +75,46 @@ const DeviceMenu = new Lang.Class({
         return icon;
     },
     
-    _battery: function (device, signal_id, cb_data) {
+    // Callbacks
+    _battery: function (device, signal_id, level_state) {
         // FIXME: called 5+ times per signal
         // Set the icon name, relevant to battery level and charging state
-        debug("Signal Callback: DeviceMenu._battery: " + cb_data);
+        debug("Signal Callback: DeviceMenu._battery(): " + level_state);
         
         let icon;
         
         // Try the get data from the device itself
-        if (!cb_data) {
-            cb_data = [
+        if (!level_state) {
+            level_state = [
                 this.device.plugins.battery.level,
                 this.device.plugins.battery.charging
             ];
         }
         
         // Pretty much how upower does it
-        if (cb_data[0] == -1) { // Default for mconnect right now
+        if (level_state[0] == -1) { // Default for mconnect right now
             icon = "battery-missing";
-        } else if (cb_data[0] < 3) {
-            icon = cb_data[1] ? "battery-empty-charging" : "battery-empty";
-        } else if (cb_data[0] < 10) {
-            icon = cb_data[1] ? "battery-caution-charging" : "battery-caution";
-        } else if (cb_data[0] < 30) {
-            icon = cb_data[1] ? "battery-low-charging" : "battery-low";
-        } else if (cb_data[0] < 60) {
-            icon = cb_data[1] ? "battery-good-charging" : "battery-good";
-        } else if (cb_data[0] >= 60) {
-            icon = cb_data[1] ? "battery-full-charging" : "battery-full";
+        } else if (level_state[0] < 3) {
+            icon = level_state[1] ? "battery-empty-charging" : "battery-empty";
+        } else if (level_state[0] < 10) {
+            icon = level_state[1] ? "battery-caution-charging" : "battery-caution";
+        } else if (level_state[0] < 30) {
+            icon = level_state[1] ? "battery-low-charging" : "battery-low";
+        } else if (level_state[0] < 60) {
+            icon = level_state[1] ? "battery-good-charging" : "battery-good";
+        } else if (level_state[0] >= 60) {
+            icon = level_state[1] ? "battery-full-charging" : "battery-full";
         }
         
         this.deviceItem.icon.icon_name = icon + "-symbolic";
+    },
+    
+    _findmyphone: function (button, signal_id) {
+        debug("DeviceMenu._findmyphone()");
+        
+        if (this.device.plugins.findmyphone) {
+            this.device.plugins.findmyphone.find();
+        }
     },
     
     _sync: function () {
@@ -122,12 +125,12 @@ const DeviceMenu = new Lang.Class({
                 // TODO: handle the battery differently
                 break;
             case (this.device.plugins.findmyphone):
-                this._findAction.visible = true;
+                this.findAction.visible = true;
                 break;
             case (this.device.plugins.ping):
                 break;
             case (this.device.plugins.sms):
-                this._smsAction.visible = true;
+                this.smsAction.visible = true;
                 break;
             case (this.device.plugins.telephony):
                 break;
@@ -169,15 +172,12 @@ const DeviceIndicator = new Lang.Class({
         this.device.connect("changed::active", Lang.bind(this, this._status));
     },
     
+    // Callbacks
     _status: function (device, signal_id, cb_data) {
-        // none     All other states
-        // paired   Handshake occurred/encryption established
-        // allowed  Permitted to be "active", explicitly in "mconnect.conf"
-        // active   Connected, implying "paired" & "allowed"
         let icon = this.device.type;
         
         switch (true) {
-            // Type correction
+            // Type correction for icons
             case (this.device.type == "phone"):
                 icon = "smartphone";
             // Status
@@ -250,7 +250,6 @@ const SystemIndicator = new Lang.Class({
         Main.sessionMode.connect("updated", Lang.bind(this, this._sessionUpdated));
         
         // Sync the UI
-        this._sync();
         this._sessionUpdated();
         
         // Watch for DBus service
@@ -265,13 +264,16 @@ const SystemIndicator = new Lang.Class({
         // Watch "start-daemon" setting
         Settings.connect(
             "changed::start-daemon",
-            function (settings, key, cb_data) {
-                debug("Signal: changed::start-daemon");
-                
-                if (Settings.get_boolean(key) && this.manager == null) {
-                    this.backend.startDaemon();
+            Lang.bind(
+                this,
+                function (settings, key, cb_data) {
+                    debug("Settings: changed::start-daemon");
+                    
+                    if (Settings.get_boolean(key) && this.manager == null) {
+                        this.backend.startDaemon();
+                    }
                 }
-            }
+            )
         );
     },
 
@@ -284,8 +286,9 @@ const SystemIndicator = new Lang.Class({
     
     // UI Settings callbacks
     _isVisible: function (device) {
-        debug("SystemIndicator._isVisible()");
         // Return boolean whether user considers device visible or not
+        // FIXME: dun broken son
+        debug("SystemIndicator._isVisible()");
         
         let visible = [];
         
@@ -312,7 +315,7 @@ const SystemIndicator = new Lang.Class({
         this.enableItem.actor.visible = (this.manager) ? false : true;
         
         for (let busPath in this.deviceMenus) {
-            if (!Object.keys(this.deviceMenus).length) {
+            if (Object.keys(this.deviceMenus).length < 1) {
                 return;
             }
         
@@ -425,11 +428,13 @@ const SystemIndicator = new Lang.Class({
         this.manager.destroy();
         delete this.manager;
         
-        // TODO: check this
+        // Destroy the UI
+        this.devicesSection.destroy();
         this.mobileDevices.destroy();
+        this.systemIndicator.destroy();
         this.menu.destroy();
     
-        // Stop watching "start-daemon" setting
+        // Stop watching "start-daemon" & DBus
         Settings.disconnect("changed::start-daemon");
         
         // Stop watching for DBus Service
@@ -451,6 +456,16 @@ function enable() {
     
     // Create the UI
     systemIndicator = new SystemIndicator();
+    
+    Settings.connect(
+        "changed::use-kdeconnect",
+        function (settings, key, cb_data) {
+            debug("Settings: changed::use-kdeconnect");
+            
+            systemIndicator.destroy();
+            systemIndicator = new SystemIndicator();
+        }
+    );
 };
  
 function disable() {
