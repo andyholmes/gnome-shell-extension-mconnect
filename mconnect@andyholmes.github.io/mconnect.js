@@ -62,6 +62,8 @@ const BatteryProxy = Gio.DBusProxy.makeProxyWrapper('\
       <arg type="u" name="level"/> \
       <arg type="b" name="charging"/> \
     </signal> \
+    <property type="u" name="Level" access="readwrite"/> \
+    <property type="b" name="Charging" access="readwrite"/> \
   </interface> \
 </node> \
 ');
@@ -119,15 +121,11 @@ const Battery = new Lang.Class({
         );
         
         // Properties
-        // TODO: will be a DBus properties/methods, for now use the Battery
-        //       signal to update the properties
         this.device = device;
-        this._charging = false;
-        this._level = -1;
         
         Object.defineProperties(this, {
-            charging: { value: this._charging },
-            level: { value: this._level }
+            charging: { value: this.proxy.Charging },
+            level: { value: this.proxy.Level }
         });
         
         // Signals

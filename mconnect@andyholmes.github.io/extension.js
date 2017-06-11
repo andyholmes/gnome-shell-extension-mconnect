@@ -247,10 +247,6 @@ const SystemIndicator = new Lang.Class({
         Settings.connect("changed::show-inactive", Lang.bind(this, this._sync));
         Settings.connect("changed::show-unallowed", Lang.bind(this, this._sync));
         Settings.connect("changed::show-unpaired", Lang.bind(this, this._sync));
-        Main.sessionMode.connect("updated", Lang.bind(this, this._sessionUpdated));
-        
-        // Sync the UI
-        this._sessionUpdated();
         
         // Watch for DBus service
         this._watchdog = Gio.bus_watch_name(
@@ -275,13 +271,6 @@ const SystemIndicator = new Lang.Class({
                 }
             )
         );
-    },
-
-    _sessionUpdated: function (sessionMode) {
-        // Keep menu disabled when desktop locked
-        // FIXME: Extension.disable() is called anyways?
-        let sensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
-        this.menu.setSensitive(sensitive);
     },
     
     // UI Settings callbacks
