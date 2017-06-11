@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // Imports
 const Lang = imports.lang;
@@ -9,16 +9,14 @@ const Util = imports.misc.util;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
-
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const { log, debug, assert, Settings } = Me.imports.prefs;
 
-// Constants
-const BUS_NAME = 'org.mconnect';
 
+// DBus Constants
+const BUS_NAME = "org.mconnect";
 
-// DBus Interface Proxies
 const ManagerProxy = Gio.DBusProxy.makeProxyWrapper('\
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
@@ -54,20 +52,6 @@ const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
 ');
 
 
-// module Methods
-function startDaemon() {
-    // Start the mconnect daemon
-    log('spawning mconnect daemon');
-    
-    try {
-        Util.spawnCommandLine('mconnect -d');
-        GLib.usleep(10000); // 10ms
-    } catch (e) {
-        debug('startDaemon: ' + e);
-    };
-};
-
-
 // Plugins
 const BatteryProxy = Gio.DBusProxy.makeProxyWrapper('\
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
@@ -93,197 +77,179 @@ const PingProxy = Gio.DBusProxy.makeProxyWrapper('\
 </node> \
 ');
 
-// A DBus Interface wrapper for org.connect.Device.Battery
+
+// Start the backend daemon
+function startDaemon() {
+    log("spawning mconnect daemon");
+    
+    try {
+        Util.spawnCommandLine("mconnect -d");
+        GLib.usleep(10000); // 10ms
+    } catch (e) {
+        debug("mconnect.startDaemon: " + e);
+    }
+}
+
+
+// Start the backend settings
+function startSettings() {
+    log("spawning mconnect settings");
+    
+    try {
+        Util.spawn(["gnome-shell-extension-prefs", Me.metadata.uuid]);
+        GLib.usleep(10000); // 10ms
+    } catch (e) {
+        debug("mconnect.startSettings: " + e);
+    }
+}
+
+
+// A DBus Interface wrapper for the battery plugin
 const Battery = new Lang.Class({
     Name: "Battery",
     
     _init: function (device) {
-        debug('initializing battery plugin');
+        debug("mconnect.Battery._init(" + device.busPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new BatteryProxy(
             Gio.DBus.session,
-            'org.mconnect',
+            BUS_NAME,
             device.busPath
         );
         
         // Properties
+        // TODO: will be a DBus properties/methods, for now use the Battery
+        //       signal to update the properties
         this.device = device;
-        
-        // TODO: will be a DBus property/method, for now use the Battery
-        //        signal to update this variable
         this._charging = false;
-        Object.defineProperty(this, 'charging', {
-            get: function () { return this._charging; },
-            set: function (charging) { this._charging = charging; }
-        });
-        debug('Device.battery.charging: ' + this.charging);
+        this._level = -1;
         
-        // TODO: will be a DBus property/method, for now use the Battery
-        //        signal to update this variable
-        this._level = 0;
-        Object.defineProperty(this, 'level', {
-            get: function () { return this._level; },
-            set: function (arg) { return this._level; }
+        Object.defineProperties(this, {
+            charging: { value: this._charging },
+            level: { value: this._level }
         });
-        debug('Device.battery.level: ' + this.level);
         
-        this.proxy.connectSignal(
-            'Battery',
-            Lang.bind(
-                this,
-                function (proxy, sender, cb_data) {
-                    debug(this.device.busPath + ' emitted Battery: ' + cb_data);
-                    
-                    // have the device re-emit the signal
-                    this.device.emit('battery', null, cb_data);
-                }
-            )
-        );
+        // Signals
+        this.proxy.connectSignal("Battery", Lang.bind(this, this._Battery));
     },
     
+    // Callbacks
+    _Battery: function (proxy, sender, level_charging) {
+        debug("mconnect._Battery(): " + level_charging);
+                    
+        this._level = level_charging[0];
+        this._charging = level_charging[1];
+        // have the device re-emit the signal
+        this.device.emit("changed::battery", null, level_charging);
+    },
+    
+    // Public Methods
     destroy: function () {
-        // TODO: more
+        // TODO: disconnect signals
         delete this.proxy;
     }
 });
 
 Signals.addSignalMethods(Battery.prototype);
 
-// A DBus Interface wrapper for org.connect.Device.Battery
+// A DBus Interface wrapper for the ping plugin
 const Ping = new Lang.Class({
     Name: "Ping",
     
     _init: function (device) {
-        debug('initializing ping plugin');
+        debug("mconnect.Ping._init(" + device.busPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new PingProxy(
             Gio.DBus.session,
-            'org.mconnect',
+            BUS_NAME,
             device.busPath
         );
         
         // Properties
         this.device = device;
         
-        this.proxy.connectSignal(
-            'Ping',
-            Lang.bind(
-                this,
-                function (proxy, sender, cb_data) {
-                    debug(this.device.busPath + ' emitted Ping');
-                    
-                    // have the device re-emit the signal
-                    this.device.emit('ping', cb_data);
-                }
-            )
-        );
+        // Signals
+        this.proxy.connectSignal("Ping", Lang.bind(this, this._Ping));
     },
     
+    // Callbacks
+    _Ping: function (proxy, sender) {
+        debug("mconnect._Ping()");
+        
+        // have the device re-emit the signal
+        this.device.emit("received::ping", null);
+    },
+    
+    // Public Methods
     destroy: function () {
-        // TODO: more
+        // TODO: disconnect signals
         delete this.proxy;
     }
 });
 
-Signals.addSignalMethods(Battery.prototype);
+Signals.addSignalMethods(Ping.prototype);
 
+// Our supported plugins mapping
 const Plugins = {
-    'battery': Battery,
-    'ping': Ping
+    "battery": Battery,
+    "ping": Ping
 };
 
 
-// A DBus Interface wrapper for org.mconnect.Device
+// A DBus Interface wrapper for a device
 const Device = new Lang.Class({
-    Name: 'Device',
+    Name: "Device",
     
     _init: function (busPath) {
         // Create proxy for the DBus Interface
-        this.proxy = new DeviceProxy(Gio.DBus.session, 'org.mconnect', busPath);
+        this.proxy = new DeviceProxy(Gio.DBus.session, BUS_NAME, busPath);
         
         // Properties
         this.busPath = busPath;
         this.plugins = {};
         
-        Object.defineProperty(this, 'id', {
-            get: function () { return this.proxy.Id; },
-            set: function (arg) {}
+        Object.defineProperties(this, {
+            id: { value: this.proxy.Id },
+            name: { value: this.proxy.Name },
+            type: { value: this.proxy.DeviceType },
+            version: { value: this.proxy.ProtocolVersion }, // TODO: not a kdeconnect property
+            address: { value: this.proxy.Address }, // TODO: not a kdeconnect property
+            paired: { value: this.proxy.IsPaired }, // TODO: not a kdeconnect property
+            allowed: { value: this.proxy.Allowed }, // TODO: this is actually changeable
+            active: { value: this.proxy.isActive }, // kdeconnect: reachable
+            incomingCapabilities: { value: this.proxy.IncomingCapabilities },
+            outgoingCapabilities: { value: this.proxy.OutgoingCapabilities }
         });
-        debug('Device.id: ' + this.id);
-        
-        Object.defineProperty(this, 'name', {
-            get: function () { return this.proxy.Name; },
-            set: function (name) { return; }
-        });
-        debug('Device.name: ' + this.name);
-        
-        Object.defineProperty(this, 'type', {
-            get: function () { return this.proxy.DeviceType; },
-            set: function (arg) {}
-        });
-        debug('Device.type: ' + this.type);
-        
-        Object.defineProperty(this, 'version', {
-            get: function () { return this.proxy.ProtocolVersion; },
-            set: function (arg) {}
-        });
-        debug('Device.version: ' + this.version);
-        
-        Object.defineProperty(this, 'address', {
-            get: function () { return this.proxy.Address; },
-            set: function (arg) {}
-        });
-        debug('Device.address: ' + this.address);
-        
-        Object.defineProperty(this, 'paired', {
-            get: function () { return this.proxy.IsPaired; },
-            set: function (arg) {}
-        });
-        debug('Device.paired: ' + this.paired);
-        
-        Object.defineProperty(this, 'allowed', {
-            get: function () { return this.proxy.Allowed; },
-            set: function (arg) { return arg; }
-        });
-        debug('Device.allowed: ' + this.allowed);
-        
-        Object.defineProperty(this, 'active', {
-            get: function () { return this.proxy.Allowed; },
-            set: function (arg) { return arg; }
-        });
-        debug('Device.active: ' + this.active);
-        
-        Object.defineProperty(this, 'incomingCapabilities', {
-            get: function () { return this.proxy.IncomingCapabilities; },
-            set: function (arg) { return; }
-        });
-        debug('Device.incomingCapabilities: ' + this.incomingCapabilities);
-        
-        Object.defineProperty(this, 'outgoingCapabilities', {
-            get: function () { return this.proxy.OutgoingCapabilities; },
-            set: function (arg) { return arg; }
-        });
-        debug('Device.outgoingCapabilities: ' + this.outgoingCapabilities);
         
         // Plugins
-        // TODO: outgoing vs incoming? supported vs enabled reporting?
+        this._initPlugins();
+        
+        // TODO: Signals
+        //this.proxy.connectSignal("initPlugins", Lang.bind(this, this._initPlugins));
+    },
+    
+    // Callbacks
+    _initPlugins: function (proxy, sender, cb_data) {
+        // NOTE: not actually a signal yet
+        debug("mconnect.Device._initPlugins()");
+        
         for (let pluginName of this.outgoingCapabilities) {
-            pluginName = pluginName.substring(11)
+            pluginName = pluginName.substring(11);
             
             if (Plugins.hasOwnProperty(pluginName)) {
                 this.plugins[pluginName] = new Plugins[pluginName](this);
-            };
-        };
+            }
+        }
     },
     
+    // Public Methods
     destroy: function () {
-        // TODO: run through the whole thing
         for (let pluginName in this.plugins) {
             this.plugins[pluginName].destroy();
             delete this.plugins[pluginName];
-        };
+        }
         
         delete this.proxy;
     }
@@ -292,9 +258,9 @@ const Device = new Lang.Class({
 Signals.addSignalMethods(Device.prototype);
 
 
-// A DBus Interface wrapper for org.mconnect.DeviceManager
+// A DBus Interface wrapper for a device manager
 const DeviceManager = new Lang.Class({
-    Name: 'DeviceManager',
+    Name: "DeviceManager",
     
     devices: {},
     
@@ -302,56 +268,70 @@ const DeviceManager = new Lang.Class({
         // Create proxy wrapper for DBus Interface
         this.proxy = new ManagerProxy(
             Gio.DBus.session,
-            'org.mconnect',
-            '/org/mconnect/manager'
+            BUS_NAME,
+            "/org/mconnect/manager"
         );
         
         // Properties
-        Object.defineProperty(this, 'name', {
-            get: function () {
-                // TODO: this is actually a read/write property for KDE Connect
-                //       but mconnect always reports username@hostname.
-                return GLib.get_user_name() + '@' + GLib.get_host_name();
+        Object.defineProperties(this, {
+            name: {
+                get: function () {
+                    // TODO: this is actually a read/write property for KDE 
+                    // Connect but mconnect always reports username@hostname.
+                    return GLib.get_user_name() + "@" + GLib.get_host_name();
+                }
             }
         });
-        debug('DeviceManager.name: ' + this.name);
         
         // Add currently managed devices
         for (let busPath of this._ListDevices()) {
             this._deviceAdded(this, null, busPath);
-        };
+        }
+        
+        // TODO: Signals
+        //this.proxy.connectSignal("deviceAdded", Lang.bind(this, this._deviceAdded));
+        //this.proxy.connectSignal("deviceRemoved", Lang.bind(this, this._deviceRemoved));
+        //this.proxy.connectSignal("deviceVisibilityChanged", Lang.bind(this, this._deviceVisibilityChanged));
     },
     
+    // Callbacks
     _deviceAdded: function (manager, signal_id, busPath) {
-        debug('Signal Callback: DeviceManager.deviceAdded: ' + busPath);
+        // NOTE: not actually a signal yet
+        debug("mconnect.DeviceManager.deviceAdded(): " + busPath);
         
         this.devices[busPath] = new Device(busPath);
-        this.emit('device-added', null, busPath);
+        this.emit("device::added", null, busPath);
     },
     
     _deviceRemoved: function (manager, signal_id, busPath) {
-        debug('Signal Callback: DeviceManager.deviceRemoved: ' + busPath);
+        // NOTE: not actually a signal yet
+        debug("mconnect.DeviceManager.deviceRemoved(): " + busPath);
         
         this.devices[busPath].destroy();
         delete this.devices[busPath];
-        this.emit('device-removed', null, busPath);
+        this.emit("device::removed", null, busPath);
     },
     
-    destroy: function () {
-        for (let busPath in this.devices) {
-            this._deviceRemoved(this, null, busPath);
-        };
-    },
-    
-    // Methods: remove the DBus cruft, but otherwise preserved
+    // MConnect Methods
     _AllowDevice: function (busPath) {
-        // Add device at DBus path *busPath*
-        return this.proxy.AllowDeviceSync(busPath)[0];
+        // Mark the device at *busPath* as allowed
+        debug("mconnect.DeviceManager._AllowDevice()");
+        
+        return this.proxy.AllowDeviceSync(busPath);
     },
     
     _ListDevices: function () {
-        // Return an Array of DBus paths to managed devices
+        // Return an array in an array of device DBus paths
+        debug("mconnect.DeviceManager._ListDevices()");
+        
         return this.proxy.ListDevicesSync()[0];
+    },
+    
+    // Public Methods
+    destroy: function () {
+        for (let busPath in this.devices) {
+            this._deviceRemoved(this, null, busPath);
+        }
     }
 });
 

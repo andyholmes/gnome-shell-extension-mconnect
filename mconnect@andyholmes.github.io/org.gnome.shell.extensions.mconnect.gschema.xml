@@ -6,11 +6,6 @@
       <summary>Print debug messages to log</summary>
       <description>If true the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
-    <key type="b" name="start-daemon">
-      <default>true</default>
-      <summary>Start the daemon automatically</summary>
-      <description>If true the daemon will be automatically started and restarted if it stops. If false the extension will wait for the daemon to be started.</description>
-    </key>
     <key type="b" name="per-device-indicators">
       <default>false</default>
       <summary>Show per-device indicators</summary>
@@ -30,6 +25,16 @@
       <default>false</default>
       <summary>Show unpaired devices</summary>
       <description>If true, devices will be shown in the interface even if they are unpaired.</description>
+    </key>
+    <key type="b" name="start-daemon">
+      <default>true</default>
+      <summary>Start the daemon automatically</summary>
+      <description>If true the daemon will be automatically started and restarted if it stops. If false the extension will wait for the daemon to be started.</description>
+    </key>
+    <key type="b" name="use-kdeconnect">
+      <default>false</default>
+      <summary>Use KDE Connect</summary>
+      <description>Use KDE Connect as the backend, instead of MConnect.</description>
     </key>
   </schema>
 </schemalist>

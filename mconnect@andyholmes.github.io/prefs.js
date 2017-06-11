@@ -67,6 +67,7 @@ function buildPrefsWidget() {
         'show-unallowed',
         'show-unpaired',
         'start-daemon',
+        'use-kdeconnect',
         'debug'
     ];
     
