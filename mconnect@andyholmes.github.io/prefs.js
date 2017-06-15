@@ -6,46 +6,8 @@ const Lang = imports.lang;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const { debug, Schema, Settings } = Me.imports.utils;
 
-
-// Settings
-// FIXME: this is all just crazy
-let schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-    Me.dir.get_path(),
-    Gio.SettingsSchemaSource.get_default(),
-    false
-);
-const Schema = schemaSource.lookup(Me.metadata['settings-schema'], true);
-
-if (!Schema) {
-    schemaSource = Gio.SettingsSchemaSource.get_default();
-    const Schema = schemaSource.lookup(Me.metadata['settings-schema'], true);
-};
-
-if (!Schema) {
-    throw new Error('Could not find schema for ' + Me.metadata['settings-schema']);
-};
-
-const Settings = new Gio.Settings({ settings_schema: Schema });
-
-// Logging
-function log(msg) {
-  global.log('[' + Me.uuid + '] ' + msg);
-}
-
-function debug(msg) {
-    if (Settings.get_boolean('debug')) {
-        log('DEBUG: ' + msg);
-    };
-}
-
-function assert(condition, msg) {
-    if (!condition) {
-        msg = msg || 'Assertion failed'
-        debug('Assertion failed: ' + msg);
-        throw new Error('Assertion failed: ' + msg)
-    };
-};
 
 function init() {
     debug('initializing preferences');
@@ -85,7 +47,23 @@ function buildPrefsWidget() {
     };
 
     // About
-    // TODO: this can all be better
+    // FIXME: Gtk.show_about_dialog()
+//    Gtk.show_about_dialog (
+//        window,
+//        "artists", artists,
+//        "authors", authors,
+//        "translator-credits", "translator-credits",
+//        "program-name", Me.metadata.name.toString(),
+//        "title", "About " + Me.metadata.name.toString(),
+//        "comments", Me.metadata.description.toString(),
+//        "copyright", "Copyright 2017 Andy Holmes",
+//        "license-type", Gtk.License.GPL_2_0,
+//        "logo-icon-name", "x-office-address-book",
+//        "version", Me.metadata.version.toString(),
+//        "website", Me.metadata.url.toString(),
+//        "wrap-license", true);
+//    }
+//    
     builder.get_object('extension-name').set_label(Me.metadata.name.toString());
     builder.get_object('extension-description').set_label(Me.metadata.description.toString());
     builder.get_object('extension-url').set_uri(Me.metadata.url.toString());

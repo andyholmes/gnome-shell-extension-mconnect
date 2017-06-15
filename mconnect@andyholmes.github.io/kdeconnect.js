@@ -3,15 +3,19 @@
 // Imports
 const Lang = imports.lang;
 const Signals = imports.signals;
-const Main = imports.ui.main;
-const Util = imports.misc.util;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
 // Local Imports
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.prefs;
+function getPath() {
+    // Diced from: https://github.com/optimisme/gjs-examples/
+    let m = new RegExp('@(.+):\\d+').exec((new Error()).stack.split('\n')[1]);
+    return Gio.File.new_for_path(m[1]).get_parent().get_path();
+}
+
+imports.searchPath.push(getPath());
+const { debug, Settings } = imports.utils;
 
 
 // DBus Constants
@@ -160,6 +164,22 @@ const FindMyPhoneProxy = Gio.DBusProxy.makeProxyWrapper('\
 </node> \
 ');
 
+const NotificationProxy = Gio.DBusProxy.makeProxyWrapper('\
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
+<node> \
+  <interface name="org.kde.kdeconnect.device.notifications.notification"> \
+    <property name="internalId" type="s" access="read"/> \
+    <property name="appName" type="s" access="read"/> \
+    <property name="ticker" type="s" access="read"/> \
+    <property name="iconPath" type="s" access="read"/> \
+    <property name="dismissable" type="b" access="read"/> \
+    <method name="dismiss"> \
+    </method> \
+  </interface> \
+</node> \
+');
+
 const NotificationsProxy = Gio.DBusProxy.makeProxyWrapper('\
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
@@ -180,15 +200,32 @@ const NotificationsProxy = Gio.DBusProxy.makeProxyWrapper('\
 </node> \
 ');
 
+const TelephonyProxy = Gio.DBusProxy.makeProxyWrapper('\
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
+<node> \
+  <interface name="org.kde.kdeconnect.device.telephony"> \
+    <method name="sendSms"> \
+      <arg name="phoneNumber" type="s" direction="in"/> \
+      <arg name="messageBody" type="s" direction="in"/> \
+    </method> \
+  </interface> \
+</node> \
+');
+
 
 // Start the backend daemon
 function startDaemon() {
-    log("spawning kdeconnect daemon");
+    debug("spawning kdeconnect daemon");
     
     try {
-        // FIXME: not working
-        //Util.spawnCommandLine("kdeconnectd");
-        debug('not supported');
+        // kdeconnectd isn't in PATH (at least on Ubuntu)
+        let [res, out] = GLib.spawn_command_line_sync(
+            "locate -br '^kdeconnectd$'"
+        );
+        
+        // TODO: check this works, re:platform offscreen
+        GLib.spawn_command_line_async(out.toString() + " -platform offscreen");
         GLib.usleep(10000); // 10ms
     } catch (e) {
         debug("kdeconnect.startDaemon: " + e);
@@ -198,10 +235,10 @@ function startDaemon() {
 
 // Start the backend settings
 function startSettings() {
-    log("spawning kdeconnect settings");
+    debug("spawning kdeconnect settings");
     
     try {
-        Util.spawnCommandLine("kcmshell5 kcm_kdeconnect");
+        GLib.spawn_command_line_async("kcmshell5 kcm_kdeconnect");
         GLib.usleep(10000); // 10ms
     } catch (e) {
         debug("kdeconnect.startSettings: " + e);
@@ -245,7 +282,7 @@ const Battery = new Lang.Class({
     
     // KDE Connect Callbacks
     _chargeChanged: function (proxy, sender, level) {
-        debug("kdeconnect.Battery._chargeChanged(): " + level[0]);
+        debug("kdeconnect.Battery._chargeChanged(" + level[0] + ")");
         
         // re-pack like an mconnect battery update
         let level_charging = [level[0], this.charging];
@@ -254,7 +291,7 @@ const Battery = new Lang.Class({
     },
     
     _stateChanged: function (proxy, sender, charging) {
-        debug("kdeconnect.Battery._stateChanged(): " + charging[0]);
+        debug("kdeconnect.Battery._stateChanged(" + charging[0] + ")");
         
         // re-pack like an mconnect battery update
         let level_charging = [this.level, charging[0]];
@@ -321,24 +358,144 @@ const FindMyPhone = new Lang.Class({
     
     // Public Methods
     find: function () {
-        // FIXME: ...takes...a...while
+        // TODO: ...takes...a...while, async?
         debug("kdeconnect.FindMyPhone.find()");
         
         this._ring();
     },
     
     destroy: function () {
+        delete this.proxy;
+    }
+});
+
+Signals.addSignalMethods(FindMyPhone.prototype);
+
+
+// A DBus Interface wrapper for the notifications plugin
+// FIXME: gnome-shell freaks if you use "Notifications"
+const Notificationz = new Lang.Class({
+    Name: "Notificationz",
+    
+    _init: function (device) {
+        debug("kdeconnect.Notifications._init(" + device.busPath + ")");
+        
+        // Create proxy for the DBus Interface
+        this.proxy = new NotificationsProxy(
+            Gio.DBus.session,
+            BUS_NAME,
+            device.busPath
+        );
+        
+        // Properties
+        this.device = device;
+        
+        Object.defineProperties(this, {
+            notifications: { get: this._activeNotifications }
+        });
+        
+        // Signals
+        this.proxy.connectSignal(
+            "notificationPosted",
+            Lang.bind(this, this._notificationPosted)
+        );
+        
+        this.proxy.connectSignal(
+            "notificationRemoved",
+            Lang.bind(this, this._notificationRemoved)
+        );
+        
+        this.proxy.connectSignal(
+            "allNotificationsRemoved",
+            Lang.bind(this, this._allNotificationsRemoved)
+        );
+    },
+    
+    // Callbacks
+    _allNotificationsRemoved: function (proxy, sender) {
+        debug("kdeconnect.Notifications._allNotificationsRemoved()");
+        
+        // have the device re-emit the signal
+        this.device.emit("notification::dismissed-all", null);
+    },
+    
+    _notificationPosted: function (proxy, sender, busPath) {
+        debug("kdeconnect.Notifications._notificationPosted(" + busPath[0] + ")");
+        
+        // have the device re-emit the signal
+        this.device.emit("notification::received", null, busPath[0]);
+    },
+    
+    _notificationRemoved: function (proxy, sender, busPath) {
+        debug("kdeconnect.Notifications._notificationRemoved(" + busPath[0] + ")");
+        
+        // have the device re-emit the signal
+        this.device.emit("notification::dismissed", null, busPath[0]);
+    },
+    
+    // KDE Connect Methods
+    _activeNotifications: function () {
+        debug("kdeconnect.Notifications._activeNotifications()");
+        
+        return this.proxy.activeNotificationsSync()[0];
+    },
+    
+    // Public Methods
+    destroy: function () {
         // TODO: disconnect signals
         delete this.proxy;
     }
 });
 
-Signals.addSignalMethods(Battery.prototype);
+Signals.addSignalMethods(Notificationz.prototype);
+
+
+// A DBus Interface wrapper for the telephony plugin
+const Telephony = new Lang.Class({
+    Name: "Telephony",
+    
+    _init: function (device) {
+        debug("kdeconnect.Telephony._init(" + device.busPath + ")");
+        
+        // Create proxy for the DBus Interface
+        this.proxy = new TelephonyProxy(
+            Gio.DBus.session,
+            BUS_NAME,
+            device.busPath + "/telephony"
+        );
+        
+        // Properties
+        this.device = device;
+    },
+    
+    // KDE Connect Methods
+    _sendSms: function (phoneNumber, messageBody) {
+        debug("kdeconnect.Telephony._sendSms(" + messageBody + ")");
+        
+        this.proxy.sendSmsSync(phoneNumber, messageBody);
+    },
+    
+    // Public Methods
+    send: function (number, message) {
+        debug("kdeconnect.Telephony.send(" + message + ")");
+        
+        this._sendSms(number, message);
+    },
+    
+    destroy: function () {
+        delete this.proxy;
+    }
+});
+
+Signals.addSignalMethods(Telephony.prototype);
 
 // Our supported plugins mapping
 const Plugins = {
     "battery": Battery,
-    "findmyphone": FindMyPhone
+    "findmyphone": FindMyPhone,
+    // FIXME: gnome-shell freaks if you use "Notifications"
+    "notifications": Notificationz,
+    "telephony": Telephony
 };
 
 
@@ -360,8 +517,8 @@ const Device = new Lang.Class({
             type: { value: this.proxy.type },
             version: { value: null }, // TODO: not a kdeconnect property
             address: { value: null }, // TODO: not a kdeconnect property
-            paired: { value: true }, // FIXME: really fix me
-            allowed: { value: this.proxy.isTrusted }, // TODO: this is actually changeable
+            paired: { value: false }, // FIXME: really fix me
+            trusted: { value: this.proxy.isTrusted }, // TODO: this is actually changeable
             active: { value: this.proxy.isReachable },
             incomingCapabilities: { value: this.proxy.supportedPlugins },
             outgoingCapabilities: { get: this._loadedPlugins }
@@ -393,6 +550,8 @@ const Device = new Lang.Class({
     
     _pluginsChanged: function (proxy, sender) {
         debug("kdeconnect.Device._pluginsChanged()");
+        
+        this.plugins = {};
         
         for (let pluginName of this.outgoingCapabilities) {
             pluginName = pluginName.substring(11);
@@ -593,12 +752,12 @@ const DeviceManager = new Lang.Class({
     },
     
     _devices: function (onlyReachable = false, onlyPaired = false) {
-        // FIXME: args
-        // Returns a list of device id"s, optionally *onlyReachable*
+        // TODO: args
+        // Returns a nested list of device id's, optionally *onlyReachable*
         // or *onlyPaired*
         debug("kdeconnect.DeviceManager._devices()");
         
-        return this.proxy.devicesSync();
+        return this.proxy.devicesSync()[0];
     },
     
     _forceOnNetworkChange: function () {
@@ -619,6 +778,14 @@ const DeviceManager = new Lang.Class({
         debug("kdeconnect.DeviceManager._setAnnouncedName()");
         
         return this.proxy.setAnnouncedNameSync(name);
+    },
+    
+    // Public Methods
+    allowDevice: function (busPath) {
+        // We're going to do it the MConnect way, why not
+        debug("kdeconnect.DeviceManager.allowDevice()");
+        
+        this.devices[busPath].pair();
     },
     
     destroy: function () {

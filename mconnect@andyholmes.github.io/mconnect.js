@@ -3,15 +3,19 @@
 // Imports
 const Lang = imports.lang;
 const Signals = imports.signals;
-const Main = imports.ui.main;
-const Util = imports.misc.util;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
 // Local Imports
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.prefs;
+function getPath() {
+    // Diced from: https://github.com/optimisme/gjs-examples/
+    let m = new RegExp('@(.+):\\d+').exec((new Error()).stack.split('\n')[1]);
+    return Gio.File.new_for_path(m[1]).get_parent().get_path();
+}
+
+imports.searchPath.push(getPath());
+const { debug, Settings } = imports.utils;
 
 
 // DBus Constants
@@ -82,26 +86,28 @@ const PingProxy = Gio.DBusProxy.makeProxyWrapper('\
 
 // Start the backend daemon
 function startDaemon() {
-    log("spawning mconnect daemon");
+    debug("spawning mconnect daemon");
     
     try {
-        Util.spawnCommandLine("mconnect -d");
+        GLib.spawn_command_line_async("mconnect -d");
         GLib.usleep(10000); // 10ms
     } catch (e) {
-        debug("mconnect.startDaemon: " + e);
+        debug("mconnect.startDaemon(): " + e);
     }
 }
 
 
 // Start the backend settings
 function startSettings() {
-    log("spawning mconnect settings");
+    debug("spawning mconnect settings");
     
     try {
-        Util.spawn(["gnome-shell-extension-prefs", Me.metadata.uuid]);
+        GLib.spawn_command_line_async(
+            "gnome-shell-extension-prefs mconnect@andyholmes.github.io"
+        );
         GLib.usleep(10000); // 10ms
     } catch (e) {
-        debug("mconnect.startSettings: " + e);
+        debug("mconnect.startSettings(): " + e);
     }
 }
 
@@ -215,23 +221,25 @@ const Device = new Lang.Class({
             version: { value: this.proxy.ProtocolVersion }, // TODO: not a kdeconnect property
             address: { value: this.proxy.Address }, // TODO: not a kdeconnect property
             paired: { value: this.proxy.IsPaired }, // TODO: not a kdeconnect property
-            allowed: { value: this.proxy.Allowed }, // TODO: this is actually changeable
+            trusted: { value: this.proxy.Allowed }, // TODO: this is actually changeable
             active: { value: this.proxy.isActive }, // kdeconnect: reachable
             incomingCapabilities: { value: this.proxy.IncomingCapabilities },
             outgoingCapabilities: { value: this.proxy.OutgoingCapabilities }
         });
         
         // Plugins
-        this._initPlugins();
+        this._pluginsChanged();
         
         // TODO: Signals
-        //this.proxy.connectSignal("initPlugins", Lang.bind(this, this._initPlugins));
+        //this.proxy.connectSignal("pluginsChanged", Lang.bind(this, this._pluginsChanged));
     },
     
     // MConnect Callbacks
-    _initPlugins: function (proxy, sender, cb_data) {
+    _pluginsChanged: function (proxy, sender, cb_data) {
         // NOTE: not actually a signal yet
-        debug("mconnect.Device._initPlugins()");
+        debug("mconnect.Device._pluginsChanged()");
+        
+        this.plugins = {};
         
         for (let pluginName of this.outgoingCapabilities) {
             pluginName = pluginName.substring(11);
@@ -328,6 +336,11 @@ const DeviceManager = new Lang.Class({
     },
     
     // Public Methods
+    allowDevice: function (busPath) {
+        //
+        this._AllowDevice(busPath);
+    },
+    
     destroy: function () {
         for (let busPath in this.devices) {
             this._deviceRemoved(this, null, busPath);

@@ -2,11 +2,11 @@
 
 // Imports
 const Lang = imports.lang;
+const Signals = imports.signals;
 const Main = imports.ui.main;
 const St = imports.gi.St;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
-const Util = imports.misc.util;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -14,7 +14,7 @@ const GObject = imports.gi.GObject;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, Settings } = Me.imports.prefs;
+const { debug, Settings } = Me.imports.utils;
 
 
 const DeviceMenu = new Lang.Class({
@@ -26,39 +26,47 @@ const DeviceMenu = new Lang.Class({
         
         this.device = device;
         
-        // Menu Items // Separator
-        this.deviceItem = new PopupMenu.PopupSeparatorMenuItem(this.device.name);
-        this.deviceItem.icon = new St.Icon({
+        // Menu Items -> Separator
+        this._item = new PopupMenu.PopupSeparatorMenuItem(this.device.name);
+        // Menu Items -> Separator -> Battery label
+        this.batteryLabel = new St.Label();
+        this._item.actor.add(this.batteryLabel);
+        // Menu Items -> Separator -> Battery Icon
+        this.batteryIcon = new St.Icon({
             icon_name: "battery-missing-symbolic",
             style_class: "popup-menu-icon"
         });
-        this.deviceItem.actor.add(this.deviceItem.icon);
+        this._item.actor.add(this.batteryIcon);
         this._battery();
-        this.addMenuItem(this.deviceItem);
+        this.addMenuItem(this._item);
         
-        // Action Bar
-        this.actionBar = new PopupMenu.PopupBaseMenuItem({ reactive: false,
-                                                           can_focus: false });
-        
-        // Send SMS Action
-        this.smsAction = this._createActionButton("user-available-symbolic");
-        this.smsAction.connect("clicked", Lang.bind(this, this._sync));
-        this.actionBar.actor.add(this.smsAction, { expand: true, x_fill: false });
-        
-        // Find my phone Action
-        this.findAction = this._createActionButton("find-location-symbolic");
-        this.findAction.connect("clicked", Lang.bind(this, this._findmyphone));
-        this.actionBar.actor.add(this.findAction, { expand: true, x_fill: false });
-        
-        // Menu Items // Settings Item
-//        this._setAction = this._createActionButton("preferences-system-symbolic");
-//        this._setAction.connect("clicked", Lang.bind(this, this._sync));
-//        this.actionBar.actor.add(this._setAction, { expand: true, x_fill: false });
-        
+        // Menu Items -> Action Bar
+        this.actionBar = new PopupMenu.PopupBaseMenuItem({
+            reactive: false,
+            can_focus: false
+        });
         this.addMenuItem(this.actionBar);
         
-        // Connect to "Device.changed::battery" signal
+        // Menu Items -> Action Bar -> Send SMS Action
+        this.smsButton = this._createActionButton("user-available-symbolic");
+        this.smsButton.connect("clicked", Lang.bind(this, this._sms));
+        this.actionBar.actor.add(this.smsButton, { expand: true, x_fill: false });
+        
+        // Menu Items -> Action Bar -> Find my phone Action
+        this.findButton = this._createActionButton("find-location-symbolic");
+        this.findButton.connect("clicked", () => { this._findmyphone(); });
+        this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
+        
+        // Menu Items -> Action Bar -> Pair/Unpair Action
+        this.trustButton = this._createActionButton("channel-insecure-symbolic");
+        this.trustButton.connect("clicked", Lang.bind(this, this._trust));
+        this.actionBar.actor.add(this.trustButton, { expand: true, x_fill: false });
+        
+        // Connect to "Device.changed::*" signals
         this.device.connect("changed::battery", Lang.bind(this, this._battery));
+        this.device.connect("changed::plugins", Lang.bind(this, this._sync));
+        
+        this._sync();
     },
     
     _createActionButton: function (iconName) {
@@ -66,12 +74,12 @@ const DeviceMenu = new Lang.Class({
             reactive: true,
             can_focus: true,
             track_hover: true,
-            style_class: "system-menu-action"
+            style_class: "system-menu-action",
+            style: "padding: 8px;"
         });
         
-        icon.set_style("padding: 8px;");
-        
         icon.child = new St.Icon({ icon_name: iconName });
+        
         return icon;
     },
     
@@ -81,65 +89,100 @@ const DeviceMenu = new Lang.Class({
         debug("extension.DeviceMenu._battery(" + level_state + ")");
         
         // Battery plugin disabled
-        if (!this.device.plugins.battery) {
-            level_state = [ -1, false ];
+        if (!this.device.plugins.hasOwnProperty("battery") || !this.device.trusted) {
+            this.batteryIcon.icon_name = "battery-missing-symbolic";
+            this.batteryLabel.text = "";
+            return;
+        }
+        
         // Try the get data from the device itself
-        } else if (!level_state) {
+        if (!level_state) {
             level_state = [
                 this.device.plugins.battery.level,
                 this.device.plugins.battery.charging
             ];
         }
         
-        // Pretty much how upower does it
-        let icon;
+        // These are the numbers and icons upower uses (except empty)
+        let icon = "battery";
         
-        if (level_state[0] == -1) {
-            icon = "battery-missing";
-        } else if (level_state[0] < 3) {
-            icon = level_state[1] ? "battery-empty-charging" : "battery-empty";
+        if (level_state[0] < 3) {
+            icon += level_state[1] === true ? "-empty-charging" : "-empty";
         } else if (level_state[0] < 10) {
-            icon = level_state[1] ? "battery-caution-charging" : "battery-caution";
+            icon += level_state[1] === true ? "-caution-charging" : "-caution";
         } else if (level_state[0] < 30) {
-            icon = level_state[1] ? "battery-low-charging" : "battery-low";
+            icon += level_state[1] === true ? "-low-charging" : "-low";
         } else if (level_state[0] < 60) {
-            icon = level_state[1] ? "battery-good-charging" : "battery-good";
+            icon += level_state[1] === true ? "-good-charging" : "-good";
         } else if (level_state[0] >= 60) {
-            icon = level_state[1] ? "battery-full-charging" : "battery-full";
+            icon += level_state[1] === true ? "-full-charging" : "-full";
         }
         
-        this.deviceItem.icon.icon_name = icon + "-symbolic";
+        this.batteryIcon.icon_name = icon + "-symbolic";
+        this.batteryLabel.text = level_state[0] + "%";
     },
     
+    // Action Callbacks
     _findmyphone: function (button, signal_id) {
-        debug("DeviceMenu._findmyphone()");
+        debug("extension.DeviceMenu._findmyphone()");
         
-        if (this.device.plugins.findmyphone) {
-            this.device.plugins.findmyphone.find();
-        }
+        this.device.plugins.findmyphone.find();
+    },
+    
+    _sms: function (button, signal_id) {
+        // TODO: track windows...
+        debug("extension.DeviceMenu._sms()");
+        
+        GLib.spawn_command_line_async(
+            Me.path + "/sms.js \"" + this.device.busPath + "\""
+        );
+    },
+    
+    _trust: function (button, signal_id) {
+        debug("extension.DeviceMenu._trust()");
+        
+        this.emit("request::trusted", null, this.device.busPath);
     },
     
     _sync: function () {
-        debug("DeviceMenu._sync()");
+        debug("extension.DeviceMenu._sync()");
         
-        switch (true) {
-            case (this.device.plugins.battery):
-                // TODO: handle the battery differently
-                break;
-            case (this.device.plugins.findmyphone):
-                this.findAction.visible = true;
-                break;
-            case (this.device.plugins.ping):
-                break;
-            case (this.device.plugins.sms):
-                this.smsAction.visible = true;
-                break;
-            case (this.device.plugins.telephony):
-                break;
+        // SMS Button
+        if (this.device.plugins.hasOwnProperty("telephony")) {
+            this.smsButton.can_focus = true;
+            this.smsButton.reactive = true;
+            this.smsButton.track_hover = true;
+            this.smsButton.opacity = 255;
+        } else {
+            this.smsButton.can_focus = false;
+            this.smsButton.reactive = false;
+            this.smsButton.track_hover = false;
+            this.smsButton.opacity = 128;
+        }
+        
+        // Find My Phone Button
+        if (this.device.plugins.hasOwnProperty("findmyphone")) {
+            this.findButton.can_focus = true;
+            this.findButton.reactive = true;
+            this.findButton.track_hover = true;
+            this.findButton.opacity = 255;
+        } else {
+            this.findButton.can_focus = false;
+            this.findButton.reactive = false;
+            this.findButton.track_hover = false;
+            this.findButton.opacity = 128;
+        }
+        
+        // Pair Button
+        if (this.device.trusted) {
+            this.trustButton.child.icon_name = "channel-secure-symbolic";
+        } else {
+            this.trustButton.child.icon_name = "channel-insecure-symbolic";
         }
     }
 });
 
+Signals.addSignalMethods(DeviceMenu.prototype);
 
 // A Re-Wrapper for backend.Device representing a device in Menu.panel.statusArea
 // 
@@ -188,9 +231,12 @@ const DeviceIndicator = new Lang.Class({
             case (this.device.active):
                 this.icon.icon_name = icon + "-connected";
                 break;
-            case (this.device.allowed || this.device.paired):
+            case (this.device.trusted):
                 this.icon.icon_name = icon + "-trusted";
                 break;
+//            case (this.device.paired):
+//                this.icon.icon_name = icon + "-disconnected"
+//                break;
             default:
                 this.icon.icon_name = icon + "-disconnected";
         }
@@ -198,11 +244,6 @@ const DeviceIndicator = new Lang.Class({
 });
 
 // The main extension hub.
-//
-// PanelMenu.SystemIndicator
-//     -> St.BoxLayout (this.indicators)
-//         -> St.Icon
-//     -> PopupMenu.PopupMenuSection (this.menu)
 const SystemIndicator = new Lang.Class({
     Name: "SystemIndicator",
     Extends: PanelMenu.SystemIndicator,
@@ -281,7 +322,7 @@ const SystemIndicator = new Lang.Class({
     // UI Settings callbacks
     _isVisible: function (device) {
         // Return boolean whether user considers device visible or not
-        // FIXME: dun broken son
+        // FIXME: not quite working
         debug("extension.SystemIndicator._isVisible(" + device.busPath + ")");
         
         let visible = [];
@@ -363,6 +404,8 @@ const SystemIndicator = new Lang.Class({
     },
     
     _daemonVanished: function (conn, name, name_owner, cb_data) {
+        // FIXME: some widgets missing on kdeconnectd shutdown?
+        //        "JS ERROR: TypeError: deviceIndicator is undefined"
         // The DBus interface has vanished
         debug("extension.SystemIndicator._daemonVanished()");
         
@@ -402,6 +445,17 @@ const SystemIndicator = new Lang.Class({
         
         // User menu entry
         this.deviceMenus[busPath] = new DeviceMenu(device);
+        this.deviceMenus[busPath].connect(
+            "request::trusted",
+            (menu, signal_id, devPath) => {
+                debug("TRUE");
+                if (this.manager.devices[devPath].trusted) {
+                    debug("request unpairing");
+                } else {
+                    debug("request pairing");
+                }
+            }
+        );
         this.devicesSection.addMenuItem(this.deviceMenus[busPath]);
         
         this._sync();
