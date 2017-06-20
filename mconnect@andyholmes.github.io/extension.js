@@ -72,7 +72,7 @@ const DeviceIndicator = new Lang.Class({
         // Indicator Icon
         let icon = this.device.type;
         
-        if (this.device.type == "phone") {
+        if (this.device.type === "phone") {
             icon = "smartphone";
         }
         
@@ -159,9 +159,9 @@ const DeviceMenu = new Lang.Class({
         let button = new St.Button();
         button.child = new St.Icon({ icon_name: name });
         
-        if (type == "status") {
+        if (type === "status") {
             button.child.style_class = "popup-menu-icon";
-        } else if (type == "action") {
+        } else if (type === "action") {
             button.style_class = "system-menu-action";
             button.style = "padding: 8px; border-radius: 24px;";
         }
@@ -177,7 +177,7 @@ const DeviceMenu = new Lang.Class({
     _activeChanged: function (device, active) {
         debug("extension.DeviceMenu._activeChanged()");
         
-        active = (active != undefined) ? active : device.active;
+        active = (active !== undefined) ? active : device.active;
         
         let buttons = [
             //this.batteryButton,
@@ -207,7 +207,7 @@ const DeviceMenu = new Lang.Class({
         // Set the icon name, relevant to battery level and charging state
         debug("extension.DeviceMenu._batteryChanged(" + levelState + ")");
         
-        device = (device.plugins != undefined) ? device : this.device;
+        device = (device.plugins !== undefined) ? device : this.device;
         
         debug("plugins: " + Object.keys(device.plugins));
         
@@ -277,7 +277,7 @@ const DeviceMenu = new Lang.Class({
     _trustedChanged: function (device, trusted) {
         debug("extension.DeviceMenu._trustedChanged()");
         
-        trusted = (trusted != undefined) ? trusted : device.trusted;
+        trusted = (trusted !== undefined) ? trusted : device.trusted;
         
         if (trusted) {
             this.trustButton.child.icon_name = "channel-secure-symbolic";
@@ -309,7 +309,7 @@ const DeviceMenu = new Lang.Class({
 //                    debug(foo.toString());
 //                }
 //            
-//                if (window.startup_id == this.device.dbusPath) {
+//                if (window.startup_id === this.device.dbusPath) {
 //                    Main.activateWindow(window);
 //                    return;
 //                }
@@ -411,7 +411,7 @@ const SystemIndicator = new Lang.Class({
         Settings.connect("changed::start-daemon", (settings, key) => {
             debug("Settings: changed::start-daemon");
             
-            if (Settings.get_boolean(key) && this.manager == null) {
+            if (Settings.get_boolean(key) && this.manager === null) {
                 this.backend.startDaemon();
             }
         });
@@ -477,7 +477,7 @@ const SystemIndicator = new Lang.Class({
         prompt.connect("response", (dialog, responseType) => {
             prompt.close();
             
-            if (responseType == Sw.ResponseType.YES) {
+            if (responseType === Sw.ResponseType.YES) {
                 action(dbusPath)
             }
         });

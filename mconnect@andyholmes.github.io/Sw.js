@@ -50,7 +50,7 @@ const MessageDialog = new Lang.Class({
     
     _init: function (params) {
         this.parent({
-            styleClass: 'end-session-dialog',
+            styleClass: "end-session-dialog",
             destroyOnClose: params["destroyOnClose"] || true
         });
         
@@ -64,7 +64,7 @@ const MessageDialog = new Lang.Class({
         // Message Layout
         this.messageArea = new St.BoxLayout({
             vertical: true,
-            style_class: 'end-session-dialog-layout'
+            style_class: "end-session-dialog-layout"
         });
         this.contentLayout.add(this.messageArea, {
             x_fill: true,
@@ -88,7 +88,7 @@ const MessageDialog = new Lang.Class({
         // Params
         Object.defineProperties(this, {
             icon_name: {
-                get: () => { return this.icon.icon_name },
+                get: () => { return this.icon.icon_name; },
                 set: (name) => { this.icon.icon_name = name; }
             },
             
@@ -97,12 +97,12 @@ const MessageDialog = new Lang.Class({
             },
             
             text: {
-                get: () => { return this.subject.text },
+                get: () => { return this.subject.text; },
                 set: (text) => { this.subject.text = text; }
             },
             
             secondary_text: {
-                get: () => { return this.description.text },
+                get: () => { return this.description.text; },
                 set: (text) => { this.description.text = text; }
             },
             

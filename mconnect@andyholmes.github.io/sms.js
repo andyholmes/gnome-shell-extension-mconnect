@@ -33,13 +33,12 @@ const SMSWindow = Lang.Class({
         this.parent({
             default_height: 300,
             default_width: 300,
-            title: "Send SMS",
-            startup_id: dbusPath
+            title: "Send SMS"
         });
         
         this.dbusPath = dbusPath;
         
-        if (this.dbusPath.split("/")[2] == "mconnect") {
+        if (this.dbusPath.split("/")[2] === "mconnect") {
             debug("selecting MConnect as backend");
             this.device = new imports.mconnect.Device(this.dbusPath);
         } else {
