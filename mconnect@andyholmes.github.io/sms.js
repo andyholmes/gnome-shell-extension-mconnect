@@ -28,32 +28,29 @@ const SMSWindow = Lang.Class({
     Name: "SMSWindow",
     Extends: Gtk.Window,
     
-    _init: function (busPath) {
-        this.busPath = busPath;
-        
-        if (this.busPath.split("/")[2] == "mconnect") {
-            debug("selecting MConnect as backend");
-            this.device = new imports.mconnect.Device(this.busPath);
-        } else {
-            debug("selecting KDE Connect as backend");
-            this.device = new imports.kdeconnect.Device(this.busPath);
-        }
-        
-        assert(
-            this.device.plugins.hasOwnProperty("telephony"),
-            "telephony plugin not loaded"
-        );
+    _init: function (dbusPath) {
         
         this.parent({
             default_height: 300,
             default_width: 300,
             title: "Send SMS",
-            role: this.busPath
+            startup_id: dbusPath
         });
         
+        this.dbusPath = dbusPath;
+        
+        if (this.dbusPath.split("/")[2] == "mconnect") {
+            debug("selecting MConnect as backend");
+            this.device = new imports.mconnect.Device(this.dbusPath);
+        } else {
+            debug("selecting KDE Connect as backend");
+            this.device = new imports.kdeconnect.Device(this.dbusPath);
+        }
+        
+        // HeaderBar
         let headerBar = new Gtk.HeaderBar({
             title: "SMS Conversation",
-            subtitle: this.busPath,
+            subtitle: "To ... via " + this.device.name,
             show_close_button: true
         });
         this.set_titlebar(headerBar);

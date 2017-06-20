@@ -251,13 +251,13 @@ const Battery = new Lang.Class({
     Name: "Battery",
     
     _init: function (device) {
-        debug("kdeconnect.Battery._init(" + device.busPath + ")");
+        debug("kdeconnect.Battery._init(" + device.dbusPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new BatteryProxy(
             Gio.DBus.session,
             BUS_NAME,
-            device.busPath
+            device.dbusPath
         );
         
         // Properties
@@ -268,35 +268,24 @@ const Battery = new Lang.Class({
             level: { get: this._charge }
         });
         
-        // Signals
-        this.proxy.connectSignal(
-            "chargeChanged",
-            Lang.bind(this, this._chargeChanged)
-        );
+        // KDE Connect Signals
+        this.proxy.connectSignal("chargeChanged", (proxy, sender, level) => {
+            debug("kdeconnect.Battery._chargeChanged(" + level[0] + ")");
+            
+            // re-pack like an mconnect battery update
+            let levelCharging = [level[0], this.charging];
+            // have the device re-emit the signal
+            this.device.emit("changed::battery", levelCharging);
+        });
         
-        this.proxy.connectSignal(
-            "stateChanged",
-            Lang.bind(this, this._stateChanged)
-        );
-    },
-    
-    // KDE Connect Callbacks
-    _chargeChanged: function (proxy, sender, level) {
-        debug("kdeconnect.Battery._chargeChanged(" + level[0] + ")");
-        
-        // re-pack like an mconnect battery update
-        let level_charging = [level[0], this.charging];
-        // have the device re-emit the signal
-        this.device.emit("changed::battery", null, level_charging);
-    },
-    
-    _stateChanged: function (proxy, sender, charging) {
-        debug("kdeconnect.Battery._stateChanged(" + charging[0] + ")");
-        
-        // re-pack like an mconnect battery update
-        let level_charging = [this.level, charging[0]];
-        // have the device re-emit the signal
-        this.device.emit("changed::battery", null, level_charging);
+        this.proxy.connectSignal("stateChanged", (proxy, sender, charging) => {
+            debug("kdeconnect.Battery._stateChanged(" + charging[0] + ")");
+            
+            // re-pack like an mconnect battery update
+            let levelCharging = [this.level, charging[0]];
+            // have the device re-emit the signal
+            this.device.emit("changed::battery", levelCharging);
+        });
     },
     
     // KDE Connect Methods
@@ -329,13 +318,13 @@ const FindMyPhone = new Lang.Class({
     Name: "FindMyPhone",
     
     _init: function (device) {
-        debug("kdeconnect.FindMyPhone._init(" + device.busPath + ")");
+        debug("kdeconnect.FindMyPhone._init(" + device.dbusPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new FindMyPhoneProxy(
             Gio.DBus.session,
             BUS_NAME,
-            device.busPath + "/findmyphone"
+            device.dbusPath + "/findmyphone"
         );
         
         // Properties
@@ -378,13 +367,13 @@ const Notificationz = new Lang.Class({
     Name: "Notificationz",
     
     _init: function (device) {
-        debug("kdeconnect.Notifications._init(" + device.busPath + ")");
+        debug("kdeconnect.Notifications._init(" + device.dbusPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new NotificationsProxy(
             Gio.DBus.session,
             BUS_NAME,
-            device.busPath
+            device.dbusPath
         );
         
         // Properties
@@ -395,42 +384,26 @@ const Notificationz = new Lang.Class({
         });
         
         // Signals
-        this.proxy.connectSignal(
-            "notificationPosted",
-            Lang.bind(this, this._notificationPosted)
-        );
+        this.proxy.connectSignal("allNotificationsRemoved", (proxy, sender) => {
+            debug("kdeconnect.Notifications._allNotificationsRemoved()");
+            
+            // have the device re-emit the signal
+            this.device.emit("notification::dismissed-all", null);
+        });
         
-        this.proxy.connectSignal(
-            "notificationRemoved",
-            Lang.bind(this, this._notificationRemoved)
-        );
+        this.proxy.connectSignal("notificationPosted", (proxy, sender, dbusPath) => {
+            debug("kdeconnect.Notifications._notificationPosted(" + dbusPath[0] + ")");
+            
+            // have the device re-emit the signal
+            this.device.emit("notification::received", null, dbusPath[0]);
+        });
         
-        this.proxy.connectSignal(
-            "allNotificationsRemoved",
-            Lang.bind(this, this._allNotificationsRemoved)
-        );
-    },
-    
-    // Callbacks
-    _allNotificationsRemoved: function (proxy, sender) {
-        debug("kdeconnect.Notifications._allNotificationsRemoved()");
-        
-        // have the device re-emit the signal
-        this.device.emit("notification::dismissed-all", null);
-    },
-    
-    _notificationPosted: function (proxy, sender, busPath) {
-        debug("kdeconnect.Notifications._notificationPosted(" + busPath[0] + ")");
-        
-        // have the device re-emit the signal
-        this.device.emit("notification::received", null, busPath[0]);
-    },
-    
-    _notificationRemoved: function (proxy, sender, busPath) {
-        debug("kdeconnect.Notifications._notificationRemoved(" + busPath[0] + ")");
-        
-        // have the device re-emit the signal
-        this.device.emit("notification::dismissed", null, busPath[0]);
+        this.proxy.connectSignal("notificationRemoved", (proxy, sender, dbusPath) => {
+            debug("kdeconnect.Notifications._notificationRemoved(" + dbusPath[0] + ")");
+            
+            // have the device re-emit the signal
+            this.device.emit("notification::dismissed", null, dbusPath[0]);
+        });
     },
     
     // KDE Connect Methods
@@ -455,13 +428,13 @@ const Telephony = new Lang.Class({
     Name: "Telephony",
     
     _init: function (device) {
-        debug("kdeconnect.Telephony._init(" + device.busPath + ")");
+        debug("kdeconnect.Telephony._init(" + device.dbusPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new TelephonyProxy(
             Gio.DBus.session,
             BUS_NAME,
-            device.busPath + "/telephony"
+            device.dbusPath + "/telephony"
         );
         
         // Properties
@@ -503,56 +476,67 @@ const Plugins = {
 const Device = new Lang.Class({
     Name: "Device",
     
-    _init: function (busPath) {
+    _init: function (dbusPath) {
         // Create proxy for the DBus Interface
-        this.proxy = new DeviceProxy(Gio.DBus.session, BUS_NAME, busPath);
+        this.proxy = new DeviceProxy(Gio.DBus.session, BUS_NAME, dbusPath);
         
         // Properties
-        this.busPath = busPath;
+        this.dbusPath = dbusPath;
         this.plugins = {};
         
         Object.defineProperties(this, {
-            id: { value: this.busPath.substring(28) },
+            id: { value: this.dbusPath.substring(28) },
             name: { value: this.proxy.name },
             type: { value: this.proxy.type },
-            version: { value: null }, // TODO: not a kdeconnect property
-            address: { value: null }, // TODO: not a kdeconnect property
-            paired: { value: false }, // FIXME: really fix me
-            trusted: { value: this.proxy.isTrusted }, // TODO: this is actually changeable
+            trusted: {
+                get: this._isTrusted,
+                set: (trusted) => { (trusted) ? this._requestPair() : this._pair(); }
+            },
             active: { value: this.proxy.isReachable },
+            // TODO: still not clear on these two
             incomingCapabilities: { value: this.proxy.supportedPlugins },
             outgoingCapabilities: { get: this._loadedPlugins }
         });
         
-        // Plugins
-        this._pluginsChanged();
-        
         // Signals
-        this.proxy.connectSignal("nameChanged", Lang.bind(this, this._nameChanged));
-        this.proxy.connectSignal("pairingError", Lang.bind(this, this._pairingError));
-        this.proxy.connectSignal("pluginsChanged", Lang.bind(this, this._pluginsChanged));
-        this.proxy.connectSignal("reachableStatusChanged", Lang.bind(this, this._reachableStatusChanged));
-        this.proxy.connectSignal("trustedChanged", Lang.bind(this, this._trustedChanged));
-    },
-    
-    // KDE Connect Callbacks
-    _nameChanged: function (proxy, sender, name) {
-        debug("kdeconnect.Device._nameChanged(): " + name[0]);
+        this.proxy.connectSignal("nameChanged", (proxy, sender, name) => {
+            debug("kdeconnect.Device::nameChanged: " + name[0]);
+            
+            this.emit("changed::name", name[0]);
+        });
         
-        this.emit("changed::name", null, name[0]);
-    },
-    
-    _pairingError: function (proxy, sender, error) {
-        debug("kdeconnect.Device._pairingError(): " + error[0]);
+        this.proxy.connectSignal("pairingError", (proxy, sender, error) => {
+            debug("kdeconnect.Device::pairingError: " + error[0]);
+            
+            this.emit("error::pairing", error[0]);
+        });
         
-        this.emit("error::pairing", null, error[0]);
-    },
-    
-    _pluginsChanged: function (proxy, sender) {
-        debug("kdeconnect.Device._pluginsChanged()");
+        this.proxy.connectSignal("pluginsChanged", (proxy, sender) => {
+            debug("kdeconnect.Device::pluginsChanged");
+            
+            for (let pluginName of this.outgoingCapabilities) {
+                pluginName = pluginName.substring(11);
+                
+                if (Plugins.hasOwnProperty(pluginName)) {
+                    this.plugins[pluginName] = new Plugins[pluginName](this);
+                }
+            }
+            
+            this.emit("changed::plugins", null);
+        });
         
-        this.plugins = {};
+        this.proxy.connectSignal("reachableStatusChanged", (proxy, sender) => {
+            debug("kdeconnect.Device::reachableStatusChanged");
+            
+            this.emit("changed::active", this.active);
+        });
         
+        this.proxy.connectSignal("trustedChanged", (proxy, sender, trusted) => {
+            debug("kdeconnect.Device::trustedChanged:" + trusted[0]);
+            
+            this.emit("changed::trusted", trusted[0]);
+        });
+            
         for (let pluginName of this.outgoingCapabilities) {
             pluginName = pluginName.substring(11);
             
@@ -560,20 +544,6 @@ const Device = new Lang.Class({
                 this.plugins[pluginName] = new Plugins[pluginName](this);
             }
         }
-        
-        this.emit("changed::plugins", null);
-    },
-    
-    _reachableStatusChanged: function (proxy, sender) {
-        debug("kdeconnect.Device._reachableStatusChanged()");
-        
-        this.emit("changed::active", null);
-    },
-    
-    _trustedChanged: function (proxy, sender, trusted) {
-        debug("kdeconnect.Device._trustedChanged(): " + trusted);
-        
-        this.emit("changed::trusted", null, trusted[0]);
     },
     
     // KDE Connect Methods
@@ -604,7 +574,7 @@ const Device = new Lang.Class({
         // Return boolean whether the device is trusted (paired?)
         debug("kdeconnect.Device._isTrusted()");
         
-        return this.proxy.isTrustedSync();
+        return this.proxy.isTrustedSync()[0];
     },
     
     _loadedPlugins: function () {
@@ -676,60 +646,49 @@ const DeviceManager = new Lang.Class({
             name: { get: this._announcedName, set: this._setAnnouncedName }
         });
         
+        // Signals
+        this.proxy.connectSignal("announcedNameChanged", (proxy, sender, name) => {
+            // TODO
+            this.emit("changed::name", null, name[0]);
+        });
+        
+        this.proxy.connectSignal("deviceAdded", (proxy, sender, deviceId) => {
+            // KDE Connect organizes by device ID, we go by DBus path
+            let dbusPath = "/modules/kdeconnect/devices/" + deviceId[0];
+            
+            this.devices[dbusPath] = new Device(dbusPath);
+            this.emit("device::added", null, dbusPath);
+        });
+        
+        this.proxy.connectSignal("deviceRemoved", (proxy, sender, deviceId) => {
+            // KDE Connect organizes by device ID, we go by DBus path
+            let dbusPath = "/modules/kdeconnect/devices/" + deviceId[0];
+            
+            this.devices[dbusPath].destroy();
+            delete this.devices[dbusPath];
+            this.emit("device::removed", null, dbusPath);
+        });
+        
+        this.proxy.connectSignal("deviceVisibilityChanged", (proxy, sender, deviceId_visible) => {
+            let deviceId = deviceId_visible[0];
+            let visible = deviceId_visible[1];
+            
+            // We're going to have to device emit this signal for now
+            let device = this.devices["/modules/kdeconnect/devices/" + deviceId];
+            device.emit("changed::active", visible);
+        });
+        
         // Add currently managed devices
         for (let deviceId of this._devices()) {
-            this._deviceAdded(this, null, [deviceId]);
+            // KDE Connect organizes by device ID, we go by DBus path
+            let dbusPath = "/modules/kdeconnect/devices/" + deviceId;
+            
+            this.devices[dbusPath] = new Device(dbusPath);
+            this.emit("device::added", null, dbusPath);
         }
-        
-        // Signals
-        this.proxy.connectSignal("announcedNameChanged", Lang.bind(this, this._announcedNameChanged));
-        this.proxy.connectSignal("deviceAdded", Lang.bind(this, this._deviceAdded));
-        this.proxy.connectSignal("deviceRemoved", Lang.bind(this, this._deviceRemoved));
-        this.proxy.connectSignal("deviceVisibilityChanged", Lang.bind(this, this._deviceVisibilityChanged));
     },
     
-    // Callbacks
-    _announcedNameChanged: function (proxy, sender, name) {
-        // TODO
-        debug("kdeconnect.DeviceManager._deviceAdded(): " + name[0]);
-        
-        this.emit("changed::name", null, name[0]);
-    },
-    
-    _deviceAdded: function (proxy, sender, deviceId) {
-        // deviceAdded returns a nested array, so that how we do it now
-        debug("kdeconnect.DeviceManager._deviceAdded(" + deviceId[0] + ")");
-        
-        // KDE Connect organizes by device ID, we go by DBus path
-        let busPath = "/modules/kdeconnect/devices/" + deviceId[0];
-        
-        this.devices[busPath] = new Device(busPath);
-        this.emit("device::added", null, busPath);
-    },
-    
-    _deviceRemoved: function (proxy, sender, deviceId) {
-        // deviceRemoved returns a nested array, so that how we do it here too
-        debug("kdeconnect.DeviceManager._deviceRemoved(" + deviceId[0] + ")");
-        
-        // KDE Connect organizes by device ID, we go by DBus path
-        let busPath = "/modules/kdeconnect/devices/" + deviceId[0];
-        
-        this.devices[busPath].destroy();
-        delete this.devices[busPath];
-        this.emit("device::removed", null, busPath);
-    },
-    
-    _deviceVisibilityChanged: function (proxy, sender, deviceId_visible) {
-        // TODO: make deviceId->busPath
-        debug("kdeconnect.DeviceManager._deviceVisibilityChanged(): " + deviceId_visible[0]);
-        
-        let deviceId = deviceId_visible[0][0];
-        let visible = deviceId_visible[0][1];
-        
-        this.emit("device::visibility", null, [deviceId, visible]);
-    },
-    
-    // Methods
+    // KDE Connect Methods
     _acquireDiscoveryMode: function (id) {
         // Send a pairing request to *id*
         debug("kdeconnect.DeviceManager._acquireDiscoveryMode(" + id + ")");
@@ -781,17 +740,25 @@ const DeviceManager = new Lang.Class({
     },
     
     // Public Methods
-    allowDevice: function (busPath) {
-        // We're going to do it the MConnect way, why not
-        debug("kdeconnect.DeviceManager.allowDevice()");
+    trustDevice: function (dbusPath) {
+        // We're going to do it the MConnect way with dbusPath's
+        debug("kdeconnect.DeviceManager.trustDevice()");
         
-        this.devices[busPath].pair();
+        this.devices[dbusPath]._requestPair();
+    },
+    
+    untrustDevice: function (dbusPath) {
+        // We're going to do it the MConnect way with dbusPath's
+        debug("kdeconnect.DeviceManager.trustDevice()");
+        
+        this.devices[dbusPath]._unpair();
     },
     
     destroy: function () {
-        for (let busPath in this.devices) {
-            // _deviceRemoved takes a device id in an array (eg. [deviceId])
-            this._deviceRemoved(this, null, [this.devices[busPath].id]);
+        for (let dbusPath in this.devices) {
+            this.devices[dbusPath].destroy();
+            delete this.devices[dbusPath];
+            this.emit("device::removed", null, dbusPath);
         }
     }
 });

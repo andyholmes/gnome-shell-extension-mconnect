@@ -67,7 +67,7 @@
                             <property name="can_focus">False</property>
                             <property name="valign">center</property>
                             <child>
-                              <object class="GtkLabel" id="show-inactive-label">
+                              <object class="GtkLabel" id="show-offline-label">
                                 <property name="height_request">32</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
@@ -86,7 +86,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSwitch" id="show-inactive">
+                              <object class="GtkSwitch" id="show-offline">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="halign">end</property>
@@ -117,7 +117,7 @@
                             <property name="can_focus">False</property>
                             <property name="valign">center</property>
                             <child>
-                              <object class="GtkLabel" id="show-unpaired-label">
+                              <object class="GtkLabel" id="show-untrusted-label">
                                 <property name="height_request">32</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
@@ -136,57 +136,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSwitch" id="show-unpaired">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="halign">end</property>
-                                <property name="valign">center</property>
-                                <property name="margin_right">12</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkListBoxRow">
-                        <property name="width_request">100</property>
-                        <property name="height_request">80</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="activatable">False</property>
-                        <property name="selectable">False</property>
-                        <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="valign">center</property>
-                            <child>
-                              <object class="GtkLabel" id="show-unallowed-label">
-                                <property name="height_request">32</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="margin_left">12</property>
-                                <property name="margin_top">8</property>
-                                <property name="margin_bottom">8</property>
-                                <property name="hexpand">True</property>
-                                <property name="label" translatable="yes">menu-always-label</property>
-                                <property name="use_underline">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSwitch" id="show-unallowed">
+                              <object class="GtkSwitch" id="show-untrusted">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="halign">end</property>

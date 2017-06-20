@@ -25,9 +25,8 @@ function buildPrefsWidget() {
     // then programatically built and each option connect to GSettings.
     let optionsList = [
         'per-device-indicators',
-        'show-inactive',
-        'show-unallowed',
-        'show-unpaired',
+        'show-offline',
+        'show-untrusted',
         'start-daemon',
         'use-kdeconnect',
         'debug'
@@ -35,7 +34,7 @@ function buildPrefsWidget() {
     
     let label;
     
-    for (let option of optionsList) {
+    optionsList.forEach((option) => {
         label = builder.get_object(option + '-label');
         label.set_label(Schema.get_key(option).get_summary());
         Settings.bind(
@@ -44,7 +43,7 @@ function buildPrefsWidget() {
             'active',
             Gio.SettingsBindFlags.DEFAULT
         );
-    };
+    });
 
     // About
     // FIXME: Gtk.show_about_dialog()

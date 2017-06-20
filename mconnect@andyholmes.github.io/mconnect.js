@@ -117,13 +117,13 @@ const Battery = new Lang.Class({
     Name: "Battery",
     
     _init: function (device) {
-        debug("mconnect.Battery._init(" + device.busPath + ")");
+        debug("mconnect.Battery._init(" + device.dbusPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new BatteryProxy(
             Gio.DBus.session,
             BUS_NAME,
-            device.busPath
+            device.dbusPath
         );
         
         // Properties
@@ -134,18 +134,11 @@ const Battery = new Lang.Class({
             level: { value: this.proxy.Level }
         });
         
-        // Signals
-        this.proxy.connectSignal("Battery", Lang.bind(this, this._Battery));
-    },
-    
-    // MConnect Callbacks
-    _Battery: function (proxy, sender, level_charging) {
-        debug("mconnect.Battery._Battery(): " + level_charging);
-                    
-        this._level = level_charging[0];
-        this._charging = level_charging[1];
-        // have the device re-emit the signal
-        this.device.emit("changed::battery", null, level_charging);
+        // MConnect Signals
+        this.proxy.connectSignal("Battery", (proxy, sender, levelCharging) => {
+            // have the device re-emit the signal
+            this.device.emit("changed::battery", levelCharging);
+        });
     },
     
     // Public Methods
@@ -162,28 +155,23 @@ const Ping = new Lang.Class({
     Name: "Ping",
     
     _init: function (device) {
-        debug("mconnect.Ping._init(" + device.busPath + ")");
+        debug("mconnect.Ping._init(" + device.dbusPath + ")");
         
         // Create proxy for the DBus Interface
         this.proxy = new PingProxy(
             Gio.DBus.session,
             BUS_NAME,
-            device.busPath
+            device.dbusPath
         );
         
         // Properties
         this.device = device;
         
-        // Signals
-        this.proxy.connectSignal("Ping", Lang.bind(this, this._Ping));
-    },
-    
-    // MConnect Callbacks
-    _Ping: function (proxy, sender) {
-        debug("mconnect.Ping._Ping()");
-        
-        // have the device re-emit the signal
-        this.device.emit("received::ping", null);
+        // MConnect Signals
+        this.proxy.connectSignal("Ping", (proxy, sender) => {
+            // have the device re-emit the signal
+            this.device.emit("received::ping", null);
+        });
     },
     
     // Public Methods
@@ -206,25 +194,27 @@ const Plugins = {
 const Device = new Lang.Class({
     Name: "Device",
     
-    _init: function (busPath) {
+    _init: function (dbusPath) {
         // Create proxy for the DBus Interface
-        this.proxy = new DeviceProxy(Gio.DBus.session, BUS_NAME, busPath);
+        this.proxy = new DeviceProxy(Gio.DBus.session, BUS_NAME, dbusPath);
         
         // Properties
-        this.busPath = busPath;
+        this.dbusPath = dbusPath;
         this.plugins = {};
         
         Object.defineProperties(this, {
             id: { value: this.proxy.Id },
             name: { value: this.proxy.Name },
             type: { value: this.proxy.DeviceType },
-            version: { value: this.proxy.ProtocolVersion }, // TODO: not a kdeconnect property
-            address: { value: this.proxy.Address }, // TODO: not a kdeconnect property
-            paired: { value: this.proxy.IsPaired }, // TODO: not a kdeconnect property
-            trusted: { value: this.proxy.Allowed }, // TODO: this is actually changeable
-            active: { value: this.proxy.isActive }, // kdeconnect: reachable
+            trusted: { value: this.proxy.Allowed }, // TODO: get/set
+            active: { value: this.proxy.IsActive }, // kdeconnect: reachable
+            // TODO: still not clear on these two
             incomingCapabilities: { value: this.proxy.IncomingCapabilities },
             outgoingCapabilities: { value: this.proxy.OutgoingCapabilities }
+            // TODO: the following aren't kdeconnect properties
+            //address: { value: this.proxy.Address },
+            //paired: { value: this.proxy.IsPaired },
+            //version: { value: this.proxy.ProtocolVersion }
         });
         
         // Plugins
@@ -292,40 +282,37 @@ const DeviceManager = new Lang.Class({
         });
         
         // Add currently managed devices
-        for (let busPath of this._ListDevices()) {
-            this._deviceAdded(this, null, busPath);
-        }
+        this._ListDevices().forEach((dbusPath) => {
+            this._deviceAdded(this, null, dbusPath);
+        });
         
         // TODO: Signals
-        //this.proxy.connectSignal("deviceAdded", Lang.bind(this, this._deviceAdded));
-        //this.proxy.connectSignal("deviceRemoved", Lang.bind(this, this._deviceRemoved));
-        //this.proxy.connectSignal("deviceVisibilityChanged", Lang.bind(this, this._deviceVisibilityChanged));
     },
     
     // MConnect Callbacks
-    _deviceAdded: function (manager, signal_id, busPath) {
+    _deviceAdded: function (manager, signal_id, dbusPath) {
         // NOTE: not actually a signal yet
-        debug("mconnect.DeviceManager._deviceAdded(" + busPath + ")");
+        debug("mconnect.DeviceManager._deviceAdded(" + dbusPath + ")");
         
-        this.devices[busPath] = new Device(busPath);
-        this.emit("device::added", null, busPath);
+        this.devices[dbusPath] = new Device(dbusPath);
+        this.emit("device::added", null, dbusPath);
     },
     
-    _deviceRemoved: function (manager, signal_id, busPath) {
+    _deviceRemoved: function (manager, signal_id, dbusPath) {
         // NOTE: not actually a signal yet
-        debug("mconnect.DeviceManager._deviceRemoved(" + busPath + ")");
+        debug("mconnect.DeviceManager._deviceRemoved(" + dbusPath + ")");
         
-        this.devices[busPath].destroy();
-        delete this.devices[busPath];
-        this.emit("device::removed", null, busPath);
+        this.devices[dbusPath].destroy();
+        delete this.devices[dbusPath];
+        this.emit("device::removed", null, dbusPath);
     },
     
     // MConnect Methods
-    _AllowDevice: function (busPath) {
-        // Mark the device at *busPath* as allowed
-        debug("mconnect.DeviceManager._AllowDevice()");
+    _AllowDevice: function (dbusPath) {
+        // Mark the device at *dbusPath* as allowed
+        debug("mconnect.DeviceManager._AllowDevice(" + dbusPath + ")");
         
-        return this.proxy.AllowDeviceSync(busPath);
+        return this.proxy.AllowDeviceSync(dbusPath);
     },
     
     _ListDevices: function () {
@@ -336,14 +323,23 @@ const DeviceManager = new Lang.Class({
     },
     
     // Public Methods
-    allowDevice: function (busPath) {
-        //
-        this._AllowDevice(busPath);
+    trustDevice: function (dbusPath) {
+        // We're going to do it the MConnect way with dbusPath's
+        debug("mconnect.DeviceManager.trustDevice(" + dbusPath + ")");
+        
+        this._AllowDevice(dbusPath);
+    },
+    
+    untrustDevice: function (dbusPath) {
+        // We're going to do it the MConnect way with dbusPath's
+        debug("mconnect.DeviceManager.untrustDevice(" + dbusPath + ")");
+        
+        debug("mconnect.DeviceManager.untrustDevice(): Not implemented");
     },
     
     destroy: function () {
-        for (let busPath in this.devices) {
-            this._deviceRemoved(this, null, busPath);
+        for (let dbusPath in this.devices) {
+            this._deviceRemoved(this, null, dbusPath);
         }
     }
 });

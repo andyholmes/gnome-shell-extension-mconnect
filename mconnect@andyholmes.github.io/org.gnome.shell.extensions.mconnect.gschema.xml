@@ -9,22 +9,17 @@
     <key type="b" name="per-device-indicators">
       <default>false</default>
       <summary>Show per-device indicators</summary>
-      <description>If true, show an indicator for each device. If false, devices will be available in the user menu.</description>
+      <description>If true, show an indicator in the Status Area for each device. If false, devices will be available in the User Menu.</description>
     </key>
-    <key type="b" name="show-inactive">
+    <key type="b" name="show-offline">
       <default>false</default>
-      <summary>Show inactive devices</summary>
-      <description>If true, devices will be shown in the interface even if they are inactive.</description>
+      <summary>Show offline devices</summary>
+      <description>If true, rememered devices will be shown in the interface even when they are offline.</description>
     </key>
-    <key type="b" name="show-unallowed">
+    <key type="b" name="show-untrusted">
       <default>false</default>
-      <summary>Show unallowed devices</summary>
-      <description>If true, devices will be shown in the interface even if they are unallowed.</description>
-    </key>
-    <key type="b" name="show-unpaired">
-      <default>false</default>
-      <summary>Show unpaired devices</summary>
-      <description>If true, devices will be shown in the interface even if they are unpaired.</description>
+      <summary>Show untrusted devices</summary>
+      <description>If true, devices will be shown in the interface even if they have not been marked trusted or formally paired.</description>
     </key>
     <key type="b" name="start-daemon">
       <default>true</default>

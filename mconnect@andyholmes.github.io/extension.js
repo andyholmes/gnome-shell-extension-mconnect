@@ -10,186 +10,15 @@ const PopupMenu = imports.ui.popupMenu;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const { debug, Settings } = Me.imports.utils;
+const Sw = Me.imports.Sw;
 
 
-const DeviceMenu = new Lang.Class({
-    Name: "DeviceMenu",
-    Extends: PopupMenu.PopupMenuSection,
-    
-    _init: function (device) {
-        this.parent(null, "DeviceMenu");
-        
-        this.device = device;
-        
-        // Menu Items -> Separator
-        this._item = new PopupMenu.PopupSeparatorMenuItem(this.device.name);
-        // Menu Items -> Separator -> Battery label
-        this.batteryLabel = new St.Label();
-        this._item.actor.add(this.batteryLabel);
-        // Menu Items -> Separator -> Battery Icon
-        this.batteryIcon = new St.Icon({
-            icon_name: "battery-missing-symbolic",
-            style_class: "popup-menu-icon"
-        });
-        this._item.actor.add(this.batteryIcon);
-        this._battery();
-        this.addMenuItem(this._item);
-        
-        // Menu Items -> Action Bar
-        this.actionBar = new PopupMenu.PopupBaseMenuItem({
-            reactive: false,
-            can_focus: false
-        });
-        this.addMenuItem(this.actionBar);
-        
-        // Menu Items -> Action Bar -> Send SMS Action
-        this.smsButton = this._createActionButton("user-available-symbolic");
-        this.smsButton.connect("clicked", Lang.bind(this, this._sms));
-        this.actionBar.actor.add(this.smsButton, { expand: true, x_fill: false });
-        
-        // Menu Items -> Action Bar -> Find my phone Action
-        this.findButton = this._createActionButton("find-location-symbolic");
-        this.findButton.connect("clicked", () => { this._findmyphone(); });
-        this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
-        
-        // Menu Items -> Action Bar -> Pair/Unpair Action
-        this.trustButton = this._createActionButton("channel-insecure-symbolic");
-        this.trustButton.connect("clicked", Lang.bind(this, this._trust));
-        this.actionBar.actor.add(this.trustButton, { expand: true, x_fill: false });
-        
-        // Connect to "Device.changed::*" signals
-        this.device.connect("changed::battery", Lang.bind(this, this._battery));
-        this.device.connect("changed::plugins", Lang.bind(this, this._sync));
-        
-        this._sync();
-    },
-    
-    _createActionButton: function (iconName) {
-        let icon = new St.Button({
-            reactive: true,
-            can_focus: true,
-            track_hover: true,
-            style_class: "system-menu-action",
-            style: "padding: 8px;"
-        });
-        
-        icon.child = new St.Icon({ icon_name: iconName });
-        
-        return icon;
-    },
-    
-    // Callbacks
-    _battery: function (device, signal_id, level_state) {
-        // Set the icon name, relevant to battery level and charging state
-        debug("extension.DeviceMenu._battery(" + level_state + ")");
-        
-        // Battery plugin disabled
-        if (!this.device.plugins.hasOwnProperty("battery") || !this.device.trusted) {
-            this.batteryIcon.icon_name = "battery-missing-symbolic";
-            this.batteryLabel.text = "";
-            return;
-        }
-        
-        // Try the get data from the device itself
-        if (!level_state) {
-            level_state = [
-                this.device.plugins.battery.level,
-                this.device.plugins.battery.charging
-            ];
-        }
-        
-        // These are the numbers and icons upower uses (except empty)
-        let icon = "battery";
-        
-        if (level_state[0] < 3) {
-            icon += level_state[1] === true ? "-empty-charging" : "-empty";
-        } else if (level_state[0] < 10) {
-            icon += level_state[1] === true ? "-caution-charging" : "-caution";
-        } else if (level_state[0] < 30) {
-            icon += level_state[1] === true ? "-low-charging" : "-low";
-        } else if (level_state[0] < 60) {
-            icon += level_state[1] === true ? "-good-charging" : "-good";
-        } else if (level_state[0] >= 60) {
-            icon += level_state[1] === true ? "-full-charging" : "-full";
-        }
-        
-        this.batteryIcon.icon_name = icon + "-symbolic";
-        this.batteryLabel.text = level_state[0] + "%";
-    },
-    
-    // Action Callbacks
-    _findmyphone: function (button, signal_id) {
-        debug("extension.DeviceMenu._findmyphone()");
-        
-        this.device.plugins.findmyphone.find();
-    },
-    
-    _sms: function (button, signal_id) {
-        // TODO: track windows...
-        debug("extension.DeviceMenu._sms()");
-        
-        GLib.spawn_command_line_async(
-            Me.path + "/sms.js \"" + this.device.busPath + "\""
-        );
-    },
-    
-    _trust: function (button, signal_id) {
-        debug("extension.DeviceMenu._trust()");
-        
-        this.emit("request::trusted", null, this.device.busPath);
-    },
-    
-    _sync: function () {
-        debug("extension.DeviceMenu._sync()");
-        
-        // SMS Button
-        if (this.device.plugins.hasOwnProperty("telephony")) {
-            this.smsButton.can_focus = true;
-            this.smsButton.reactive = true;
-            this.smsButton.track_hover = true;
-            this.smsButton.opacity = 255;
-        } else {
-            this.smsButton.can_focus = false;
-            this.smsButton.reactive = false;
-            this.smsButton.track_hover = false;
-            this.smsButton.opacity = 128;
-        }
-        
-        // Find My Phone Button
-        if (this.device.plugins.hasOwnProperty("findmyphone")) {
-            this.findButton.can_focus = true;
-            this.findButton.reactive = true;
-            this.findButton.track_hover = true;
-            this.findButton.opacity = 255;
-        } else {
-            this.findButton.can_focus = false;
-            this.findButton.reactive = false;
-            this.findButton.track_hover = false;
-            this.findButton.opacity = 128;
-        }
-        
-        // Pair Button
-        if (this.device.trusted) {
-            this.trustButton.child.icon_name = "channel-secure-symbolic";
-        } else {
-            this.trustButton.child.icon_name = "channel-insecure-symbolic";
-        }
-    }
-});
-
-Signals.addSignalMethods(DeviceMenu.prototype);
-
-// A Re-Wrapper for backend.Device representing a device in Menu.panel.statusArea
-// 
-// PanelMenu.Button (Extends PanelMenu.ButtonBox)
-//    -> St.Bin (this.container)
-//        -> StBox (this.actor)
-//    -> PopupMenu.PopupMenu (this.menu)
+// An indicator representing a device in Menu.panel.statusArea, used as an
+// optional location for a DeviceMenu.
 const DeviceIndicator = new Lang.Class({
     Name: "DeviceIndicator",
     Extends: PanelMenu.Button,
@@ -206,42 +35,321 @@ const DeviceIndicator = new Lang.Class({
         });
         this.actor.add_actor(this.icon);
         
-        // Set icon
-        this._status();
-        
-        let menu = new DeviceMenu(device);
-        this.menu.addMenuItem(menu);
+        this.deviceMenu = new DeviceMenu(device);
+        this.menu.addMenuItem(this.deviceMenu);
         
         // Signals
-        this.device.connect("changed::active", Lang.bind(this, this._status));
-        this.device.connect("changed::trusted", Lang.bind(this, this._status));
+        device.connect("changed::active", () => { this._sync(); });
+        device.connect("changed::trusted", () => { this._sync(); });
+        
+        Settings.connect("changed::per-device-indicators", () => { this._sync(); });
+        Settings.connect("changed::show-offline", () => { this._sync(); });
+        Settings.connect("changed::show-untrusted", () => { this._sync(); });
+        
+        // Sync
+        this._sync(device);
     },
     
     // Callbacks
-    _status: function (device, signal_id, cb_data) {
-        debug("extension.DeviceMenu._status(" + cb_data + ")");
+    _sync: function (sender, cb_data) {
+        debug("extension.DeviceIndicator._sync()");
         
+        // Device Visibility
+        // TODO: this just isn't intuitive for the user at all
+        if (!Settings.get_boolean("show-offline")) {
+            this.actor.visible = this.device.active;
+        } else if (!Settings.get_boolean("show-untrusted")) {
+            this.actor.visible = this.device.trusted;
+        } else {
+            this.actor.visible = true;
+        }
+        
+        // Indicator Visibility (User Setting)
+        if (this.actor.visible) {
+            this.actor.visible = Settings.get_boolean("per-device-indicators");
+        }
+        
+        // Indicator Icon
         let icon = this.device.type;
         
-        switch (true) {
-            // Type correction for icons
-            case (this.device.type == "phone"):
-                icon = "smartphone";
-            // Status
-            case (this.device.active):
-                this.icon.icon_name = icon + "-connected";
-                break;
-            case (this.device.trusted):
-                this.icon.icon_name = icon + "-trusted";
-                break;
-//            case (this.device.paired):
-//                this.icon.icon_name = icon + "-disconnected"
-//                break;
-            default:
-                this.icon.icon_name = icon + "-disconnected";
+        if (this.device.type == "phone") {
+            icon = "smartphone";
+        }
+        
+        if (this.device.active && this.device.trusted) {
+            this.icon.icon_name = icon + "-connected";
+        } else if (this.device.trusted) {
+            this.icon.icon_name = icon + "-trusted";
+        } else {
+            this.icon.icon_name = icon + "-disconnected";
         }
     }
 });
+
+// A PopupMenu used as an information and control center for a device,
+// accessible either as a User Menu submenu or Indicator popup-menu.
+const DeviceMenu = new Lang.Class({
+    Name: "DeviceMenu",
+    Extends: PopupMenu.PopupMenuSection,
+    
+    _init: function (device) {
+        this.parent(null, "DeviceMenu");
+        
+        this.device = device;
+        
+        // Menu Items -> Info Bar
+        // TODO: should be dynamic
+        this.infoBar = new PopupMenu.PopupSeparatorMenuItem(device.name);
+        this.addMenuItem(this.infoBar);
+        // Menu Items -> Separator -> Battery label (eg. "85%")
+        this.batteryLabel = new St.Label();
+        this.infoBar.actor.add(this.batteryLabel);
+        // Menu Items -> Separator -> Battery Icon (eg. battery-good-symbolic)
+        this.batteryButton = this._createButton(
+            "status",
+            "battery-missing-symbolic",
+            this._batteryChanged
+        );
+        this.infoBar.actor.add(this.batteryButton);
+        // Menu Items -> Separator -> Trust Icon (eg. battery-good-symbolic)
+        this.trustButton = this._createButton(
+            "status",
+            "channel-insecure-symbolic",
+            this._trustAction
+        );
+        this.infoBar.actor.add(this.trustButton);
+        
+        // Menu Items -> Action Bar
+        this.actionBar = new PopupMenu.PopupBaseMenuItem({
+            reactive: false,
+            can_focus: false
+        });
+        this.addMenuItem(this.actionBar);
+        
+        // Menu Items -> Action Bar -> Send SMS Action
+        this.smsButton = this._createButton(
+            "action",
+            "user-available-symbolic",
+            this._smsAction
+        );
+        this.actionBar.actor.add(this.smsButton, { expand: true, x_fill: false });
+        
+        // Menu Items -> Action Bar -> Find my phone Action
+        this.findButton = this._createButton(
+            "action",
+            "find-location-symbolic",
+            this._findAction,
+            device
+        );
+        this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
+        
+        // Connect to "Device.changed::*" signals
+        device.connect("changed::active", Lang.bind(this, this._activeChanged));
+        device.connect("changed::battery", Lang.bind(this, this._batteryChanged));
+        device.connect("changed::plugins", Lang.bind(this, this._pluginsChanged));
+        device.connect("changed::trusted", Lang.bind(this, this._trustedChanged));
+        
+        Settings.connect("changed::show-offline", Lang.bind(this, this._sync));
+        Settings.connect("changed::show-untrusted", Lang.bind(this, this._sync));
+        
+        this._sync(device);
+    },
+    
+    _createButton: function (type, name, callback) {
+        let button = new St.Button();
+        button.child = new St.Icon({ icon_name: name });
+        
+        if (type == "status") {
+            button.child.style_class = "popup-menu-icon";
+        } else if (type == "action") {
+            button.style_class = "system-menu-action";
+            button.style = "padding: 8px; border-radius: 24px;";
+        }
+        
+        if (callback) {
+            button.connect("clicked", Lang.bind(this, callback));
+        }
+        
+        return button;
+    },
+    
+    // Callbacks
+    _activeChanged: function (device, active) {
+        debug("extension.DeviceMenu._activeChanged()");
+        
+        active = (active != undefined) ? active : device.active;
+        
+        let buttons = [
+            //this.batteryButton,
+            this.smsButton,
+            this.findButton,
+            //this.trustButton
+        ];
+        
+        if (active) {
+            buttons.forEach((button) => {
+                button.can_focus = true;
+                button.reactive = true;
+                button.track_hover = true;
+                button.opacity = 255;
+            });
+        } else {
+            buttons.forEach((button) => {
+                button.can_focus = false;
+                button.reactive = false;
+                button.track_hover = false;
+                button.opacity = 128;
+            });
+        }
+    },
+    
+    _batteryChanged: function (device, levelState) {
+        // Set the icon name, relevant to battery level and charging state
+        debug("extension.DeviceMenu._batteryChanged(" + levelState + ")");
+        
+        device = (device.plugins != undefined) ? device : this.device;
+        
+        debug("plugins: " + Object.keys(device.plugins));
+        
+        // Battery plugin disabled
+        if (!device.plugins.hasOwnProperty("battery") || !device.trusted) {
+            this.batteryButton.child.icon_name = "battery-missing-symbolic";
+            this.batteryLabel.text = "";
+            return;
+        }
+            debug("charge: " + device.plugins.battery.charge);
+        
+        // Try the get data from the device itself
+        if (!levelState) {
+            levelState = [
+                this.device.plugins.battery.level,
+                this.device.plugins.battery.charging
+            ];
+        }
+        
+        debug("levelState: " + levelState);
+        
+        // uPower Style
+        let icon = "battery";
+        
+        if (levelState[0] < 3) {
+            icon += levelState[1] === true ? "-empty-charging" : "-empty";
+        } else if (levelState[0] < 10) {
+            icon += levelState[1] === true ? "-caution-charging" : "-caution";
+        } else if (levelState[0] < 30) {
+            icon += levelState[1] === true ? "-low-charging" : "-low";
+        } else if (levelState[0] < 60) {
+            icon += levelState[1] === true ? "-good-charging" : "-good";
+        } else if (levelState[0] >= 60) {
+            icon += levelState[1] === true ? "-full-charging" : "-full";
+        }
+        
+        this.batteryButton.child.icon_name = icon + "-symbolic";
+        this.batteryLabel.text = levelState[0] + "%";
+    },
+    
+    _pluginsChanged: function (device) {
+        debug("extension.DeviceMenu._pluginsChanged()");
+        
+        // Device Menu Buttons
+        let buttons = [
+            [this.smsButton, "telephony"],
+            [this.findButton, "findmyphone"]
+        ];
+        
+        buttons.forEach((button) => {
+            if (device.plugins.hasOwnProperty(button[1])) {
+                button[0].can_focus = true;
+                button[0].reactive = true;
+                button[0].track_hover = true;
+                button[0].opacity = 255;
+            } else {
+                button[0].can_focus = false;
+                button[0].reactive = false;
+                button[0].track_hover = false;
+                button[0].opacity = 128;
+            }
+        });
+        
+        this._batteryChanged(device);
+    },
+    
+    _trustedChanged: function (device, trusted) {
+        debug("extension.DeviceMenu._trustedChanged()");
+        
+        trusted = (trusted != undefined) ? trusted : device.trusted;
+        
+        if (trusted) {
+            this.trustButton.child.icon_name = "channel-secure-symbolic";
+        } else {
+            this.trustButton.child.icon_name = "channel-insecure-symbolic";
+        }
+    },
+    
+    // Action Button Callbacks
+    _findAction: function (button, device) {
+        debug("extension.DeviceMenu._findmyphone()");
+        
+        device.plugins.findmyphone.find();
+        this._getTopMenu().close(true);
+    },
+    
+    _smsAction: function (button, device) {
+        // TODO: track windows...
+        debug("extension.DeviceMenu._sms()");
+        
+//        for (let i = 0; i < global.screen.n_workspaces; i++) {
+//            let workspace = global.screen.get_workspace_by_index(i);
+//            let windows = workspace.list_windows();
+//            
+//            windows.forEach((window) => {
+//                debug(window.title.toString());
+//                
+//                for (let foo in window) {
+//                    debug(foo.toString());
+//                }
+//            
+//                if (window.startup_id == this.device.dbusPath) {
+//                    Main.activateWindow(window);
+//                    return;
+//                }
+//            });
+//        }
+        
+        GLib.spawn_command_line_async(
+            Me.path + "/sms.js \"" + device.dbusPath + "\""
+        );
+        
+        this._getTopMenu().close(true);
+    },
+    
+    _trustAction: function () {
+        debug("extension.DeviceMenu._trustAction()");
+        
+        this.emit("request::trusted", this.device.dbusPath);
+        this._getTopMenu().close(true);
+    },
+    
+    // UI Callbacks
+    _sync: function () {
+        debug("extension.DeviceMenu._sync()");
+        
+        // Device Visibility
+        if (!Settings.get_boolean("show-offline")) {
+            this.actor.visible = device.active;
+        } else if (!Settings.get_boolean("show-untrusted")) {
+            this.actor.visible = device.trusted;
+        } else {
+            this.actor.visible = true;
+        }
+        
+        this._activeChanged(this.device);
+        this._pluginsChanged(this.device); // include _batteryChanged()
+        this._trustedChanged(this.device);
+    }
+});
+
+Signals.addSignalMethods(DeviceMenu.prototype);
 
 // The main extension hub.
 const SystemIndicator = new Lang.Class({
@@ -252,13 +360,12 @@ const SystemIndicator = new Lang.Class({
         this.parent();
         
         this.manager = null;
-        this._pauseSync = false;
         this.backend = Settings.get_boolean("use-kdeconnect") ? Me.imports.kdeconnect : Me.imports.mconnect;
         
         // device submenus
         this.deviceMenus = {};
         
-        // Icon
+        // System Indicator
         this.systemIndicator = this._addIndicator();
         this.systemIndicator.icon_name = "smartphone-symbolic";
         let userMenuTray = Main.panel.statusArea.aggregateMenu._indicators;
@@ -290,9 +397,6 @@ const SystemIndicator = new Lang.Class({
         
         // Signals
         Settings.connect("changed::per-device-indicators", Lang.bind(this, this._sync));
-        Settings.connect("changed::show-inactive", Lang.bind(this, this._sync));
-        Settings.connect("changed::show-unallowed", Lang.bind(this, this._sync));
-        Settings.connect("changed::show-unpaired", Lang.bind(this, this._sync));
         
         // Watch for DBus service
         this._watchdog = Gio.bus_watch_name(
@@ -304,76 +408,81 @@ const SystemIndicator = new Lang.Class({
         );
         
         // Watch "start-daemon" setting
-        Settings.connect(
-            "changed::start-daemon",
-            Lang.bind(
-                this,
-                function (settings, key, cb_data) {
-                    debug("Settings: changed::start-daemon");
-                    
-                    if (Settings.get_boolean(key) && this.manager == null) {
-                        this.backend.startDaemon();
-                    }
-                }
-            )
-        );
+        Settings.connect("changed::start-daemon", (settings, key) => {
+            debug("Settings: changed::start-daemon");
+            
+            if (Settings.get_boolean(key) && this.manager == null) {
+                this.backend.startDaemon();
+            }
+        });
     },
     
     // UI Settings callbacks
-    _isVisible: function (device) {
-        // Return boolean whether user considers device visible or not
-        // FIXME: not quite working
-        debug("extension.SystemIndicator._isVisible(" + device.busPath + ")");
-        
-        let visible = [];
-        
-        switch (false) {
-            case Settings.get_boolean("show-unpaired"):
-                visible.push(device.paired);
-            case Settings.get_boolean("show-unallowed"):
-                visible.push(device.allowed);
-            case Settings.get_boolean("show-inactive"):
-                visible.push(device.paired);
-        }
-        
-        return (visible.indexOf(false) < 0);
-    },
-    
     _sync: function () {
         debug("extension.SystemIndicator._sync()");
         
-        if (this._pauseSync) {
-            debug("extension.SystemIndicator._sync(): paused; skipping");
-            return;
-        }
-        
         // Show "Enable" if backend not running
         this.enableItem.actor.visible = (this.manager) ? false : true;
-        
-        for (let busPath in this.deviceMenus) {
-            if (Object.keys(this.deviceMenus).length < 1) {
-                return;
-            }
-        
-            let deviceIndicator = Main.panel.statusArea[busPath];
-            let deviceMenu = this.deviceMenus[busPath];
-            let visible = false;
             
-            if (this.manager) {
-                visible = this._isVisible(this.manager.devices[busPath])
-            }
-            
-            // Show per-device indicators OR user menu entries
-            if (Settings.get_boolean("per-device-indicators")) {
-                deviceIndicator.actor.visible = visible;
-                deviceMenu.actor.visible = false;
-                this.systemIndicator.visible = (!this.manager);
-            } else {
-                this.systemIndicator.visible = true;
-                deviceMenu.actor.visible = visible;
-                deviceIndicator.actor.visible = false;
-            }
+        // Show per-device indicators OR user menu entries
+        if (Settings.get_boolean("per-device-indicators")) {
+            this.devicesSection.actor.visible = false;
+        } else {
+            this.devicesSection.actor.visible = true;
         }
+    },
+    
+    _requestTrusted: function (menu, dbusPath) {
+        debug("extension.SystemIndicator._trust(" + dbusPath + ")");
+        
+        let device = this.manager.devices[dbusPath];
+        let action, params;
+        
+        
+        // Prepare the dialog content
+        if (device.trusted) {
+            log("requesting unpairing for \"" + dbusPath + "\"");
+            params = {
+                message_type: Sw.MessageType.QUESTION,
+                icon_name: "channel-insecure-symbolic",
+                text: "Mark device as untrusted?",
+                secondary_text: [
+                    "Marking the " +  device.type + " \"" + device.name + "\" ",
+                    "as untrusted will deny it access to your computer. ",
+                    "Are you sure you want to proceed?"].join(""),
+                buttons: Sw.ButtonsType.YES_NO
+            }
+            
+            action = this.manager.untrustDevice;
+        } else {
+            log("confirming pairing for \"" + dbusPath + "\"");
+            params = {
+                message_type: Sw.MessageType.QUESTION,
+                icon_name: "channel-secure-symbolic",
+                text: "Mark device as trusted?",
+                secondary_text: [
+                    "Marking the " +  device.type + " \"" + device.name + "\" ",
+                    "as trusted will allow it access to your computer and ",
+                    "may pose a serious security risk. ",
+                    "Are you sure you want to proceed?"].join(""),
+                buttons: Sw.ButtonsType.YES_NO
+            }
+            
+            action = this.manager.trustDevice;
+        }
+        
+        // Prompt the user with the dialog
+        let prompt = new Sw.MessageDialog(params);
+        
+        prompt.connect("response", (dialog, responseType) => {
+            prompt.close();
+            
+            if (responseType == Sw.ResponseType.YES) {
+                action(dbusPath)
+            }
+        });
+        
+        prompt.open();
     },
     
     // DBus Callbacks
@@ -384,8 +493,8 @@ const SystemIndicator = new Lang.Class({
         // Initialize the manager and add current devices
         this.manager = new this.backend.DeviceManager();
         
-        for (let busPath in this.manager.devices) {
-            systemIndicator._deviceAdded(this.manager, null, busPath);
+        for (let dbusPath in this.manager.devices) {
+            systemIndicator._deviceAdded(this.manager, null, dbusPath);
         }
         
         // Sync the UI
@@ -404,8 +513,6 @@ const SystemIndicator = new Lang.Class({
     },
     
     _daemonVanished: function (conn, name, name_owner, cb_data) {
-        // FIXME: some widgets missing on kdeconnectd shutdown?
-        //        "JS ERROR: TypeError: deviceIndicator is undefined"
         // The DBus interface has vanished
         debug("extension.SystemIndicator._daemonVanished()");
         
@@ -417,10 +524,8 @@ const SystemIndicator = new Lang.Class({
         
         // If a manager is initialized, destroy it
         if (this.manager) {
-            this._pauseSync = true;
             this.manager.destroy();
             delete this.manager;
-            this._pauseSync = false;
         }
         
         // Sync the UI
@@ -434,48 +539,44 @@ const SystemIndicator = new Lang.Class({
         }
     },
     
-    _deviceAdded: function (manager, signal_id, busPath) {
-        debug("extension.SystemIndicator._deviceAdded(" + busPath + ")");
+    _deviceAdded: function (manager, signal_id, dbusPath) {
+        debug("extension.SystemIndicator._deviceAdded(" + dbusPath + ")");
         
-        let device = manager.devices[busPath];
+        let device = this.manager.devices[dbusPath];
         
         // Per-device indicator
         let indicator = new DeviceIndicator(device);
-        Main.panel.addToStatusArea(busPath, indicator);
+        indicator.deviceMenu.connect(
+            "request::trusted",
+            Lang.bind(this, this._requestTrusted)
+        );
+        Main.panel.addToStatusArea(dbusPath, indicator);
         
         // User menu entry
-        this.deviceMenus[busPath] = new DeviceMenu(device);
-        this.deviceMenus[busPath].connect(
+        this.deviceMenus[dbusPath] = new DeviceMenu(device);
+        this.deviceMenus[dbusPath].connect(
             "request::trusted",
-            (menu, signal_id, devPath) => {
-                debug("TRUE");
-                if (this.manager.devices[devPath].trusted) {
-                    debug("request unpairing");
-                } else {
-                    debug("request pairing");
-                }
-            }
+            Lang.bind(this, this._requestTrusted)
         );
-        this.devicesSection.addMenuItem(this.deviceMenus[busPath]);
+        this.devicesSection.addMenuItem(this.deviceMenus[dbusPath]);
         
         this._sync();
     },
     
-    _deviceRemoved: function (manager, signal_id, busPath) {
-        debug("extension.SystemIndicator._deviceRemoved(" + busPath + ")");
+    _deviceRemoved: function (manager, signal_id, dbusPath) {
+        debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
         
         // Per-device indicator
-        Main.panel.statusArea[busPath].destroy();
+        Main.panel.statusArea[dbusPath].destroy();
         
         // User menu entry
-        this.deviceMenus[busPath].destroy();
+        this.deviceMenus[dbusPath].destroy();
         
         this._sync();
     },
     
     // Public Methods
     destroy: function () {
-        this._pauseSync = true;
         this.manager.destroy();
         delete this.manager;
         
