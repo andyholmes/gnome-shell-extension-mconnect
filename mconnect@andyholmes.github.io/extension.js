@@ -108,7 +108,7 @@ const DeviceMenu = new Lang.Class({
     _activeChanged: function (device, active) {
         debug("extension.DeviceMenu._activeChanged()");
 
-        active = (typeof active === Boolean) ? active : device.active;
+        active = (typeof active === Boolean) ? active : this.device.active;
 
         let buttons = [
             //this.batteryButton,

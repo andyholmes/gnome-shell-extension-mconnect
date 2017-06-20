@@ -293,14 +293,14 @@ const Battery = new Lang.Class({
         // Returns an integer percentage of the device"s battery remaining
         debug("kdeconnect.Battery._charge()");
         
-        return this.proxy.chargeSync();
+        return this.proxy.chargeSync()[0];
     },
     
     _isCharging: function () {
         // Returns a boolean if device is charging
         debug("kdeconnect.Battery._isCharging()");
         
-        return this.proxy.isChargingSync();
+        return this.proxy.isChargingSync()[0];
     },
     
     // Public Methods
