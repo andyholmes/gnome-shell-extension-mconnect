@@ -305,12 +305,13 @@ const Battery = new Lang.Class({
     
     // Public Methods
     destroy: function () {
-        // TODO: disconnect signals
+        this.proxy._signalConnections.forEach((connection) => { 
+            this.proxy.disconnectSignal(connection.id);
+        });
+        
         delete this.proxy;
     }
 });
-
-Signals.addSignalMethods(Battery.prototype);
 
 
 // A DBus Interface wrapper for the findmyphone plugin
@@ -357,8 +358,6 @@ const FindMyPhone = new Lang.Class({
         delete this.proxy;
     }
 });
-
-Signals.addSignalMethods(FindMyPhone.prototype);
 
 
 // A DBus Interface wrapper for the notifications plugin
@@ -415,12 +414,13 @@ const Notificationz = new Lang.Class({
     
     // Public Methods
     destroy: function () {
-        // TODO: disconnect signals
+        this.proxy._signalConnections.forEach((connection) => {
+            this.proxy.disconnectSignal(connection.id);
+        });
+        
         delete this.proxy;
     }
 });
-
-Signals.addSignalMethods(Notificationz.prototype);
 
 
 // A DBus Interface wrapper for the telephony plugin
@@ -459,8 +459,6 @@ const Telephony = new Lang.Class({
         delete this.proxy;
     }
 });
-
-Signals.addSignalMethods(Telephony.prototype);
 
 // Our supported plugins mapping
 const Plugins = {
@@ -620,7 +618,12 @@ const Device = new Lang.Class({
             delete this.plugins[pluginName];
         }
         
+        this.proxy._signalConnections.forEach((connection) => { 
+            this.proxy.disconnectSignal(connection.id);
+        });
         delete this.proxy;
+        
+        this.disconnectAll();
     }
 });
 
@@ -689,11 +692,11 @@ const DeviceManager = new Lang.Class({
     },
     
     // KDE Connect Methods
-    _acquireDiscoveryMode: function (id) {
+    _acquireDiscoveryMode: function (connection) {
         // Send a pairing request to *id*
         debug("kdeconnect.DeviceManager._acquireDiscoveryMode(" + id + ")");
         
-        return this.proxy.acquireDiscoveryModeSync(id);
+        return this.proxy.acquireDiscoveryModeSync(connection);
     },
     
     _announcedName: function () {
@@ -725,11 +728,11 @@ const DeviceManager = new Lang.Class({
         return this.proxy.forceOnNetworkChangeSync();
     },
     
-    _releaseDiscoveryMode: function (id) {
+    _releaseDiscoveryMode: function (connection) {
         // Release the device with *id* from discovery (?)
         debug("kdeconnect.DeviceManager._releaseDiscoveryMode()");
         
-        return this.proxy.releaseDiscoveryModeSync(id);
+        return this.proxy.releaseDiscoveryModeSync(connection);
     },
     
     _setAnnouncedName: function (name) {
@@ -760,6 +763,13 @@ const DeviceManager = new Lang.Class({
             delete this.devices[dbusPath];
             this.emit("device::removed", null, dbusPath);
         }
+        
+        this.proxy._signalConnections.forEach((connection) => { 
+            this.proxy.disconnectSignal(connection.id);
+        });
+        delete this.proxy;
+        
+        this.disconnectAll();
     }
 });
 

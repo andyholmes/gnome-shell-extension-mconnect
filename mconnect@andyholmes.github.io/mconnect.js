@@ -143,12 +143,13 @@ const Battery = new Lang.Class({
     
     // Public Methods
     destroy: function () {
-        // TODO: disconnect signals
+        this.proxy._signalConnections.forEach((connection) => { 
+            this.proxy.disconnectSignal(connection.id);
+        });
+        
         delete this.proxy;
     }
 });
-
-Signals.addSignalMethods(Battery.prototype);
 
 // A DBus Interface wrapper for the ping plugin
 const Ping = new Lang.Class({
@@ -176,12 +177,13 @@ const Ping = new Lang.Class({
     
     // Public Methods
     destroy: function () {
-        // TODO: disconnect signals
+        this.proxy._signalConnections.forEach((connection) => { 
+            this.proxy.disconnectSignal(connection.id);
+        });
+        
         delete this.proxy;
     }
 });
-
-Signals.addSignalMethods(Ping.prototype);
 
 // Our supported plugins mapping
 const Plugins = {
@@ -249,7 +251,13 @@ const Device = new Lang.Class({
             delete this.plugins[pluginName];
         }
         
+        // TODO: no signals yet
+        //this.proxy._signalConnections.forEach((connection) => { 
+        //    this.proxy.disconnectSignal(connection.id);
+        //});
         delete this.proxy;
+        
+        this.disconnectAll();
     }
 });
 
@@ -283,14 +291,14 @@ const DeviceManager = new Lang.Class({
         
         // Add currently managed devices
         this._ListDevices().forEach((dbusPath) => {
-            this._deviceAdded(this, null, dbusPath);
+            this._deviceAdded(this, dbusPath);
         });
         
         // TODO: Signals
     },
     
     // MConnect Callbacks
-    _deviceAdded: function (manager, signal_id, dbusPath) {
+    _deviceAdded: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
         debug("mconnect.DeviceManager._deviceAdded(" + dbusPath + ")");
         
@@ -298,13 +306,13 @@ const DeviceManager = new Lang.Class({
         this.emit("device::added", null, dbusPath);
     },
     
-    _deviceRemoved: function (manager, signal_id, dbusPath) {
+    _deviceRemoved: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
         debug("mconnect.DeviceManager._deviceRemoved(" + dbusPath + ")");
         
         this.devices[dbusPath].destroy();
         delete this.devices[dbusPath];
-        this.emit("device::removed", null, dbusPath);
+        this.emit("device::removed", null,  dbusPath);
     },
     
     // MConnect Methods
@@ -339,8 +347,16 @@ const DeviceManager = new Lang.Class({
     
     destroy: function () {
         for (let dbusPath in this.devices) {
-            this._deviceRemoved(this, null, dbusPath);
+            this._deviceRemoved(this, dbusPath);
         }
+        
+        // TODO: no signals yet
+        //this.proxy._signalConnections.forEach((connection) => { 
+        //    this.proxy.disconnectSignal(connection.id);
+        //});
+        delete this.proxy
+        
+        this.disconnectAll();
     }
 });
 
