@@ -95,7 +95,7 @@ const SMSWindow = new Lang.Class({
             editable: false,
             wrap_mode: Gtk.WrapMode.WORD
         });
-        scrolledWindow.add(this.conversationView)
+        scrolledWindow.add(this.conversationView);
         
         this.conversationBuffer = new Gtk.TextBuffer();
         this.conversationView.set_buffer(this.conversationBuffer)
