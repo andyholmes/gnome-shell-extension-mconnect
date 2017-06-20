@@ -10,37 +10,37 @@ const { debug, Schema, Settings } = Me.imports.utils;
 
 
 function init() {
-    debug('initializing preferences');
+    debug("initializing preferences");
     
     // TODO: localization?
-};
+}
 
 // Extension Preferences
 function buildPrefsWidget() {
     let builder = new Gtk.Builder();
-    builder.add_from_file(Me.path + '/prefs.ui');
+    builder.add_from_file(Me.path + "/prefs.ui");
     
-    // Each GSetting key is given an associated widget named 'gsetting-key'
-    // and a label named 'gsetting-key-label'. The preferences widget is
+    // Each GSetting key is given an associated widget named "gsetting-key"
+    // and a label named "gsetting-key-label". The preferences widget is
     // then programatically built and each option connect to GSettings.
     let optionsList = [
-        'per-device-indicators',
-        'show-offline',
-        'show-untrusted',
-        'start-daemon',
-        'use-kdeconnect',
-        'debug'
+        "per-device-indicators",
+        "show-offline",
+        "show-untrusted",
+        "start-daemon",
+        "use-kdeconnect",
+        "debug"
     ];
     
     let label;
     
     optionsList.forEach((option) => {
-        label = builder.get_object(option + '-label');
+        label = builder.get_object(option + "-label");
         label.set_label(Schema.get_key(option).get_summary());
         Settings.bind(
             option,
             builder.get_object(option),
-            'active',
+            "active",
             Gio.SettingsBindFlags.DEFAULT
         );
     });
@@ -63,14 +63,16 @@ function buildPrefsWidget() {
 //        "wrap-license", true);
 //    }
 //    
-    builder.get_object('extension-name').set_label(Me.metadata.name.toString());
-    builder.get_object('extension-description').set_label(Me.metadata.description.toString());
-    builder.get_object('extension-url').set_uri(Me.metadata.url.toString());
-    //builder.get_object('extension-version').set_label(Me.metadata.version.toString());
+    builder.get_object("extension-name").set_label(Me.metadata.name.toString());
+    builder.get_object("extension-description").set_label(Me.metadata.description.toString());
+    builder.get_object("extension-url").set_uri(Me.metadata.url.toString());
+    //builder.get_object("extension-version").set_label(Me.metadata.version.toString());
     
     //
-    let widget = builder.get_object('prefs-widget');
+    let widget = builder.get_object("prefs-widget");
     widget.show_all();
     
     return widget;
-};
+}
+
+

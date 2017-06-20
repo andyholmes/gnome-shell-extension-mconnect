@@ -13,7 +13,7 @@ const Gtk = imports.gi.Gtk;
 // Local Imports
 function getPath() {
     // Diced from: https://github.com/optimisme/gjs-examples/
-    let m = new RegExp('@(.+):\\d+').exec((new Error()).stack.split('\n')[1]);
+    let m = new RegExp("@(.+):\\d+").exec((new Error()).stack.split("\n")[1]);
     return Gio.File.new_for_path(m[1]).get_parent().get_path();
 }
 
@@ -24,7 +24,7 @@ const KDEConnect = imports.kdeconnect;
 
 
 // User Interface
-const SMSWindow = Lang.Class({
+const SMSWindow = new Lang.Class({
     Name: "SMSWindow",
     Extends: Gtk.Window,
     
@@ -110,13 +110,13 @@ const SMSWindow = Lang.Class({
         box.add(this.messageEntry);
         
         this.messageEntry.connect(
-            'activate',
+            "activate",
             (entry, signal_id, cb_data) => {
                 this.send(entry, signal_id, cb_data);
             }
         );
         this.messageEntry.connect(
-            'icon-release',
+            "icon-release",
             (entry, signal_id, cb_data) => {
                 this.send(entry, signal_id, cb_data);
             }
@@ -130,13 +130,13 @@ const SMSWindow = Lang.Class({
     _checkMessage: function () {
         // TODO: figure what KDE Connect does internally
         debug("sms.SMSWindow._checkMessage()");
-        return (this.messageEntry.text != "");
+        return (this.messageEntry.text !== "");
     },
     
     _checkNumber: function () {
         // TODO: figure what KDE Connect does internally
         debug("sms.SMSWindow._checkNumber()");
-        return (this.contactEntry.text != "");
+        return (this.contactEntry.text !== "");
     },
     
     // Public Methods
@@ -151,7 +151,7 @@ const SMSWindow = Lang.Class({
         
         if (this._checkMessage()) {
             debug("sending: " + entry.text + " to " + this.contactEntry.text);
-            this.device.plugins.telephony.send(this.contactEntry.text, entry.text)
+            this.device.plugins.telephony.send(this.contactEntry.text, entry.text);
             this.conversationBuffer.text += "Me: " + entry.text + "\n";
             entry.text = "";
         }
@@ -159,5 +159,5 @@ const SMSWindow = Lang.Class({
 });
 
 Gtk.init(null);
-let foo = new SMSWindow(ARGV[0]);
+let smsWindow = new SMSWindow(ARGV[0]);
 Gtk.main();

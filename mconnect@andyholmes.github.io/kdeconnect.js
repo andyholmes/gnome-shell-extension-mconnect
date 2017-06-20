@@ -10,7 +10,7 @@ const GLib = imports.gi.GLib;
 // Local Imports
 function getPath() {
     // Diced from: https://github.com/optimisme/gjs-examples/
-    let m = new RegExp('@(.+):\\d+').exec((new Error()).stack.split('\n')[1]);
+    let m = new RegExp("@(.+):\\d+").exec((new Error()).stack.split("\n")[1]);
     return Gio.File.new_for_path(m[1]).get_parent().get_path();
 }
 

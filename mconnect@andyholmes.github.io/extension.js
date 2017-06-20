@@ -451,7 +451,7 @@ const SystemIndicator = new Lang.Class({
                     "as untrusted will deny it access to your computer. ",
                     "Are you sure you want to proceed?"].join(""),
                 buttons: Sw.ButtonsType.YES_NO
-            }
+            };
             
             action = this.manager.untrustDevice;
         } else {
@@ -466,7 +466,7 @@ const SystemIndicator = new Lang.Class({
                     "may pose a serious security risk. ",
                     "Are you sure you want to proceed?"].join(""),
                 buttons: Sw.ButtonsType.YES_NO
-            }
+            };
             
             action = this.manager.trustDevice;
         }
@@ -478,7 +478,7 @@ const SystemIndicator = new Lang.Class({
             prompt.close();
             
             if (responseType === Sw.ResponseType.YES) {
-                action(dbusPath)
+                action(dbusPath);
             }
         });
         
@@ -601,7 +601,7 @@ function init() {
     debug("initializing extension");
     
     // TODO: localization
-};
+}
  
 function enable() {
     debug("enabling extension");
@@ -618,14 +618,14 @@ function enable() {
             systemIndicator = new SystemIndicator();
         }
     );
-};
+}
  
 function disable() {
     debug("disabling extension");
     
     // Destroy the UI
     systemIndicator.destroy();
-};
+}
 
 
 
