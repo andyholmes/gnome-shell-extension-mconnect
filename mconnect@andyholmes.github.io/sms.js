@@ -98,7 +98,7 @@ const SMSWindow = new Lang.Class({
         scrolledWindow.add(this.conversationView);
         
         this.conversationBuffer = new Gtk.TextBuffer();
-        this.conversationView.set_buffer(this.conversationBuffer)
+        this.conversationView.set_buffer(this.conversationBuffer);
         
         // Main Widget -> Message Entry
         this.messageEntry = new Gtk.Entry({

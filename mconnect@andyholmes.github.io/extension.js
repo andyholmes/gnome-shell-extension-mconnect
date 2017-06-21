@@ -108,11 +108,10 @@ const DeviceMenu = new Lang.Class({
     // Callbacks
     _activeChanged: function (device, active) {
         debug("extension.DeviceMenu._activeChanged()");
-
+        
         active = (typeof active === "boolean") ? active : this.device.active;
 
         let buttons = [
-            //this.batteryButton,
             this.smsButton,
             this.findButton,
             //this.trustButton
@@ -458,7 +457,7 @@ const SystemIndicator = new Lang.Class({
         } else {
             params = {
                 message_type: Sw.MessageType.QUESTION,
-                icon_name: "channel-secure-symbolic",
+                icon_name: "channel-insecure-symbolic",
                 text: "Mark device as trusted?",
                 secondary_text: [
                     "Marking the " +  device.type + " \"" + device.name + "\" ",

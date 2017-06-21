@@ -217,18 +217,17 @@ const Device = new Lang.Class({
         this.plugins = {};
         
         Object.defineProperties(this, {
+            address: { value: this.proxy.Address },
             id: { value: this.proxy.Id },
-            name: { value: this.proxy.Name },
             type: { value: this.proxy.DeviceType },
+            name: { value: this.proxy.Name },
+            active: { value: this.proxy.IsActive }, // paired, trusted & connected
+            paired: { value: this.proxy.IsPaired },
             trusted: { value: this.proxy.Allowed }, // TODO: get/set
-            active: { value: this.proxy.IsActive }, // kdeconnect: reachable
             // TODO: still not clear on these two
             incomingCapabilities: { value: this.proxy.IncomingCapabilities },
-            outgoingCapabilities: { value: this.proxy.OutgoingCapabilities }
-            // TODO: the following aren't kdeconnect properties
-            //address: { value: this.proxy.Address },
-            //paired: { value: this.proxy.IsPaired },
-            //version: { value: this.proxy.ProtocolVersion }
+            outgoingCapabilities: { value: this.proxy.OutgoingCapabilities },
+            version: { value: this.proxy.ProtocolVersion }
         });
         
         // Plugins
@@ -239,19 +238,19 @@ const Device = new Lang.Class({
             (proxy, sender, data) => {
                 let [iface, params] = data;
                 
-                if (iface == "org.mconnect.Device") {
+                if (iface === "org.mconnect.Device") {
                     if (params.hasOwnProperty("Name")) {
-                        this.emit("changed::name", null);
+                        this.emit("changed::name", this.name);
                     }
                     
                     if (params.hasOwnProperty("Allowed")) {
-                        this.emit("changed::trusted", null);
+                        this.emit("changed::trusted", this.trusted);
                     }
                     
                     if (params.hasOwnProperty("IsActive")) {
-                        this.emit("changed::active", null);
+                        this.emit("changed::active", this.active);
                     }
-                } else if (iface == "org.mconnect.Device.Battery") {
+                } else if (iface === "org.mconnect.Device.Battery") {
                     this.emit(
                         "changed::battery",
                         this.plugins.battery.level,
@@ -304,8 +303,6 @@ Signals.addSignalMethods(Device.prototype);
 const DeviceManager = new Lang.Class({
     Name: "DeviceManager",
     
-    devices: {},
-    
     _init: function () {
         // Create proxy wrapper for DBus Interface
         this.proxy = new ManagerProxy(
@@ -315,6 +312,8 @@ const DeviceManager = new Lang.Class({
         );
         
         // Properties
+        this.devices = {};
+        
         Object.defineProperties(this, {
             name: {
                 get: function () {
@@ -390,7 +389,7 @@ const DeviceManager = new Lang.Class({
         //this.proxy._signalConnections.forEach((connection) => { 
         //    this.proxy.disconnectSignal(connection.id);
         //});
-        delete this.proxy
+        delete this.proxy;
         
         this.disconnectAll();
     }

@@ -43,7 +43,9 @@ const ResponseType = {
     HELP: -11,          // Returned by Help buttons in GTK+ dialogs
 };
 
-// A dialog for confirming pairing/unpairing requests with the user
+// MessageDialog: A rendition of Gtk.MessageDialog for Gnome Shell
+//
+// https://github.com/GNOME/gnome-shell/blob/master/js/ui/modalDialog.js
 const MessageDialog = new Lang.Class({
     Name: "MessageDialog",
     Extends: ModalDialog.ModalDialog,
@@ -58,7 +60,9 @@ const MessageDialog = new Lang.Class({
         this.contentLayout.vertical = false;
         
         // Dialog Icon
-        this.icon = new St.Icon();
+        this.icon = new St.Icon({
+            style_class: "end-session-dialog-shutdown-icon"
+        });
         this.contentLayout.add(this.icon, {});
         
         // Message Layout
@@ -113,24 +117,20 @@ const MessageDialog = new Lang.Class({
         });
         
         // Init the Dialog
-        this.message_type = params["message_type"] || MessageType.INFO;
+        this.message_type = params["message_type"] || MessageType.OTHER;
         
-        switch (this.message_type) {
-            case MessageType.INFO:
-                this.icon_name = params["icon_name"] || "dialog-information-symbolic";
-                break;
-            case MessageType.WARNING:
-                this.icon_name = params["icon_name"] || "dialog-warning-symbolic";
-                break;
-            case MessageType.QUESTION:
-                this.icon_name = params["icon_name"] || "dialog-question-symbolic";
-                break;
-            case MessageType.ERROR:
-                this.icon_name = params["icon_name"] || "dialog-error-symbolic";
-                break;
-            case MessageType.OTHER:
-                this.icon_name = params["icon_name"] || "dialog-information-symbolic";
-                break;
+        if (params.hasOwnProperty("icon_name")) {
+            this.icon_name = params["icon_name"];
+        } else if (this.message_type === MessageType.INFO) {
+            this.icon_name = "dialog-information-symbolic";
+        } else if (this.message_type === MessageType.WARNING) {
+            this.icon_name = "dialog-warning-symbolic";
+        } else if (this.message_type === MessageType.QUESTION) {
+            this.icon_name = "dialog-question-symbolic";
+        } else if (this.message_type === MessageType.ERROR) {
+            this.icon_name = "dialog-error-symbolic";
+        } else if (this.message_type === MessageType.OTHER) {
+            this.icon_name = "dialog-information-symbolic";
         }
         
         this.text = params["text"] || "Information";
@@ -142,10 +142,9 @@ const MessageDialog = new Lang.Class({
     addButton: function (params) {
         ModalDialog.ModalDialog.prototype.addButton.call(this, {
             label: params.text,
-            action: () => {
-                this.emit("response", params.response);
-            },
-            isDefault: params.isDefault
+            action: () => { this.emit("response", params.response); },
+            isDefault: params.isDefault,
+            key: params.key
         });
     },
     
@@ -176,7 +175,8 @@ const MessageDialog = new Lang.Class({
                 this.addButton({
                     text: "No",
                     response: ResponseType.NO,
-                    isDefault: false
+                    isDefault: false,
+                    key: Clutter.KEY_Escape
                 });
                 this.addButton({
                     text: "Yes",
@@ -188,7 +188,8 @@ const MessageDialog = new Lang.Class({
                 this.addButton({
                     text: "Cancel",
                     response: ResponseType.CANCEL,
-                    isDefault: false
+                    isDefault: false,
+                    key: Clutter.KEY_Escape
                 });
                 this.addButton({
                     text: "OK",
