@@ -272,19 +272,15 @@ const Battery = new Lang.Class({
         this.proxy.connectSignal("chargeChanged", (proxy, sender, level) => {
             debug("kdeconnect.Battery._chargeChanged(" + level[0] + ")");
             
-            // re-pack like an mconnect battery update
-            let levelCharging = [level[0], this.charging];
             // have the device re-emit the signal
-            this.device.emit("changed::battery", levelCharging);
+            this.device.emit("changed::battery", level[0], charging);
         });
         
         this.proxy.connectSignal("stateChanged", (proxy, sender, charging) => {
             debug("kdeconnect.Battery._stateChanged(" + charging[0] + ")");
             
-            // re-pack like an mconnect battery update
-            let levelCharging = [this.level, charging[0]];
             // have the device re-emit the signal
-            this.device.emit("changed::battery", levelCharging);
+            this.device.emit("changed::battery", this.level, charging[0]);
         });
     },
     

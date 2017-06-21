@@ -77,6 +77,7 @@ const DeviceMenu = new Lang.Class({
         // Connect to "Device.changed::*" signals
         device.connect("changed::active", Lang.bind(this, this._activeChanged));
         device.connect("changed::battery", Lang.bind(this, this._batteryChanged));
+        device.connect("changed::name", Lang.bind(this, this._nameChanged));
         device.connect("changed::plugins", Lang.bind(this, this._pluginsChanged));
         device.connect("changed::trusted", Lang.bind(this, this._trustedChanged));
 
@@ -108,7 +109,7 @@ const DeviceMenu = new Lang.Class({
     _activeChanged: function (device, active) {
         debug("extension.DeviceMenu._activeChanged()");
 
-        active = (typeof active === Boolean) ? active : this.device.active;
+        active = (typeof active === "boolean") ? active : this.device.active;
 
         let buttons = [
             //this.batteryButton,
@@ -134,9 +135,9 @@ const DeviceMenu = new Lang.Class({
         }
     },
 
-    _batteryChanged: function (device, levelState) {
+    _batteryChanged: function (device, level, charging) {
         // Set the icon name, relevant to battery level and charging state
-        debug("extension.DeviceMenu._batteryChanged(" + levelState + ")");
+        debug("extension.DeviceMenu._batteryChanged(" + [level, charging] + ")");
 
         // Battery plugin disabled/untrusted
         if (!this.device.plugins.hasOwnProperty("battery") ||
@@ -145,38 +146,38 @@ const DeviceMenu = new Lang.Class({
             this.batteryLabel.text = "";
             return;
         }
-
+        
         // Try the get data from the device itself
-        if (typeof levelState !== Array) {
-            levelState = [
-                this.device.plugins.battery.level,
-                this.device.plugins.battery.charging
-            ];
-        // corner case where MConnect returns an array with undefined
-        } else if (typeof levelState[1] !== Boolean) {
-            levelState = [
-                this.device.plugins.battery.level,
-                this.device.plugins.battery.charging
-            ];
+        if ((typeof level !== "number") || (typeof charging !== "boolean")) {
+            level = this.device.plugins.battery.level;
+            charging = this.device.plugins.battery.charging;
         }
 
         // uPower Style
         let icon = "battery";
 
-        if (levelState[0] < 3) {
-            icon += levelState[1] === true ? "-empty-charging" : "-empty";
-        } else if (levelState[0] < 10) {
-            icon += levelState[1] === true ? "-caution-charging" : "-caution";
-        } else if (levelState[0] < 30) {
-            icon += levelState[1] === true ? "-low-charging" : "-low";
-        } else if (levelState[0] < 60) {
-            icon += levelState[1] === true ? "-good-charging" : "-good";
-        } else if (levelState[0] >= 60) {
-            icon += levelState[1] === true ? "-full-charging" : "-full";
+        if (level < 3) {
+            icon += charging === true ? "-empty-charging" : "-empty";
+        } else if (level < 10) {
+            icon += charging === true ? "-caution-charging" : "-caution";
+        } else if (level < 30) {
+            icon += charging === true ? "-low-charging" : "-low";
+        } else if (level < 60) {
+            icon += charging === true ? "-good-charging" : "-good";
+        } else if (level >= 60) {
+            icon += charging === true ? "-full-charging" : "-full";
         }
 
         this.batteryButton.child.icon_name = icon + "-symbolic";
-        this.batteryLabel.text = levelState[0] + "%";
+        this.batteryLabel.text = level + "%";
+    },
+
+    _nameChanged: function (device, name) {
+        debug("extension.DeviceMenu._nameChanged()");
+        
+        name = (typeof name === "string") ? name : this.device.name;
+        
+        this.infoBar.text = name;
     },
 
     _pluginsChanged: function (device) {
@@ -209,7 +210,7 @@ const DeviceMenu = new Lang.Class({
         debug("extension.DeviceMenu._trustedChanged()");
 
         // Prefer the signal data
-        trusted = (typeof trusted === Boolean) ? trusted : this.device.trusted;
+        trusted = (typeof trusted === "boolean") ? trusted : this.device.trusted;
 
         if (trusted) {
             this.trustButton.child.icon_name = "channel-secure-symbolic";
@@ -276,6 +277,7 @@ const DeviceMenu = new Lang.Class({
         }
 
         this._activeChanged();
+        this._nameChanged();
         this._pluginsChanged(); // include _batteryChanged()
         this._trustedChanged();
     }
@@ -434,15 +436,13 @@ const SystemIndicator = new Lang.Class({
     },
 
     _requestTrusted: function (menu, dbusPath) {
-        debug("extension.SystemIndicator._trust(" + dbusPath + ")");
+        debug("extension.SystemIndicator._requestTrusted(" + dbusPath + ")");
 
         let device = this.manager.devices[dbusPath];
         let action, params;
 
-
         // Prepare the dialog content
         if (device.trusted) {
-            log("requesting unpairing for \"" + dbusPath + "\"");
             params = {
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
@@ -456,7 +456,6 @@ const SystemIndicator = new Lang.Class({
 
             action = this.manager.untrustDevice;
         } else {
-            log("confirming pairing for \"" + dbusPath + "\"");
             params = {
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-secure-symbolic",
@@ -477,10 +476,7 @@ const SystemIndicator = new Lang.Class({
 
         prompt.connect("response", (dialog, responseType) => {
             prompt.close();
-
-            if (responseType === Sw.ResponseType.YES) {
-                action(dbusPath);
-            }
+            (responseType === Sw.ResponseType.YES) ? action(dbusPath) : null;
         });
 
         prompt.open();

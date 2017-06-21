@@ -21,9 +21,33 @@ const { debug, Settings } = imports.utils;
 // DBus Constants
 const BUS_NAME = "org.mconnect";
 
+const PropertiesProxy = Gio.DBusProxy.makeProxyWrapper('\
+<node> \
+  <interface name="org.freedesktop.DBus.Properties"> \
+    <method name="Get"> \
+      <arg type="s" name="interface_name" direction="in"/> \
+      <arg type="s" name="property_name" direction="in"/> \
+      <arg type="v" name="value" direction="out"/> \
+    </method> \
+    <method name="GetAll"> \
+      <arg type="s" name="interface_name" direction="in"/> \
+      <arg type="a{sv}" name="properties" direction="out"/> \
+    </method> \
+    <method name="Set"> \
+      <arg type="s" name="interface_name" direction="in"/> \
+      <arg type="s" name="property_name" direction="in"/> \
+      <arg type="v" name="value" direction="in"/> \
+    </method> \
+    <signal name="PropertiesChanged"> \
+      <arg type="s" name="interface_name"/> \
+      <arg type="a{sv}" name="changed_properties"/> \
+      <arg type="as" name="invalidated_properties"/> \
+    </signal> \
+  </interface> \
+</node> \
+');
+
 const ManagerProxy = Gio.DBusProxy.makeProxyWrapper('\
-<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
-"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
 <node> \
   <interface name="org.mconnect.DeviceManager"> \
     <method name="AllowDevice"> \
@@ -37,8 +61,6 @@ const ManagerProxy = Gio.DBusProxy.makeProxyWrapper('\
 ');
 
 const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
-<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
-"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
 <node> \
   <interface name="org.mconnect.Device"> \
     <property type="s" name="Id" access="readwrite"/> \
@@ -58,14 +80,8 @@ const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
 
 // Plugins
 const BatteryProxy = Gio.DBusProxy.makeProxyWrapper('\
-<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
-"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
 <node> \
   <interface name="org.mconnect.Device.Battery"> \
-    <signal name="Battery"> \
-      <arg type="u" name="level"/> \
-      <arg type="b" name="charging"/> \
-    </signal> \
     <property type="u" name="Level" access="readwrite"/> \
     <property type="b" name="Charging" access="readwrite"/> \
   </interface> \
@@ -73,8 +89,6 @@ const BatteryProxy = Gio.DBusProxy.makeProxyWrapper('\
 ');
 
 const PingProxy = Gio.DBusProxy.makeProxyWrapper('\
-<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" \
-"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"> \
 <node> \
   <interface name="org.mconnect.Device.Ping"> \
     <signal name="Ping"> \
@@ -130,23 +144,20 @@ const Battery = new Lang.Class({
         this.device = device;
         
         Object.defineProperties(this, {
-            charging: { value: this.proxy.Charging },
+            charging: { get: () => {
+                if (typeof this.proxy.Charging === "boolean") {
+                    return this.proxy.Charging;
+                }
+                
+                debug("NON BOOLEAN CHARGING");
+                return false;
+            }},
             level: { value: this.proxy.Level }
-        });
-        
-        // MConnect Signals
-        this.proxy.connectSignal("Battery", (proxy, sender, levelCharging) => {
-            // have the device re-emit the signal
-            this.device.emit("changed::battery", levelCharging);
         });
     },
     
     // Public Methods
     destroy: function () {
-        this.proxy._signalConnections.forEach((connection) => { 
-            this.proxy.disconnectSignal(connection.id);
-        });
-        
         delete this.proxy;
     }
 });
@@ -199,6 +210,7 @@ const Device = new Lang.Class({
     _init: function (dbusPath) {
         // Create proxy for the DBus Interface
         this.proxy = new DeviceProxy(Gio.DBus.session, BUS_NAME, dbusPath);
+        this.props = new PropertiesProxy(Gio.DBus.session, BUS_NAME, dbusPath);
         
         // Properties
         this.dbusPath = dbusPath;
@@ -222,8 +234,32 @@ const Device = new Lang.Class({
         // Plugins
         this._pluginsChanged();
         
-        // TODO: Signals
-        //this.proxy.connectSignal("pluginsChanged", Lang.bind(this, this._pluginsChanged));
+        // Signals
+        this.props.connectSignal("PropertiesChanged",
+            (proxy, sender, data) => {
+                let [iface, params] = data;
+                
+                if (iface == "org.mconnect.Device") {
+                    if (params.hasOwnProperty("Name")) {
+                        this.emit("changed::name", null);
+                    }
+                    
+                    if (params.hasOwnProperty("Allowed")) {
+                        this.emit("changed::trusted", null);
+                    }
+                    
+                    if (params.hasOwnProperty("IsActive")) {
+                        this.emit("changed::active", null);
+                    }
+                } else if (iface == "org.mconnect.Device.Battery") {
+                    this.emit(
+                        "changed::battery",
+                        this.plugins.battery.level,
+                        this.plugins.battery.charging
+                    );
+                }
+            }
+        );
     },
     
     // MConnect Callbacks
