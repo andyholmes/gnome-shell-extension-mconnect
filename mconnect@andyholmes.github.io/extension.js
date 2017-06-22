@@ -70,8 +70,7 @@ const DeviceMenu = new Lang.Class({
         this.findButton = this._createButton(
             "action",
             "find-location-symbolic",
-            this._findAction,
-            device
+            this._findAction
         );
         this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
 
@@ -80,7 +79,8 @@ const DeviceMenu = new Lang.Class({
         device.connect("changed::battery", Lang.bind(this, this._batteryChanged));
         device.connect("changed::name", Lang.bind(this, this._nameChanged));
         device.connect("changed::plugins", Lang.bind(this, this._pluginsChanged));
-        device.connect("changed::allowed", Lang.bind(this, this._allowedChanged));
+        device.connect("changed::allowed", Lang.bind(this, this._statusChanged));
+        device.connect("changed::paired", Lang.bind(this, this._statusChanged));
 
         Settings.connect("changed::show-offline", Lang.bind(this, this._settingsChanged));
         Settings.connect("changed::show-unallowed", Lang.bind(this, this._settingsChanged));
@@ -89,19 +89,20 @@ const DeviceMenu = new Lang.Class({
         this._activeChanged();
         this._nameChanged();
         this._pluginsChanged(); // include _batteryChanged()
-        this._allowedChanged();
+        this._batteryChanged();
         this._settingsChanged();
+        this._statusChanged();
     },
 
     _createButton: function (type, name, callback) {
         let button = new St.Button();
-        button.child = new St.Icon({ icon_name: name });
+            button.child = new St.Icon({ icon_name: name });
 
-        if (type === "status") {
-            button.child.style_class = "popup-menu-icon";
-        } else if (type === "action") {
+        if (type === "action") {
             button.style_class = "system-menu-action";
             button.style = "padding: 8px; border-radius: 24px;";
+        } else if (type === "status") {
+            button.child.style_class = "popup-menu-icon";
         }
 
         if (callback) {
@@ -121,26 +122,12 @@ const DeviceMenu = new Lang.Class({
         //active = (typeof active === "boolean") ? active : this.device.active;
     },
 
-    _allowedChanged: function (device, allowed) {
-        debug("extension.DeviceMenu._allowedChanged()");
-
-        // Prefer the signal data
-        allowed = (typeof allowed === "boolean") ? allowed : this.device.allowed;
-
-        if (allowed) {
-            this.allowButton.child.icon_name = "channel-secure-symbolic";
-        } else {
-            this.allowButton.child.icon_name = "channel-insecure-symbolic";
-        }
-    },
-
     _batteryChanged: function (device, level, charging) {
-        // Set the icon name, relevant to battery level and charging state
         debug("extension.DeviceMenu._batteryChanged(" + [level, charging] + ")");
 
         // Battery plugin disabled/unallowed
         if (!this.device.plugins.hasOwnProperty("battery") ||
-        !this.device.allowed || !this.device.connected) {
+        !this.device.connected) {
             this.batteryButton.child.icon_name = "battery-missing-symbolic";
             this.batteryLabel.text = "";
             return;
@@ -208,7 +195,7 @@ const DeviceMenu = new Lang.Class({
         this.infoBar.text = name;
     },
 
-    _pluginsChanged: function (device) {
+    _pluginsChanged: function (device, plugins) {
         debug("extension.DeviceMenu._pluginsChanged()");
 
         // Device Menu Buttons
@@ -230,20 +217,29 @@ const DeviceMenu = new Lang.Class({
                 button[0].opacity = 128;
             }
         });
-
-        this._batteryChanged(this.device);
     },
     
     _settingsChanged: function () {
-        debug("extension.DeviceMenu._sync()");
+        debug("extension.DeviceMenu._settingsChanged()");
 
         // Device Visibility
-        if (!Settings.get_boolean("show-offline")) {
-            this.actor.visible = this.device.active;
-        } else if (!Settings.get_boolean("show-unallowed")) {
+        // TODO
+        if (!Settings.get_boolean("show-unallowed")) {
             this.actor.visible = this.device.allowed;
         } else {
             this.actor.visible = true;
+        }
+    },
+
+    _statusChanged: function (device, state) {
+        debug("extension.DeviceMenu._statusChanged()");
+
+        if (this.device.paired && this.device.allowed) {
+            this.allowButton.child.icon_name = "channel-secure-symbolic";
+        } else if (this.device.allowed) {
+            this.allowButton.child.icon_name = "feed-refresh-symbolic";
+        } else {
+            this.allowButton.child.icon_name = "channel-insecure-symbolic";
         }
     },
 
@@ -332,10 +328,8 @@ const DeviceIndicator = new Lang.Class({
         debug("extension.DeviceIndicator._sync()");
 
         // Device Visibility
-        // TODO: this just isn't intuitive for the user at all
-        if (!Settings.get_boolean("show-offline")) {
-            this.actor.visible = this.device.active;
-        } else if (!Settings.get_boolean("show-unallowed")) {
+        // TODO
+        if (!Settings.get_boolean("show-unallowed")) {
             this.actor.visible = this.device.allowed;
         } else {
             this.actor.visible = true;
@@ -453,7 +447,7 @@ const SystemIndicator = new Lang.Class({
         let action, params;
 
         // Prepare the dialog content
-        if (device.allowed) {
+        if (device.paired) {
             params = {
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
@@ -461,6 +455,20 @@ const SystemIndicator = new Lang.Class({
                 secondary_text: [
                     "Marking the " +  device.type + " \"" + device.name + "\" ",
                     "as unallowed will deny it access to your computer. ",
+                    "Are you sure you want to proceed?"].join(""),
+                buttons: Sw.ButtonsType.YES_NO
+            };
+
+            action = Lang.bind(this.manager, this.manager.disallowDevice);
+        } else if (device.allowed) {
+            params = {
+                message_type: Sw.MessageType.QUESTION,
+                icon_name: "channel-insecure-symbolic",
+                text: "Mark device as unallowed?",
+                secondary_text: [
+                    "The " +  device.type + " \"" + device.name + "\" has",
+                    "a pending pair request. Marking the device as unallowed ",
+                    "will cancel the request and deny it access to your computer. ",
                     "Are you sure you want to proceed?"].join(""),
                 buttons: Sw.ButtonsType.YES_NO
             };
