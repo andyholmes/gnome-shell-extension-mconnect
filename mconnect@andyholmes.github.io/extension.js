@@ -14,6 +14,7 @@ const GLib = imports.gi.GLib;
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const { debug, Settings } = Me.imports.utils;
+const MConnect = Me.imports.mconnect;
 const Sw = Me.imports.Sw;
 
 
@@ -362,7 +363,6 @@ const SystemIndicator = new Lang.Class({
         this.parent();
 
         this.manager = null;
-        this.backend = Settings.get_boolean("use-kdeconnect") ? Me.imports.kdeconnect : Me.imports.mconnect;
 
         // device submenus
         this.deviceMenus = {};
@@ -385,13 +385,13 @@ const SystemIndicator = new Lang.Class({
         // Extension Menu -> [ Enable Item ]
         this.enableItem = this.mobileDevices.menu.addAction(
             "Enable",
-            this.backend.startDaemon
+            MConnect.startDaemon
         );
 
         // Extension Menu -> Mobile Settings Item
         this.mobileDevices.menu.addAction(
             "Mobile Settings",
-            this.backend.startSettings
+            MConnect.startSettings
         );
 
         //
@@ -403,7 +403,7 @@ const SystemIndicator = new Lang.Class({
         // Watch for DBus service
         this._watchdog = Gio.bus_watch_name(
             Gio.BusType.SESSION,
-            this.backend.BUS_NAME,
+            MConnect.BUS_NAME,
             Gio.BusNameWatcherFlags.NONE,
             Lang.bind(this, this._daemonAppeared),
             Lang.bind(this, this._daemonVanished)
@@ -414,7 +414,7 @@ const SystemIndicator = new Lang.Class({
             debug("Settings: changed::start-daemon");
 
             if (Settings.get_boolean(key) && this.manager === null) {
-                this.backend.startDaemon();
+                MConnect.startDaemon();
             }
         });
     },
@@ -487,7 +487,7 @@ const SystemIndicator = new Lang.Class({
         debug("extension.SystemIndicator._daemonAppeared()");
 
         // Initialize the manager and add current devices
-        this.manager = new this.backend.DeviceManager();
+        this.manager = new MConnect.DeviceManager();
 
         for (let dbusPath in this.manager.devices) {
             systemIndicator._deviceAdded(this.manager, null, dbusPath);
@@ -529,7 +529,7 @@ const SystemIndicator = new Lang.Class({
 
         // Start the daemon or wait for it to start
         if (Settings.get_boolean("start-daemon")) {
-            this.backend.startDaemon();
+            MConnect.startDaemon();
         } else {
             log("waiting for daemon");
         }
@@ -605,16 +605,6 @@ function enable() {
 
     // Create the UI
     systemIndicator = new SystemIndicator();
-
-    Settings.connect(
-        "changed::use-kdeconnect",
-        function (settings, key, cb_data) {
-            debug("Settings: changed::use-kdeconnect");
-
-            systemIndicator.destroy();
-            systemIndicator = new SystemIndicator();
-        }
-    );
 }
 
 function disable() {

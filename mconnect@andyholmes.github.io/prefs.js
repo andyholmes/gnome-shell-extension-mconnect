@@ -28,7 +28,6 @@ function buildPrefsWidget() {
         "show-offline",
         "show-untrusted",
         "start-daemon",
-        "use-kdeconnect",
         "debug"
     ];
     

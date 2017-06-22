@@ -47,37 +47,6 @@ const PropertiesProxy = Gio.DBusProxy.makeProxyWrapper('\
 </node> \
 ');
 
-const ManagerProxy = Gio.DBusProxy.makeProxyWrapper('\
-<node> \
-  <interface name="org.mconnect.DeviceManager"> \
-    <method name="AllowDevice"> \
-      <arg type="s" name="path" direction="in"/> \
-    </method> \
-    <method name="ListDevices"> \
-      <arg type="ao" name="result" direction="out"/> \
-    </method> \
-  </interface> \
-</node> \
-');
-
-const DeviceProxy = Gio.DBusProxy.makeProxyWrapper('\
-<node> \
-  <interface name="org.mconnect.Device"> \
-    <property type="s" name="Id" access="readwrite"/> \
-    <property type="s" name="Name" access="readwrite"/> \
-    <property type="s" name="DeviceType" access="readwrite"/> \
-    <property type="u" name="ProtocolVersion" access="readwrite"/> \
-    <property type="s" name="Address" access="readwrite"/> \
-    <property type="b" name="IsPaired" access="readwrite"/> \
-    <property type="b" name="Allowed" access="readwrite"/> \
-    <property type="b" name="IsActive" access="readwrite"/> \
-    <property type="as" name="IncomingCapabilities" access="readwrite"/> \
-    <property type="as" name="OutgoingCapabilities" access="readwrite"/> \
-  </interface> \
-</node> \
-');
-
-
 // Plugins
 const BatteryProxy = Gio.DBusProxy.makeProxyWrapper('\
 <node> \
@@ -96,6 +65,63 @@ const PingProxy = Gio.DBusProxy.makeProxyWrapper('\
   </interface> \
 </node> \
 ');
+
+const DeviceXML = '\
+<node> \
+  <interface name="org.mconnect.Device"> \
+    <property type="s" name="Id" access="readwrite"/> \
+    <property type="s" name="Name" access="readwrite"/> \
+    <property type="s" name="DeviceType" access="readwrite"/> \
+    <property type="u" name="ProtocolVersion" access="readwrite"/> \
+    <property type="s" name="Address" access="readwrite"/> \
+    <property type="b" name="IsPaired" access="readwrite"/> \
+    <property type="b" name="Allowed" access="readwrite"/> \
+    <property type="b" name="IsActive" access="readwrite"/> \
+    <property type="as" name="IncomingCapabilities" access="readwrite"/> \
+    <property type="as" name="OutgoingCapabilities" access="readwrite"/> \
+  </interface> \
+</node> \
+';
+
+const DeviceManagerXML = '\
+<node> \
+  <interface name="org.mconnect.DeviceManager"> \
+    <method name="AllowDevice"> \
+      <arg type="s" name="path" direction="in"/> \
+    </method> \
+    <method name="ListDevices"> \
+      <arg type="ao" name="result" direction="out"/> \
+    </method> \
+  </interface> \
+</node> \
+';
+
+
+// Plugins
+const BatteryXML = '\
+<node> \
+  <interface name="org.mconnect.Device.Battery"> \
+    <property type="u" name="Level" access="readwrite"/> \
+    <property type="b" name="Charging" access="readwrite"/> \
+  </interface> \
+</node> \
+';
+
+const PingXML = '\
+<node> \
+  <interface name="org.mconnect.Device.Ping"> \
+    <signal name="Ping"> \
+    </signal> \
+  </interface> \
+</node> \
+';
+
+const Interface = {
+    DEVICE: new Gio.DBusNodeInfo.new_for_xml(DeviceXML).interfaces[0],
+    MANAGER: new Gio.DBusNodeInfo.new_for_xml(DeviceManagerXML).interfaces[0],
+    BATTERY: new Gio.DBusNodeInfo.new_for_xml(BatteryXML).interfaces[0],
+    PING: new Gio.DBusNodeInfo.new_for_xml(PingXML).interfaces[0]
+};
 
 
 // Start the backend daemon
@@ -188,13 +214,15 @@ const Ping = new Lang.Class({
     
     // Public Methods
     destroy: function () {
-        this.proxy._signalConnections.forEach((connection) => { 
+        this.proxy._signalConnections.forEach((connection) => {
             this.proxy.disconnectSignal(connection.id);
         });
         
         delete this.proxy;
     }
 });
+
+Signals.addSignalMethods(Ping.prototype);
 
 // Our supported plugins mapping
 const Plugins = {
@@ -203,31 +231,56 @@ const Plugins = {
 };
 
 
-// A DBus Interface wrapper for a device
-const Device = new Lang.Class({
-    Name: "Device",
+const ProxyBase = new Lang.Class({
+    Name: "ProxyBase",
+    Extends: Gio.DBusProxy,
     
-    _init: function (dbusPath) {
+    _init: function (iface, dbusPath) {
+        this.parent({
+            gConnection: Gio.DBus.session,
+            gInterfaceInfo: iface,
+            gName: BUS_NAME,
+            gObjectPath: dbusPath,
+            gInterfaceName: iface.name
+        });
+        
+        this.cancellable = new Gio.Cancellable();
+        this.init(null);
+        
         // Create proxy for the DBus Interface
-        this.proxy = new DeviceProxy(Gio.DBus.session, BUS_NAME, dbusPath);
         this.props = new PropertiesProxy(Gio.DBus.session, BUS_NAME, dbusPath);
         
         // Properties
         this.dbusPath = dbusPath;
+    }
+});
+
+Signals.addSignalMethods(ProxyBase.prototype);
+
+
+// A DBus Interface wrapper for a device
+const Device = new Lang.Class({
+    Name: "Device",
+    Extends: ProxyBase,
+    
+    _init: function (dbusPath) {
+        this.parent(Interface.DEVICE, dbusPath);
+        
+        // Properties
         this.plugins = {};
         
         Object.defineProperties(this, {
-            address: { value: this.proxy.Address },
-            id: { value: this.proxy.Id },
-            type: { value: this.proxy.DeviceType },
-            name: { value: this.proxy.Name },
-            active: { value: this.proxy.IsActive }, // paired, trusted & connected
-            paired: { value: this.proxy.IsPaired },
-            trusted: { value: this.proxy.Allowed }, // TODO: get/set
+            address: { get: () => { return this._getProp("Address"); } },
+            id: { get: () => { return this._getProp("Id"); } },
+            type: { get: () => { return this._getProp("DeviceType"); } },
+            name: { get: () => { return this._getProp("Name"); } },
+            active: { get: () => { return this._getProp("IsActive"); } }, // paired, trusted & connected
+            paired: { get: () => { return this._getProp("IsPaired"); } },
+            trusted: { get: () => { return this._getProp("Allowed"); } }, // TODO: get/set
             // TODO: still not clear on these two
-            incomingCapabilities: { value: this.proxy.IncomingCapabilities },
-            outgoingCapabilities: { value: this.proxy.OutgoingCapabilities },
-            version: { value: this.proxy.ProtocolVersion }
+            incomingCapabilities: { get: () => { return this._getProp("IncomingCapabilities"); } },
+            outgoingCapabilities: { get: () => { return this._getProp("OutgoingCapabilities"); } },
+            version:{ get: () => { return this._getProp("ProtocolVersion"); } },
         });
         
         // Plugins
@@ -256,6 +309,40 @@ const Device = new Lang.Class({
                         this.plugins.battery.level,
                         this.plugins.battery.charging
                     );
+                }
+            }
+        );
+    },
+    
+    // wrapper funcs
+    connect_: function (proxy, sender_name, signal_name, parameters) {
+        Signals._emit.call(proxy, signal_name, sender_name, parameters.deep_unpack());
+    },
+    
+    _getProp: function (name) {
+        let value = this.get_cached_property(name);
+        return value ? value.deep_unpack() : null;
+    },
+
+    _setProp: function (value, name, signature) {
+        let variant = new GLib.Variant(signature, value);
+        this.set_cached_property(name, variant);
+
+        this.call(
+            'org.freedesktop.DBus.Properties.Set',
+            new GLib.Variant(
+                '(ssv)',
+                [this.g_interface_name, name, variant]
+            ),
+            Gio.DBusCallFlags.NONE,
+            -1,
+            null,
+            (proxy, result) => {
+                try {
+                    this.call_finish(result);
+                } catch (e) {
+                    log('Could not set property ' + name + ' on remote object ' +
+                        this.g_object_path + ': ' + e.message);
                 }
             }
         );
@@ -296,20 +383,14 @@ const Device = new Lang.Class({
     }
 });
 
-Signals.addSignalMethods(Device.prototype);
-
 
 // A DBus Interface wrapper for a device manager
 const DeviceManager = new Lang.Class({
     Name: "DeviceManager",
+    Extends: ProxyBase,
     
     _init: function () {
-        // Create proxy wrapper for DBus Interface
-        this.proxy = new ManagerProxy(
-            Gio.DBus.session,
-            BUS_NAME,
-            "/org/mconnect/manager"
-        );
+        this.parent(Interface.MANAGER, "/org/mconnect/manager");
         
         // Properties
         this.devices = {};
@@ -355,14 +436,25 @@ const DeviceManager = new Lang.Class({
         // Mark the device at *dbusPath* as allowed
         debug("mconnect.DeviceManager._AllowDevice(" + dbusPath + ")");
         
-        return this.proxy.AllowDeviceSync(dbusPath);
+        return this.call_sync(
+            "AllowDevice",
+            new GLib.Variant('(s)', dbusPath),
+            Gio.DBusCallFlags.NONE,
+            -1,
+            this.cancellable
+        ).deep_unpack()[0];
     },
     
     _ListDevices: function () {
-        // Return an array in an array of device DBus paths
         debug("mconnect.DeviceManager._ListDevices()");
         
-        return this.proxy.ListDevicesSync()[0];
+        return this.call_sync(
+            "ListDevices",
+            new GLib.Variant('()', ''),
+            Gio.DBusCallFlags.NONE,
+            -1,
+            this.cancellable
+        ).deep_unpack()[0];
     },
     
     // Public Methods
@@ -394,6 +486,4 @@ const DeviceManager = new Lang.Class({
         this.disconnectAll();
     }
 });
-
-Signals.addSignalMethods(DeviceManager.prototype);
 

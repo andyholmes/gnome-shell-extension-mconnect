@@ -20,7 +20,6 @@ function getPath() {
 imports.searchPath.push(getPath());
 const { assert, debug, Settings } = imports.utils;
 const MConnect = imports.mconnect;
-const KDEConnect = imports.kdeconnect;
 
 
 // User Interface
@@ -37,14 +36,7 @@ const SMSWindow = new Lang.Class({
         });
         
         this.dbusPath = dbusPath;
-        
-        if (this.dbusPath.split("/")[2] === "mconnect") {
-            debug("selecting MConnect as backend");
-            this.device = new imports.mconnect.Device(this.dbusPath);
-        } else {
-            debug("selecting KDE Connect as backend");
-            this.device = new imports.kdeconnect.Device(this.dbusPath);
-        }
+        this.device = MConnect.Device(this.dbusPath);
         
         // HeaderBar
         let headerBar = new Gtk.HeaderBar({
@@ -128,13 +120,13 @@ const SMSWindow = new Lang.Class({
     
     // Private Methods
     _checkMessage: function () {
-        // TODO: figure what KDE Connect does internally
+        // TODO: figure what MConnect will do
         debug("sms.SMSWindow._checkMessage()");
         return (this.messageEntry.text !== "");
     },
     
     _checkNumber: function () {
-        // TODO: figure what KDE Connect does internally
+        // TODO: figure what MConnect will do
         debug("sms.SMSWindow._checkNumber()");
         return (this.contactEntry.text !== "");
     },
