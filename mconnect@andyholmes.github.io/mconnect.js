@@ -320,7 +320,10 @@ const Device = new Lang.Class({
         this.props.connectSignal("PropertiesChanged",
             (proxy, sender, data) => {
                 let [iface, props, user_data] = data;
-                props.forEach((p) => { props[p] = props[p].deep_unpack() });
+                
+                for (let name in props) {
+                    props[name] = props[name].deep_unpack();
+                }
                 
                 if (iface === "org.mconnect.Device") {
                     if (props.hasOwnProperty("Name")) {
@@ -337,6 +340,13 @@ const Device = new Lang.Class({
                         );
                     }
                     
+                    if (props.hasOwnProperty("IsPaired")) {
+                        this.emit(
+                            "changed::paired",
+                            props["IsPaired"] || this.paired
+                        );
+                    }
+                    
                     if (props.hasOwnProperty("IsActive")) {
                         this.emit(
                             "changed::active",
@@ -344,37 +354,33 @@ const Device = new Lang.Class({
                         );
                     }
                     
-                    if (props.hasOwnProperty("IsActive")) {
+                    if (props.hasOwnProperty("IsConnected")) {
                         this.emit(
-                            "changed::active", 
+                            "changed::connected", 
                             props["IsConnected"] || this.connected
                         );
                     }
                     
                     if (props.hasOwnProperty("IncomingCapabilities")) {
-                        this.emit(
-                            "changed::plugins",
-                            this.incomingCapabilities
-                        );
+                        this._pluginsChanged(this, this.plugins);
                     } else if (props.hasOwnProperty("OutgoingCapabilities")) {
-                        this.emit(
-                            "changed::plugins",
-                            this.outgoingCapabilities
-                        );
+                        this._pluginsChanged(this, this.plugins);
                     }
                 } else if (iface === "org.mconnect.Device.Battery") {
-                    
-                    this.emit(
-                        "changed::battery",
-                        props["Level"] || this.plugins.battery.level,
-                        props["Charging"] || this.plugins.battery.charging
-                    );
+                    // Sometimes we get a battery packet before the plugin
+                    if (this.plugins.hasOwnProperty("battery")) {
+                        this.emit(
+                            "changed::battery",
+                            props["Level"] || this.plugins.battery.level,
+                            props["Charging"] || this.plugins.battery.charging
+                        );
+                    }
                 }
             }
         );
     },
     
-    // MConnect Callbacks
+    // Callbacks
     _pluginsChanged: function (proxy, sender, cb_data) {
         // NOTE: not actually a signal yet
         debug("mconnect.Device._pluginsChanged()");
@@ -460,17 +466,13 @@ const DeviceManager = new Lang.Class({
         // TODO: not a method yet
         // Unmark the device at *dbusPath* as unallowed
         debug("mconnect.DeviceManager.disallowDevice(" + dbusPath + ")");
-        
         debug("mconnect.DeviceManager.disallowDevice(): Not Implemented")
     },
     
     listDevices: function () {
         debug("mconnect.DeviceManager.listDevices()");
         
-        return this._call(
-            "ListDevices",
-            new GLib.Variant("()", "")
-        );
+        return this._call("ListDevices", new GLib.Variant("()", ""));
     },
     
     // Override
