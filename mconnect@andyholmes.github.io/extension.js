@@ -82,10 +82,15 @@ const DeviceMenu = new Lang.Class({
         device.connect("changed::plugins", Lang.bind(this, this._pluginsChanged));
         device.connect("changed::allowed", Lang.bind(this, this._allowedChanged));
 
-        Settings.connect("changed::show-offline", Lang.bind(this, this._sync));
-        Settings.connect("changed::show-unallowed", Lang.bind(this, this._sync));
+        Settings.connect("changed::show-offline", Lang.bind(this, this._settingsChanged));
+        Settings.connect("changed::show-unallowed", Lang.bind(this, this._settingsChanged));
 
-        this._sync(device);
+
+        this._activeChanged();
+        this._nameChanged();
+        this._pluginsChanged(); // include _batteryChanged()
+        this._allowedChanged();
+        this._settingsChanged();
     },
 
     _createButton: function (type, name, callback) {
@@ -108,30 +113,24 @@ const DeviceMenu = new Lang.Class({
 
     // Callbacks
     _activeChanged: function (device, active) {
-        debug("extension.DeviceMenu._activeChanged()");
+        // TODO: active seems to be a state of preparedness reached after a
+        //       device has been "allowed" but before it has "paired". It seems
+        //       to be of internal interest only
+        debug("extension.DeviceMenu._activeChanged(" + active + ")");
         
-        active = (typeof active === "boolean") ? active : this.device.active;
+        //active = (typeof active === "boolean") ? active : this.device.active;
+    },
 
-        let buttons = [
-            this.smsButton,
-            this.findButton,
-            //this.allowButton
-        ];
+    _allowedChanged: function (device, allowed) {
+        debug("extension.DeviceMenu._allowedChanged()");
 
-        if (active) {
-            buttons.forEach((button) => {
-                button.can_focus = true;
-                button.reactive = true;
-                button.track_hover = true;
-                button.opacity = 255;
-            });
+        // Prefer the signal data
+        allowed = (typeof allowed === "boolean") ? allowed : this.device.allowed;
+
+        if (allowed) {
+            this.allowButton.child.icon_name = "channel-secure-symbolic";
         } else {
-            buttons.forEach((button) => {
-                button.can_focus = false;
-                button.reactive = false;
-                button.track_hover = false;
-                button.opacity = 128;
-            });
+            this.allowButton.child.icon_name = "channel-insecure-symbolic";
         }
     },
 
@@ -141,7 +140,7 @@ const DeviceMenu = new Lang.Class({
 
         // Battery plugin disabled/unallowed
         if (!this.device.plugins.hasOwnProperty("battery") ||
-        !this.device.allowed || !this.device.active) {
+        !this.device.allowed || !this.device.connected) {
             this.batteryButton.child.icon_name = "battery-missing-symbolic";
             this.batteryLabel.text = "";
             return;
@@ -170,6 +169,35 @@ const DeviceMenu = new Lang.Class({
 
         this.batteryButton.child.icon_name = icon + "-symbolic";
         this.batteryLabel.text = level + "%";
+    },
+    
+    _connectedChanged: function (device, connected) {
+        debug("extension.DeviceMenu._connectedChanged()");
+        
+        connected = (typeof connected === "boolean") ? connected : this.device.connected;
+
+        let buttons = [
+            this.smsButton,
+            this.findButton,
+            // TODO: connected means allowed, paired and online
+            //this.allowButton
+        ];
+
+        if (connected) {
+            buttons.forEach((button) => {
+                button.can_focus = true;
+                button.reactive = true;
+                button.track_hover = true;
+                button.opacity = 255;
+            });
+        } else {
+            buttons.forEach((button) => {
+                button.can_focus = false;
+                button.reactive = false;
+                button.track_hover = false;
+                button.opacity = 128;
+            });
+        }
     },
 
     _nameChanged: function (device, name) {
@@ -205,17 +233,17 @@ const DeviceMenu = new Lang.Class({
 
         this._batteryChanged(this.device);
     },
+    
+    _settingsChanged: function () {
+        debug("extension.DeviceMenu._sync()");
 
-    _allowedChanged: function (device, allowed) {
-        debug("extension.DeviceMenu._allowedChanged()");
-
-        // Prefer the signal data
-        allowed = (typeof allowed === "boolean") ? allowed : this.device.allowed;
-
-        if (allowed) {
-            this.allowButton.child.icon_name = "channel-secure-symbolic";
+        // Device Visibility
+        if (!Settings.get_boolean("show-offline")) {
+            this.actor.visible = this.device.active;
+        } else if (!Settings.get_boolean("show-unallowed")) {
+            this.actor.visible = this.device.allowed;
         } else {
-            this.allowButton.child.icon_name = "channel-insecure-symbolic";
+            this.actor.visible = true;
         }
     },
 
@@ -242,7 +270,7 @@ const DeviceMenu = new Lang.Class({
 //                    debug(foo.toString());
 //                }
 //
-//                if (window.startup_id === this.device.dbusPath) {
+//                if (window.startup_id === this.device.gObjectPath) {
 //                    Main.activateWindow(window);
 //                    return;
 //                }
@@ -250,7 +278,7 @@ const DeviceMenu = new Lang.Class({
 //        }
 
         GLib.spawn_command_line_async(
-            Me.path + "/sms.js \"" + device.dbusPath + "\""
+            Me.path + "/sms.js \"" + device.gObjectPath + "\""
         );
 
         this._getTopMenu().close(true);
@@ -259,27 +287,8 @@ const DeviceMenu = new Lang.Class({
     _allowAction: function () {
         debug("extension.DeviceMenu._allowAction()");
 
-        this.emit("request::allowed", this.device.dbusPath);
+        this.emit("toggle::allowed", this.device.gObjectPath);
         this._getTopMenu().close(true);
-    },
-
-    // UI Callbacks
-    _sync: function () {
-        debug("extension.DeviceMenu._sync()");
-
-        // Device Visibility
-        if (!Settings.get_boolean("show-offline")) {
-            this.actor.visible = this.device.active;
-        } else if (!Settings.get_boolean("show-unallowed")) {
-            this.actor.visible = this.device.allowed;
-        } else {
-            this.actor.visible = true;
-        }
-
-        this._activeChanged();
-        this._nameChanged();
-        this._pluginsChanged(); // include _batteryChanged()
-        this._allowedChanged();
     }
 });
 
@@ -344,7 +353,7 @@ const DeviceIndicator = new Lang.Class({
             icon = "smartphone";
         }
 
-        if (this.device.active && this.device.allowed) {
+        if (this.device.connected) {
             this.icon.icon_name = icon + "-connected";
         } else if (this.device.allowed) {
             this.icon.icon_name = icon + "-trusted";
@@ -437,8 +446,8 @@ const SystemIndicator = new Lang.Class({
         }
     },
 
-    _requestAllowed: function (menu, dbusPath) {
-        debug("extension.SystemIndicator._requestAllowed(" + dbusPath + ")");
+    _toggleAllowed: function (menu, dbusPath) {
+        debug("extension.SystemIndicator._toggleAllowed(" + dbusPath + ")");
 
         let device = this.manager.devices[dbusPath];
         let action, params;
@@ -546,16 +555,16 @@ const SystemIndicator = new Lang.Class({
         // Per-device indicator
         let indicator = new DeviceIndicator(device);
         indicator.deviceMenu.connect(
-            "request::allowed",
-            Lang.bind(this, this._requestAllowed)
+            "toggle::allowed",
+            Lang.bind(this, this._toggleAllowed)
         );
         Main.panel.addToStatusArea(dbusPath, indicator);
 
         // User menu entry
         this.deviceMenus[dbusPath] = new DeviceMenu(device);
         this.deviceMenus[dbusPath].connect(
-            "request::allowed",
-            Lang.bind(this.manager, this._requestAllowed)
+            "toggle::allowed",
+            Lang.bind(this.manager, this._toggleAllowed)
         );
         this.devicesSection.addMenuItem(this.deviceMenus[dbusPath]);
 
