@@ -48,24 +48,6 @@ const PropertiesProxy = Gio.DBusProxy.makeProxyWrapper('\
 ');
 
 // Plugins
-const BatteryProxy = Gio.DBusProxy.makeProxyWrapper('\
-<node> \
-  <interface name="org.mconnect.Device.Battery"> \
-    <property type="u" name="Level" access="readwrite"/> \
-    <property type="b" name="Charging" access="readwrite"/> \
-  </interface> \
-</node> \
-');
-
-const PingProxy = Gio.DBusProxy.makeProxyWrapper('\
-<node> \
-  <interface name="org.mconnect.Device.Ping"> \
-    <signal name="Ping"> \
-    </signal> \
-  </interface> \
-</node> \
-');
-
 const DeviceXML = '\
 <node> \
   <interface name="org.mconnect.Device"> \
@@ -77,8 +59,17 @@ const DeviceXML = '\
     <property type="b" name="IsPaired" access="readwrite"/> \
     <property type="b" name="Allowed" access="readwrite"/> \
     <property type="b" name="IsActive" access="readwrite"/> \
+    <property type="b" name="IsConnected" access="readwrite"/> \
     <property type="as" name="IncomingCapabilities" access="readwrite"/> \
     <property type="as" name="OutgoingCapabilities" access="readwrite"/> \
+  </interface> \
+  <interface name="org.mconnect.Device.Battery"> \
+    <property type="u" name="Level" access="readwrite"/> \
+    <property type="b" name="Charging" access="readwrite"/> \
+  </interface> \
+  <interface name="org.mconnect.Device.Ping"> \
+    <signal name="Ping"> \
+    </signal> \
   </interface> \
 </node> \
 ';
@@ -96,31 +87,14 @@ const DeviceManagerXML = '\
 </node> \
 ';
 
-
-// Plugins
-const BatteryXML = '\
-<node> \
-  <interface name="org.mconnect.Device.Battery"> \
-    <property type="u" name="Level" access="readwrite"/> \
-    <property type="b" name="Charging" access="readwrite"/> \
-  </interface> \
-</node> \
-';
-
-const PingXML = '\
-<node> \
-  <interface name="org.mconnect.Device.Ping"> \
-    <signal name="Ping"> \
-    </signal> \
-  </interface> \
-</node> \
-';
+const DeviceNode = new Gio.DBusNodeInfo.new_for_xml(DeviceXML);
+const ManagerNode = new Gio.DBusNodeInfo.new_for_xml(DeviceManagerXML);
 
 const Interface = {
-    DEVICE: new Gio.DBusNodeInfo.new_for_xml(DeviceXML).interfaces[0],
-    MANAGER: new Gio.DBusNodeInfo.new_for_xml(DeviceManagerXML).interfaces[0],
-    BATTERY: new Gio.DBusNodeInfo.new_for_xml(BatteryXML).interfaces[0],
-    PING: new Gio.DBusNodeInfo.new_for_xml(PingXML).interfaces[0]
+    DEVICE: DeviceNode.interfaces[0],
+    BATTERY: DeviceNode.interfaces[1],
+    PING: DeviceNode.interfaces[2],
+    MANAGER: ManagerNode.interfaces[0]
 };
 
 
@@ -137,8 +111,8 @@ function startDaemon() {
 }
 
 
-// Start the backend settings
-function startSettings() {
+// Start the backend preferences
+function startPreferences() {
     debug("spawning mconnect settings");
     
     try {
@@ -152,90 +126,11 @@ function startSettings() {
 }
 
 
-// A DBus Interface wrapper for the battery plugin
-const Battery = new Lang.Class({
-    Name: "Battery",
-    
-    _init: function (device) {
-        debug("mconnect.Battery._init(" + device.dbusPath + ")");
-        
-        // Create proxy for the DBus Interface
-        this.proxy = new BatteryProxy(
-            Gio.DBus.session,
-            BUS_NAME,
-            device.dbusPath
-        );
-        
-        // Properties
-        this.device = device;
-        
-        Object.defineProperties(this, {
-            charging: { get: () => {
-                if (typeof this.proxy.Charging === "boolean") {
-                    return this.proxy.Charging;
-                }
-                
-                debug("NON BOOLEAN CHARGING");
-                return false;
-            }},
-            level: { value: this.proxy.Level }
-        });
-    },
-    
-    // Public Methods
-    destroy: function () {
-        delete this.proxy;
-    }
-});
-
-// A DBus Interface wrapper for the ping plugin
-const Ping = new Lang.Class({
-    Name: "Ping",
-    
-    _init: function (device) {
-        debug("mconnect.Ping._init(" + device.dbusPath + ")");
-        
-        // Create proxy for the DBus Interface
-        this.proxy = new PingProxy(
-            Gio.DBus.session,
-            BUS_NAME,
-            device.dbusPath
-        );
-        
-        // Properties
-        this.device = device;
-        
-        // MConnect Signals
-        this.proxy.connectSignal("Ping", (proxy, sender) => {
-            // have the device re-emit the signal
-            this.device.emit("received::ping", null);
-        });
-    },
-    
-    // Public Methods
-    destroy: function () {
-        this.proxy._signalConnections.forEach((connection) => {
-            this.proxy.disconnectSignal(connection.id);
-        });
-        
-        delete this.proxy;
-    }
-});
-
-Signals.addSignalMethods(Ping.prototype);
-
-// Our supported plugins mapping
-const Plugins = {
-    "battery": Battery,
-    "ping": Ping
-};
-
-
 const ProxyBase = new Lang.Class({
     Name: "ProxyBase",
     Extends: Gio.DBusProxy,
     
-    _init: function (iface, dbusPath) {
+    _init: function (iface, dbusPath, props) {
         this.parent({
             gConnection: Gio.DBus.session,
             gInterfaceInfo: iface,
@@ -247,71 +142,14 @@ const ProxyBase = new Lang.Class({
         this.cancellable = new Gio.Cancellable();
         this.init(null);
         
-        // Create proxy for the DBus Interface
-        this.props = new PropertiesProxy(Gio.DBus.session, BUS_NAME, dbusPath);
-        
-        // Properties
-        this.dbusPath = dbusPath;
-    }
-});
-
-Signals.addSignalMethods(ProxyBase.prototype);
-
-
-// A DBus Interface wrapper for a device
-const Device = new Lang.Class({
-    Name: "Device",
-    Extends: ProxyBase,
-    
-    _init: function (dbusPath) {
-        this.parent(Interface.DEVICE, dbusPath);
-        
-        // Properties
-        this.plugins = {};
-        
-        Object.defineProperties(this, {
-            address: { get: () => { return this._getProp("Address"); } },
-            id: { get: () => { return this._getProp("Id"); } },
-            type: { get: () => { return this._getProp("DeviceType"); } },
-            name: { get: () => { return this._getProp("Name"); } },
-            active: { get: () => { return this._getProp("IsActive"); } }, // paired, trusted & connected
-            paired: { get: () => { return this._getProp("IsPaired"); } },
-            trusted: { get: () => { return this._getProp("Allowed"); } }, // TODO: get/set
-            // TODO: still not clear on these two
-            incomingCapabilities: { get: () => { return this._getProp("IncomingCapabilities"); } },
-            outgoingCapabilities: { get: () => { return this._getProp("OutgoingCapabilities"); } },
-            version:{ get: () => { return this._getProp("ProtocolVersion"); } },
-        });
-        
-        // Plugins
-        this._pluginsChanged();
-        
-        // Signals
-        this.props.connectSignal("PropertiesChanged",
-            (proxy, sender, data) => {
-                let [iface, params] = data;
-                
-                if (iface === "org.mconnect.Device") {
-                    if (params.hasOwnProperty("Name")) {
-                        this.emit("changed::name", this.name);
-                    }
-                    
-                    if (params.hasOwnProperty("Allowed")) {
-                        this.emit("changed::trusted", this.trusted);
-                    }
-                    
-                    if (params.hasOwnProperty("IsActive")) {
-                        this.emit("changed::active", this.active);
-                    }
-                } else if (iface === "org.mconnect.Device.Battery") {
-                    this.emit(
-                        "changed::battery",
-                        this.plugins.battery.level,
-                        this.plugins.battery.charging
-                    );
-                }
-            }
-        );
+        // Create an org.freedesktop.DBus.Properties interface
+        if (props !== undefined) {
+            this.props = new PropertiesProxy(
+                Gio.DBus.session,
+                BUS_NAME,
+                dbusPath
+            );
+        }
     },
     
     // wrapper funcs
@@ -324,7 +162,7 @@ const Device = new Lang.Class({
         return value ? value.deep_unpack() : null;
     },
 
-    _setProp: function (value, name, signature) {
+    _setProp: function (name, value, signature) {
         let variant = new GLib.Variant(signature, value);
         this.set_cached_property(name, variant);
 
@@ -341,8 +179,137 @@ const Device = new Lang.Class({
                 try {
                     this.call_finish(result);
                 } catch (e) {
-                    log('Could not set property ' + name + ' on remote object ' +
-                        this.g_object_path + ': ' + e.message);
+                    log('Could not set ' + name + ' on ' + this.g_object_path +
+                        ': ' + e.message
+                    );
+                }
+            }
+        );
+    }
+});
+
+Signals.addSignalMethods(ProxyBase.prototype);
+
+
+// A DBus Interface wrapper for the battery plugin
+const Battery = new Lang.Class({
+    Name: "Battery",
+    Extends: ProxyBase,
+    
+    _init: function (dbusPath) {
+        debug("mconnect.Battery._init(" + dbusPath + ")");
+        
+        this.parent(Interface.BATTERY, dbusPath);
+        
+        // Properties
+        Object.defineProperties(this, {
+            charging: { get: () => {
+                let charging = this._getProp("Charging");
+            
+                if (typeof charging === "boolean") {
+                    return charging;
+                }
+                
+                return false;
+            }},
+            level: { get: () => { return this._getProp("Level"); } }
+        });
+    },
+    
+    // Public Methods
+    destroy: function () {
+        delete this.proxy;
+    }
+});
+
+// A DBus Interface wrapper for the ping plugin
+const Ping = new Lang.Class({
+    Name: "Ping",
+    
+    _init: function (dbusPath) {
+        debug("mconnect.Ping._init(" + dbusPath + ")");
+        
+        this.parent(Interface.PING, dbusPath);
+        
+        // Properties
+        
+        // MConnect Signals
+//        this.connectSignal("Ping", (proxy, sender) => {
+//            // have the device re-emit the signal
+//            this.device.emit("received::ping", null);
+//        });
+    },
+    
+    // Public Methods
+    destroy: function () {
+        // TODO
+    }
+});
+
+// Our supported plugins mapping
+const Plugins = {
+    "battery": Battery,
+    "ping": Ping
+};
+
+
+// A DBus Interface wrapper for a device
+const Device = new Lang.Class({
+    Name: "Device",
+    Extends: ProxyBase,
+    
+    _init: function (dbusPath) {
+        this.parent(Interface.DEVICE, dbusPath, true);
+        
+        // Properties
+        this.plugins = {};
+        
+        Object.defineProperties(this, {
+            // Immutable Properties
+            address: { get: () => { return this._getProp("Address"); } },
+            id: { get: () => { return this._getProp("Id"); } },
+            type: { get: () => { return this._getProp("DeviceType"); } },
+            
+            name: { get: () => { return this._getProp("Name"); } },
+            active: { get: () => { return this._getProp("IsActive"); } }, // paired, allowed & connected
+            paired: { get: () => { return this._getProp("IsPaired"); } },
+            allowed: { get: () => { return this._getProp("Allowed"); } }, // TODO: get/set
+            // TODO: still not clear on these two
+            incomingCapabilities: { get: () => { return this._getProp("IncomingCapabilities"); } },
+            outgoingCapabilities: { get: () => { return this._getProp("OutgoingCapabilities"); } },
+            version: { get: () => { return this._getProp("ProtocolVersion"); } },
+            
+            // Battery
+            charging: { get: () => { return this._getProp("Battery.charging"); } },
+            level: { get: () => { return this._getProp("Battery.level"); } }
+        });
+        
+        // Plugins
+        this._pluginsChanged();
+        
+        // Signals
+        this.props.connectSignal("PropertiesChanged",
+            (proxy, sender, data) => {
+                let [iface, params] = data;
+                
+                if (iface === "org.mconnect.Device") {
+                    if (params.hasOwnProperty("Name")) {
+                        this.emit("changed::name", this.name);
+                    }
+                    
+                    if (params.hasOwnProperty("Allowed")) {
+                        this.emit("changed::allowed", this.allowed);
+                    }
+                    
+                    if (params.hasOwnProperty("IsActive")) {
+                        this.emit("changed::active", this.active);
+                    }
+                } else if (iface === "org.mconnect.Device.Battery") {
+                    this.emit(
+                        "changed::battery",
+                        this.plugins.battery.level,
+                        this.plugins.battery.charging
+                    );
                 }
             }
         );
@@ -359,7 +326,7 @@ const Device = new Lang.Class({
             pluginName = pluginName.substring(11);
             
             if (Plugins.hasOwnProperty(pluginName)) {
-                this.plugins[pluginName] = new Plugins[pluginName](this);
+                this.plugins[pluginName] = new Plugins[pluginName](this.gObjectPath);
             }
         }
         
@@ -406,7 +373,7 @@ const DeviceManager = new Lang.Class({
         });
         
         // Add currently managed devices
-        this._ListDevices().forEach((dbusPath) => {
+        this.listDevices().forEach((dbusPath) => {
             this._deviceAdded(this, dbusPath);
         });
         
@@ -431,21 +398,29 @@ const DeviceManager = new Lang.Class({
         this.emit("device::removed", null,  dbusPath);
     },
     
-    // MConnect Methods
-    _AllowDevice: function (dbusPath) {
+    // Methods
+    allowDevice: function (dbusPath) {
         // Mark the device at *dbusPath* as allowed
-        debug("mconnect.DeviceManager._AllowDevice(" + dbusPath + ")");
+        // FIXME: only first character making it
+        debug("mconnect.DeviceManager.allowDevice(" + dbusPath + ")");
         
-        return this.call_sync(
+        this.call_sync(
             "AllowDevice",
             new GLib.Variant('(s)', dbusPath),
             Gio.DBusCallFlags.NONE,
             -1,
             this.cancellable
-        ).deep_unpack()[0];
+        );
     },
     
-    _ListDevices: function () {
+    disallowDevice: function (dbusPath) {
+        // Unmark the device at *dbusPath* as allowed
+        debug("mconnect.DeviceManager.disallowDevice(" + dbusPath + ")");
+        
+        debug("mconnect.DeviceManager.disallowDevice(): Not Implemented")
+    },
+    
+    listDevices: function () {
         debug("mconnect.DeviceManager._ListDevices()");
         
         return this.call_sync(
@@ -457,21 +432,6 @@ const DeviceManager = new Lang.Class({
         ).deep_unpack()[0];
     },
     
-    // Public Methods
-    trustDevice: function (dbusPath) {
-        // We're going to do it the MConnect way with dbusPath's
-        debug("mconnect.DeviceManager.trustDevice(" + dbusPath + ")");
-        
-        this._AllowDevice(dbusPath);
-    },
-    
-    untrustDevice: function (dbusPath) {
-        // We're going to do it the MConnect way with dbusPath's
-        debug("mconnect.DeviceManager.untrustDevice(" + dbusPath + ")");
-        
-        debug("mconnect.DeviceManager.untrustDevice(): Not implemented");
-    },
-    
     destroy: function () {
         for (let dbusPath in this.devices) {
             this._deviceRemoved(this, dbusPath);
@@ -481,7 +441,7 @@ const DeviceManager = new Lang.Class({
         //this.proxy._signalConnections.forEach((connection) => { 
         //    this.proxy.disconnectSignal(connection.id);
         //});
-        delete this.proxy;
+        delete this.props;
         
         this.disconnectAll();
     }

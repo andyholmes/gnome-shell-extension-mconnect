@@ -16,10 +16,10 @@
       <summary>Show offline devices</summary>
       <description>If true, rememered devices will be shown in the interface even when they are offline.</description>
     </key>
-    <key type="b" name="show-untrusted">
+    <key type="b" name="show-unallowed">
       <default>false</default>
-      <summary>Show untrusted devices</summary>
-      <description>If true, devices will be shown in the interface even if they have not been marked trusted or formally paired.</description>
+      <summary>Show unallowed devices</summary>
+      <description>If true, devices will be shown in the interface even if they have not been marked allowed or formally paired.</description>
     </key>
     <key type="b" name="start-daemon">
       <default>true</default>

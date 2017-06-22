@@ -26,7 +26,7 @@ function buildPrefsWidget() {
     let optionsList = [
         "per-device-indicators",
         "show-offline",
-        "show-untrusted",
+        "show-unallowed",
         "start-daemon",
         "debug"
     ];
