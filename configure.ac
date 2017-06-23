@@ -13,13 +13,11 @@ GETTEXT_PACKAGE=gnome-shell-extension-mconnect
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",
                    [The prefix for our gettext translation domains.])
-IT_PROG_INTLTOOL(0.26)
 
-dnl FIXME: use these?
-dnl AM_GNU_GETTEXT_VERSION([0.19.6])
-dnl AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.19.6])
+AM_GNU_GETTEXT([external])
 
-dnl PKG_PROG_PKG_CONFIG([0.22])
+PKG_PROG_PKG_CONFIG([0.22])
 
 GLIB_GSETTINGS
 
@@ -30,6 +28,8 @@ if test "$(($shell_minor % 2))" -eq 0; then
 	SHELL_VERSION="$shell_major.$shell_minor"
 fi
 AC_SUBST([SHELL_VERSION])
+
+AC_PATH_PROG([SASSC],[sassc],[])
 
 dnl Please keep this sorted alphabetically
 AC_CONFIG_FILES([
