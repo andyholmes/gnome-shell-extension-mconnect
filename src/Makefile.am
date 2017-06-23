@@ -7,14 +7,12 @@ nodist_extension_DATA = metadata.json
 EXTRA_DIST = metadata.json.in
 CLEANFILES = metadata.json
 
-gschemas_in = $(gschemaname).gschema.xml.in
-
-gsettings_SCHEMAS = $(gschemas_in:.xml.in=.xml)
+gsettings_SCHEMAS = $(gschemaname).gschema.xml
 
 @GSETTINGS_RULES@
 
-CLEANFILES += $(gschemas_in:.xml.in=.valid) $(gsettings_SCHEMAS)
-EXTRA_DIST += $(gschemas_in)
+CLEANFILES += $(gsettings_SCHEMAS:.xml=.valid)
+EXTRA_DIST += $(gsettings_SCHEMAS)
 
 metadata.json: metadata.json.in $(top_builddir)/config.status
 	$(AM_V_GEN) sed \

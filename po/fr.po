@@ -1,0 +1,116 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Andy Holmes <andrew.g.r.holmes@gmail.com>
+# This file is distributed under the same license as the gnome-shell-extension-mconnect package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-shell-extension-mconnect 0.1\n"
+"Report-Msgid-Bugs-To: https://github.com/andyholmes/gnome-shell-extension-"
+"mconnect/issues\n"
+"POT-Creation-Date: 2017-06-23 16:17-0700\n"
+"PO-Revision-Date: 2017-06-23 16:20-0700\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.0.1\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: src/extension.js:470
+#, fuzzy
+msgid "Disallowing this device will deny it access to your computer."
+msgstr ""
+"En interdisant l'accès à ce périphérique, il refusera l'accès à votre "
+"ordinateur."
+
+#: src/extension.js:488
+#, fuzzy
+msgid ""
+"A pairing request is currently in progress. Disallowing this device will "
+"cancel the request and deny it access to your computer."
+msgstr ""
+"Une demande d'appariement est actuellement en cours. Ne pas autoriser cet "
+"appareil annule la demande et refuse l'accès à votre ordinateur."
+
+#: src/extension.js:506
+#, fuzzy
+msgid ""
+"Allowing this device will grant it access to your computer and may pose a "
+"serious security risk."
+msgstr ""
+"Permettre à ce périphérique de lui accorder un accès à votre ordinateur et "
+"peut poser de sérieux risques pour la sécurité."
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:6
+#, fuzzy
+msgid "Print debug messages to log"
+msgstr "Imprimez les messages de débogage pour vous connecter"
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:7
+#, fuzzy
+msgid ""
+"If true the extension will print verbosely to the log. See 'journalctl /usr/"
+"bin/gnome-shell -f -o cat' for output."
+msgstr ""
+"S'il est vrai que l'extension imprimera expressément le journal. Voir "
+"'journalctl / usr / bin / gnome-shell -f -o cat' pour la sortie."
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:11
+#, fuzzy
+msgid "Show per-device indicators"
+msgstr "Afficher les indicateurs par périphérique"
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:12
+#, fuzzy
+msgid ""
+"If true, show an indicator in the Status Area for each device. If false, "
+"devices will be available in the User Menu."
+msgstr ""
+"S'il est vrai, affichez un indicateur dans la zone d'état pour chaque "
+"périphérique. Si false, les périphériques seront disponibles dans le menu "
+"utilisateur."
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:16
+#, fuzzy
+msgid "Show offline devices"
+msgstr "Afficher les périphériques hors ligne"
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:17
+#, fuzzy
+msgid ""
+"If true, rememered devices will be shown in the interface even when they are "
+"offline."
+msgstr ""
+"Si c'est vrai, les périphériques en cache seront affichés dans l'interface, "
+"même s'ils sont hors ligne."
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:21
+#, fuzzy
+msgid "Show unallowed devices"
+msgstr "Afficher les périphériques hors ligne"
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:22
+#, fuzzy
+msgid ""
+"If true, devices will be shown in the interface even if they have not been "
+"marked allowed or formally paired."
+msgstr ""
+"Si c'est vrai, les périphériques seront affichés dans l'interface, même "
+"s'ils n'ont pas été marqués autorisés ou formellement appariés."
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:26
+#, fuzzy
+msgid "Start the daemon automatically"
+msgstr "Démarrez le démon automatiquement"
+
+#: src/org.gnome.shell.extensions.mconnect.gschema.xml:27
+#, fuzzy
+msgid ""
+"If true the daemon will be automatically started and restarted if it stops. "
+"If false the extension will wait for the daemon to be started."
+msgstr ""
+"Si c'est vrai, le démon est automatiquement démarré et redémarré s'il "
+"arrête. Si false, l'extension attendra le démarrage du démon."
