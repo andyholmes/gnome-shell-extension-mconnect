@@ -4,7 +4,6 @@
 
 // Imports
 const Lang = imports.lang;
-
 const Clutter = imports.gi.Clutter;
 const St = imports.gi.St;
 
