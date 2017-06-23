@@ -136,8 +136,10 @@ const DeviceMenu = new Lang.Class({
         }
         
         // Try the get data from the device itself
-        level = (typeof level === "number") ? level : this.device.level;
-        charging = (typeof charging === "boolean") ? charging : this.device.charging;
+        if (!(typeof level === "number") || !(typeof charging === "boolean")) {
+            level = this.device.level;
+            charging = this.device.charging;
+        }
 
         // uPower Style
         let icon = "battery";
