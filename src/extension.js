@@ -7,6 +7,8 @@ const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const St = imports.gi.St;
+const Gettext = imports.gettext.domain('mconnect@andyholmes.github.io');
+const _ = Gettext.gettext;
 
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
@@ -465,7 +467,7 @@ const SystemIndicator = new Lang.Class({
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
                 text: "Disallow the " + device.type + " \"" + device.name + "\"",
-                secondary_text: "Disallowing this device will deny it access to your computer.",
+                secondary_text: _("Disallowing this device will deny it access to your computer."),
                 buttons: [
                     {text: "Cancel",
                     response: Sw.ResponseType.CANCEL,
@@ -483,7 +485,7 @@ const SystemIndicator = new Lang.Class({
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "feed-refresh-symbolic",
                 text: "Disallow the " + device.type + " \"" + device.name + "\"",
-                secondary_text: "A pairing request is currently in progress. Disallowing this device will cancel the request and deny it access to your computer.",
+                secondary_text: _("A pairing request is currently in progress. Disallowing this device will cancel the request and deny it access to your computer."),
                 buttons: [
                     {text: "Cancel",
                     response: Sw.ResponseType.CANCEL,
@@ -501,7 +503,7 @@ const SystemIndicator = new Lang.Class({
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
                 text: "Allow the " + device.type + " \"" + device.name + "\"",
-                secondary_text: "Allowing this device will grant it access to your computer and may pose a serious security risk.",
+                secondary_text: _("Allowing this device will grant it access to your computer and may pose a serious security risk."),
                 buttons: [
                     {text: "Cancel",
                     response: Sw.ResponseType.CANCEL,
