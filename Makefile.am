@@ -4,11 +4,6 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 SUBDIRS = src po
 
-if CLASSIC_MODE
-SUBDIRS += data
-endif
-
-
 include include.mk
 
 EXTRA_MODULES = prefs.js
