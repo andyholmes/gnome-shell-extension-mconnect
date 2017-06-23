@@ -14,7 +14,7 @@
     <key type="b" name="show-offline">
       <default>false</default>
       <summary>Show offline devices</summary>
-      <description>If true, rememered devices will be shown in the interface even when they are offline.</description>
+      <description>If true, cached devices will be shown in the interface even when they are offline.</description>
     </key>
     <key type="b" name="show-unallowed">
       <default>false</default>
