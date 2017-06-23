@@ -2,12 +2,22 @@
 
 // Sw - A series of widgets, extending St
 
-// Imports
 const Lang = imports.lang;
 const Clutter = imports.gi.Clutter;
 const St = imports.gi.St;
 
 const ModalDialog = imports.ui.modalDialog;
+
+//
+function hasValue(obj, value) {
+    for (let key in obj) {
+        if (obj[key] === value) {
+            return true;
+        }
+    }
+    
+    return false;
+}
 
 //
 const ButtonsType = {
@@ -42,9 +52,12 @@ const ResponseType = {
     HELP: -11,          // Returned by Help buttons in GTK+ dialogs
 };
 
-// MessageDialog: A rendition of Gtk.MessageDialog for Gnome Shell
-//
-// https://github.com/GNOME/gnome-shell/blob/master/js/ui/modalDialog.js
+/** 
+ * MessageDialog: A rendition of Gtk.MessageDialog for Gnome Shell
+ *
+ * https://github.com/GNOME/gnome-shell/blob/master/js/ui/modalDialog.js
+ *
+ */
 const MessageDialog = new Lang.Class({
     Name: "MessageDialog",
     Extends: ModalDialog.ModalDialog,
@@ -111,7 +124,7 @@ const MessageDialog = new Lang.Class({
             
             buttons: {
                 get: () => { return null; }, // TODO
-                set: (buttonsType) => { this.addButtonsType(buttonsType); }
+                set: (arg) => { this._setButtons(arg); }
             }
         });
         
@@ -134,16 +147,23 @@ const MessageDialog = new Lang.Class({
         
         this.text = params["text"] || "Information";
         this.secondary_text = params["secondary_text"] || "No description";
-        
         this.buttons = params["buttons"] || ButtonsType.NONE;
     },
     
-    addButton: function (params) {
+    _setButtons: function (buttons) {
+        if (hasValue(ButtonsType, buttons)) {
+            this.addButtonsType(buttons);
+        } else if (buttons instanceof Array) {
+            buttons.forEach((params) => { this.addButton(params); });
+        }
+    },
+    
+    addButton: function (button) {
         ModalDialog.ModalDialog.prototype.addButton.call(this, {
-            label: params.text,
-            action: () => { this.emit("response", params.response); },
-            isDefault: params.isDefault,
-            key: params.key
+            label: button.text,
+            action: () => { this.emit("response", button.response); },
+            isDefault: button.isDefault,
+            key: button.key
         });
     },
     
@@ -171,30 +191,34 @@ const MessageDialog = new Lang.Class({
                 });
                 break;
             case ButtonsType.YES_NO:
-                this.addButton({
-                    text: "No",
-                    response: ResponseType.NO,
-                    isDefault: false,
-                    key: Clutter.KEY_Escape
-                });
-                this.addButton({
-                    text: "Yes",
-                    response: ResponseType.YES,
-                    isDefault: true
-                });
+                this.buttons = [
+                    {
+                        text: "No",
+                        response: ResponseType.NO,
+                        isDefault: false,
+                        key: Clutter.KEY_Escape
+                    },
+                    {
+                        text: "Yes",
+                        response: ResponseType.YES,
+                        isDefault: true
+                    }
+                ];
                 break;
             case ButtonsType.OK_CANCEL:
-                this.addButton({
-                    text: "Cancel",
-                    response: ResponseType.CANCEL,
-                    isDefault: false,
-                    key: Clutter.KEY_Escape
-                });
-                this.addButton({
-                    text: "OK",
-                    response: ResponseType.OK,
-                    isDefault: true
-                });
+                this.buttons = [
+                    {
+                        text: "Cancel",
+                        response: ResponseType.CANCEL,
+                        isDefault: false,
+                        key: Clutter.KEY_Escape
+                    },
+                    {
+                        text: "OK",
+                        response: ResponseType.OK,
+                        isDefault: true
+                    }
+                ];
                 break;
             default:
                 // ButtonsType.NONE

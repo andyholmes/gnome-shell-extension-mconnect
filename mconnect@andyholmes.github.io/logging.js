@@ -32,12 +32,10 @@ function debug(msg) {
  * @condition: the condition to assert
  * @msg: the assertion being made
  *
- * Uses Convenience.debug() to print a message to the log and throws Error, if
- * @condition doesn't resolve to 'true'.
+ * Throws Error with @msg, if @condition doesn't resolve to 'true'.
  */
 function assert(condition, msg) {
     if (Settings.get_boolean("debug") && condition !== true) {
-        debug("Assertion failed: " + msg || "unknown");
         throw new Error("Assertion failed: " + msg);
     };
 };

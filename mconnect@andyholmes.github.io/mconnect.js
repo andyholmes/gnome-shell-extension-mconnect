@@ -269,6 +269,7 @@ const Device = new Lang.Class({
             (proxy, sender, data) => {
                 let [iface, props, user_data] = data;
                 
+                // Unpack the properties
                 for (let name in props) {
                     props[name] = props[name].deep_unpack();
                 }
@@ -365,11 +366,19 @@ const Device = new Lang.Class({
         
         for (let pluginName of this.incomingCapabilities) {
             switch (pluginName) {
+                case "kdeconnect.findmyphone.request":
+                    this.plugins.findmyphone = new ProxyBase(
+                        Interface.PING, // TODO
+                        this.gObjectPath,
+                        true
+                    );
+                    
+                    break;
                 case "kdeconnect.sms.request":
                     this.plugins.sms = new ProxyBase(
-                        Interface.PING,
+                        Interface.PING, // TODO
                         this.gObjectPath,
-                        false
+                        true
                     );
                     
                     break;
@@ -380,18 +389,29 @@ const Device = new Lang.Class({
     },
     
     // Plugin Methods
-    sendSMS: function (number, message) {
-        // TODO: telephony is not supported at all yet
-        debug("mconnect.Device.sendSMS()");
+    ring: function () {
+        // TODO: findyphone is not supported yet
+        debug("mconnect.Device.ring()");
         
 //        this._call(
-//            "org.mconnect.Device.Telephony.SendSMS",
-//            new GLib.Variant('(ss)', [number, message]),
+//            "org.mconnect.Device.FindMyPhone.Ring",
+//            new GLib.Variant("()", ""),
 //            true
 //        );
     },
     
-    // Public Methods
+    sendSMS: function (number, message) {
+        // TODO: sms/telephony is not supported yet
+        debug("mconnect.Device.sendSMS()");
+        
+//        this._call(
+//            "org.mconnect.Device.Telephony.SendSMS",
+//            new GLib.Variant("(ss)", [number, message]),
+//            true
+//        );
+    },
+    
+    // Override Methods
     destroy: function () {
         for (let pluginName in this.plugins) {
             this.plugins[pluginName].destroy();
@@ -468,7 +488,7 @@ const DeviceManager = new Lang.Class({
         return this._call("ListDevices", new GLib.Variant("()", ""));
     },
     
-    // Override
+    // Override Methods
     destroy: function () {
         for (let dbusPath in this.devices) {
             this._deviceRemoved(this, dbusPath);

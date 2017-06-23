@@ -3,6 +3,7 @@
 // Imports
 const Lang = imports.lang;
 const Signals = imports.signals;
+const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const St = imports.gi.St;
@@ -245,8 +246,24 @@ const DeviceMenu = new Lang.Class({
     // Action Button Callbacks
     _findAction: function (button, device) {
         debug("extension.DeviceMenu._findmyphone()");
+        
+        let dialog = new Sw.MessageDialog({
+            message_type: Sw.MessageType.INFO,
+            text: "Unsupported Feature",
+            secondary_text: "Sorry, Find My Phone is not yet supported.",
+            buttons: Sw.ButtonsType.OK
+        });
 
-        this.device.plugins.findmyphone.find();
+        dialog.connect("response", (dialog, responseType) => {
+            dialog.close();
+            
+            if (responseType === Sw.ResponseType.OK) {
+                this.device.ring();
+            }
+        });
+
+        dialog.open();
+
         this._getTopMenu().close(true);
     },
 
@@ -445,12 +462,17 @@ const SystemIndicator = new Lang.Class({
             params = {
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
-                text: "Mark device as unallowed?",
-                secondary_text: [
-                    "Marking the " +  device.type + " \"" + device.name + "\" ",
-                    "as unallowed will deny it access to your computer. ",
-                    "Are you sure you want to proceed?"].join(""),
-                buttons: Sw.ButtonsType.YES_NO
+                text: "Disallow the " + device.type + " \"" + device.name + "\"",
+                secondary_text: "Disallowing this device will deny it access to your computer.",
+                buttons: [
+                    {text: "Cancel",
+                    response: Sw.ResponseType.CANCEL,
+                    isDefault: false,
+                    key: Clutter.KEY_Escape},
+                    {text: "Disallow",
+                    response: 1,
+                    isDefault: true}
+                ]
             };
 
             action = Lang.bind(this.manager, this.manager.disallowDevice);
@@ -458,14 +480,17 @@ const SystemIndicator = new Lang.Class({
             params = {
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "feed-refresh-symbolic",
-                text: "Mark device as unallowed?",
-                secondary_text:
-                    "There is a pair request in progress for " +
-                    device.type + " \"" + device.name + "\". " +
-                    "Marking it as unallowed will cancel the request and " +
-                    "deny it access to your computer. " +
-                    "Are you sure you want to proceed?",
-                buttons: Sw.ButtonsType.YES_NO
+                text: "Disallow the " + device.type + " \"" + device.name + "\"",
+                secondary_text: "A pairing request is currently in progress. Disallowing this device will cancel the request and deny it access to your computer.",
+                buttons: [
+                    {text: "Cancel",
+                    response: Sw.ResponseType.CANCEL,
+                    isDefault: false,
+                    key: Clutter.KEY_Escape},
+                    {text: "Disallow",
+                    response: 1,
+                    isDefault: true}
+                ]
             };
 
             action = Lang.bind(this.manager, this.manager.disallowDevice);
@@ -473,13 +498,17 @@ const SystemIndicator = new Lang.Class({
             params = {
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
-                text: "Mark device as allowed?",
-                secondary_text: [
-                    "Marking the " +  device.type + " \"" + device.name + "\" ",
-                    "as allowed will allow it access to your computer and ",
-                    "may pose a serious security risk. ",
-                    "Are you sure you want to proceed?"].join(""),
-                buttons: Sw.ButtonsType.YES_NO
+                text: "Allow the " + device.type + " \"" + device.name + "\"",
+                secondary_text: "Allowing this device will grant it access to your computer and may pose a serious security risk.",
+                buttons: [
+                    {text: "Cancel",
+                    response: Sw.ResponseType.CANCEL,
+                    isDefault: false,
+                    key: Clutter.KEY_Escape},
+                    {text: "Allow",
+                    response: 1,
+                    isDefault: true}
+                ]
             };
 
             action = Lang.bind(this.manager, this.manager.allowDevice);
@@ -491,7 +520,7 @@ const SystemIndicator = new Lang.Class({
         prompt.connect("response", (dialog, responseType) => {
             prompt.close();
             
-            if (responseType === Sw.ResponseType.YES) {
+            if (responseType !== Sw.ResponseType.CANCEL) {
                 action(dbusPath);
             }
         });
@@ -539,7 +568,7 @@ const SystemIndicator = new Lang.Class({
         // If a manager is initialized, destroy it
         if (this.manager) {
             this.manager.destroy();
-            delete this.manager;
+            this.manager = null;
         }
 
         // Sync the UI
