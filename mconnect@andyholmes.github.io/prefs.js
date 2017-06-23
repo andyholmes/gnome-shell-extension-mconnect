@@ -1,4 +1,4 @@
-// -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil -*-
+"use strict";
 
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
@@ -6,7 +6,8 @@ const Lang = imports.lang;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { debug, Schema, Settings } = Me.imports.utils;
+const Convenience = Me.imports.convenience;
+const { log, debug, assert, Settings } = Me.imports.logging;
 
 
 function init() {
@@ -35,7 +36,7 @@ function buildPrefsWidget() {
     
     optionsList.forEach((option) => {
         label = builder.get_object(option + "-label");
-        label.set_label(Schema.get_key(option).get_summary());
+        label.set_label(Settings.settings_schema.get_key(option).get_summary());
         Settings.bind(
             option,
             builder.get_object(option),
@@ -73,5 +74,4 @@ function buildPrefsWidget() {
     
     return widget;
 }
-
 

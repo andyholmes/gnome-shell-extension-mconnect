@@ -3,19 +3,13 @@
 // Imports
 const Lang = imports.lang;
 const Signals = imports.signals;
-
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
 // Local Imports
-function getPath() {
-    // Diced from: https://github.com/optimisme/gjs-examples/
-    let m = new RegExp("@(.+):\\d+").exec((new Error()).stack.split("\n")[1]);
-    return Gio.File.new_for_path(m[1]).get_parent().get_path();
-}
-
-imports.searchPath.push(getPath());
-const { debug, Settings } = imports.utils;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
+const { log, debug, assert, Settings } = Me.imports.logging;
 
 
 // DBus Constants
@@ -226,57 +220,11 @@ const ProxyBase = new Lang.Class({
 Signals.addSignalMethods(ProxyBase.prototype);
 
 
-// A DBus Interface wrapper for the battery plugin
-const Battery = new Lang.Class({
-    Name: "Battery",
-    Extends: ProxyBase,
-    
-    _init: function (device) {
-        debug("mconnect.Battery._init(" + device.gObjectPath + ")");
-        
-        this.parent(Interface.BATTERY, device.gObjectPath);
-        
-        // Properties
-        Object.defineProperties(this, {
-            charging: { get: () => {
-                let charging = this._get("Charging");
-                
-                return (typeof charging === "boolean") ? charging : false;
-            } },
-            level: { get: () => { return this._get("Level"); } }
-        });
-    }
-});
-
-
-// A DBus Interface wrapper for the ping plugin
-const Ping = new Lang.Class({
-    Name: "Ping",
-    Extends: ProxyBase,
-    
-    _init: function (device) {
-        debug("mconnect.Ping._init(" + device.gObjectPath + ")");
-        
-        this.parent(Interface.PING, device.gObjectPath);
-        
-        // MConnect Signals
-        this.connect("g-signal", (proxy, sender, signalName) => {
-            // have the device re-emit the signal
-                debug("signalName: " + signalName);
-                
-                if (signalName === "Ping") {
-                    device.emit("received::ping", null);
-                    debug("PING");
-                }
-        });
-    }
-});
-
-
 // Our supported plugins mapping
 const Plugins = {
-    "battery": Battery,
-    "ping": Ping
+    "battery": Interface.BATTERY,
+    "ping": Interface.PING,
+    "telephony": Interface.PING
 };
 
 
@@ -299,18 +247,18 @@ const Device = new Lang.Class({
             type: { get: () => { return this._get("DeviceType"); } },
             // Dynamic Immutable Properties
             name: { get: () => { return this._get("Name"); } },
-            active: { get: () => {
-                let active = this._get("IsActive");
-                
-                return (typeof active === "boolean") ? active : false;
-            } },
-            connected: { get: () => { return this._get("IsConnected"); } },
-            paired: { get: () => { return this._get("IsPaired"); } },
+            active: { get: () => { return (this._get("IsActive") === true); } },
+            connected: { get: () => { return (this._get("IsConnected") === true); } },
+            paired: { get: () => { return (this._get("IsPaired") === true); } },
             // TODO: still not clear on these two
             incomingCapabilities: { get: () => { return this._get("IncomingCapabilities"); } },
             outgoingCapabilities: { get: () => { return this._get("OutgoingCapabilities"); } },
             // Dynamic Mutable Properties
-            allowed: { get: () => { return this._get("Allowed"); } }
+            allowed: { get: () => { return (this._get("Allowed") === true); } },
+            
+            // Plugin Properties
+            charging: { get: () => { return this.plugins.battery._get("Charging"); } },
+            level: { get: () => { return this.plugins.battery._get("Level"); } }
         });
         
         // Plugins
@@ -371,8 +319,8 @@ const Device = new Lang.Class({
                     if (this.plugins.hasOwnProperty("battery")) {
                         this.emit(
                             "changed::battery",
-                            props["Level"] || this.plugins.battery.level,
-                            props["Charging"] || this.plugins.battery.charging
+                            props["Level"] || this.level,
+                            props["Charging"] || this.charging
                         );
                     }
                 }
@@ -383,19 +331,64 @@ const Device = new Lang.Class({
     // Callbacks
     _pluginsChanged: function (proxy, sender, cb_data) {
         // NOTE: not actually a signal yet
+        // TODO: better
         debug("mconnect.Device._pluginsChanged()");
         
         this.plugins = {};
         
         for (let pluginName of this.outgoingCapabilities) {
-            pluginName = pluginName.substring(11);
-            
-            if (Plugins.hasOwnProperty(pluginName)) {
-                this.plugins[pluginName] = new Plugins[pluginName](this);
+            switch (pluginName) {
+                case "kdeconnect.battery":
+                    this.plugins.battery = new ProxyBase(
+                        Interface.BATTERY,
+                        this.gObjectPath,
+                        false
+                    );
+                    break;
+                case "kdeconnect.ping":
+                    this.plugins.ping = new ProxyBase(
+                        Interface.PING,
+                        this.gObjectPath,
+                        false
+                    );
+                    
+                    this.plugins.ping.connectSignal(
+                        "Ping",
+                        (proxy, sender, data) => {
+                            this.emit("received::ping", null)
+                        }
+                    );
+                    
+                    break;
+            }
+        }
+        
+        for (let pluginName of this.incomingCapabilities) {
+            switch (pluginName) {
+                case "kdeconnect.sms.request":
+                    this.plugins.sms = new ProxyBase(
+                        Interface.PING,
+                        this.gObjectPath,
+                        false
+                    );
+                    
+                    break;
             }
         }
         
         this.emit("changed::plugins", null);
+    },
+    
+    // Plugin Methods
+    sendSMS: function (number, message) {
+        // TODO: telephony is not supported at all yet
+        debug("mconnect.Device.sendSMS()");
+        
+//        this._call(
+//            "org.mconnect.Device.Telephony.SendSMS",
+//            new GLib.Variant('(ss)', [number, message]),
+//            true
+//        );
     },
     
     // Public Methods

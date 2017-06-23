@@ -3,17 +3,18 @@
 // Imports
 const Lang = imports.lang;
 const Signals = imports.signals;
-const Main = imports.ui.main;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const St = imports.gi.St;
+
+const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { debug, Settings } = Me.imports.utils;
+const Convenience = Me.imports.convenience;
+const { log, debug, assert, Settings } = Me.imports.logging;
 const MConnect = Me.imports.mconnect;
 const Sw = Me.imports.Sw;
 
@@ -134,10 +135,8 @@ const DeviceMenu = new Lang.Class({
         }
         
         // Try the get data from the device itself
-        if ((typeof level !== "number") || (typeof charging !== "boolean")) {
-            level = this.device.plugins.battery.level;
-            charging = this.device.plugins.battery.charging;
-        }
+        level = (typeof level === "number") ? level : this.device.level;
+        charging = (typeof charging === "boolean") ? charging : this.device.charging;
 
         // uPower Style
         let icon = "battery";
@@ -200,12 +199,12 @@ const DeviceMenu = new Lang.Class({
 
         // Device Menu Buttons
         let buttons = [
-            [this.smsButton, "telephony"],
+            [this.smsButton, "sms"],
             [this.findButton, "findmyphone"]
         ];
 
         buttons.forEach((button) => {
-            if (this.device.plugins.hasOwnProperty(button[1])) {
+            if (this.device.plugins.hasOwnProperty(button[1]) && this.device.connected) {
                 button[0].can_focus = true;
                 button[0].reactive = true;
                 button[0].track_hover = true;
@@ -252,30 +251,25 @@ const DeviceMenu = new Lang.Class({
     },
 
     _smsAction: function (button, device) {
-        // TODO: track windows...
+        // TODO: Shell.EmbeddedWindow
         debug("extension.DeviceMenu._sms()");
+        
+        let dialog = new Sw.MessageDialog({
+            message_type: Sw.MessageType.INFO,
+            text: "Unsupported Feature",
+            secondary_text: "Sorry, sending SMS messages is not yet supported.",
+            buttons: Sw.ButtonsType.OK
+        });
 
-//        for (let i = 0; i < global.screen.n_workspaces; i++) {
-//            let workspace = global.screen.get_workspace_by_index(i);
-//            let windows = workspace.list_windows();
-//
-//            windows.forEach((window) => {
-//                debug(window.title.toString());
-//
-//                for (let foo in window) {
-//                    debug(foo.toString());
-//                }
-//
-//                if (window.startup_id === this.device.gObjectPath) {
-//                    Main.activateWindow(window);
-//                    return;
-//                }
-//            });
-//        }
+        dialog.connect("response", (dialog, responseType) => {
+            dialog.close();
+            
+            if (responseType === Sw.ResponseType.YES) {
+                this.device.send(dbusPath);
+            }
+        });
 
-        GLib.spawn_command_line_async(
-            Me.path + "/sms.js \"" + device.gObjectPath + "\""
-        );
+        dialog.open();
 
         this._getTopMenu().close(true);
     },
@@ -463,13 +457,14 @@ const SystemIndicator = new Lang.Class({
         } else if (device.allowed) {
             params = {
                 message_type: Sw.MessageType.QUESTION,
-                icon_name: "channel-insecure-symbolic",
+                icon_name: "feed-refresh-symbolic",
                 text: "Mark device as unallowed?",
-                secondary_text: [
-                    "The " +  device.type + " \"" + device.name + "\" has",
-                    "a pending pair request. Marking the device as unallowed ",
-                    "will cancel the request and deny it access to your computer. ",
-                    "Are you sure you want to proceed?"].join(""),
+                secondary_text:
+                    "There is a pair request in progress for " +
+                    device.type + " \"" + device.name + "\". " +
+                    "Marking it as unallowed will cancel the request and " +
+                    "deny it access to your computer. " +
+                    "Are you sure you want to proceed?",
                 buttons: Sw.ButtonsType.YES_NO
             };
 
@@ -495,7 +490,10 @@ const SystemIndicator = new Lang.Class({
 
         prompt.connect("response", (dialog, responseType) => {
             prompt.close();
-            (responseType === Sw.ResponseType.YES) ? action(dbusPath) : null;
+            
+            if (responseType === Sw.ResponseType.YES) {
+                action(dbusPath);
+            }
         });
 
         prompt.open();
@@ -594,7 +592,7 @@ const SystemIndicator = new Lang.Class({
     // Public Methods
     destroy: function () {
         this.manager.destroy();
-        delete this.manager;
+        this.manager = null;
 
         // Destroy the UI
         this.devicesSection.destroy();
