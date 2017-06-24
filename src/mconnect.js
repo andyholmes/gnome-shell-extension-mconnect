@@ -8,8 +8,7 @@ const GLib = imports.gi.GLib;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const { log, debug, assert, Settings } = Me.imports.logging;
+const { log, debug, assert, Settings } = Me.imports.lib;
 
 
 // DBus Constants

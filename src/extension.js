@@ -1,14 +1,14 @@
 "use strict";
 
 // Imports
+const Gettext = imports.gettext.domain('gnome-shell-extension-mconnect');
+const _ = Gettext.gettext;
 const Lang = imports.lang;
 const Signals = imports.signals;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const St = imports.gi.St;
-const Gettext = imports.gettext.domain('mconnect@andyholmes.github.io');
-const _ = Gettext.gettext;
 
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
@@ -16,8 +16,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const { log, debug, assert, Settings } = Me.imports.logging;
+const { log, debug, assert, Settings } = Me.imports.lib;
 const MConnect = Me.imports.mconnect;
 const Sw = Me.imports.Sw;
 
@@ -642,13 +641,13 @@ const SystemIndicator = new Lang.Class({
     }
 });
 
-
-var systemIndicator; // FIXME: not supposed to mix "let" and "var"
+// FIXME: not supposed to mix "let" and "var" but "const" doesn't hold
+var systemIndicator;
 
 function init() {
     debug("initializing extension");
-
-    // TODO: localization
+    
+    Me.imports.lib.initTranslations();
 }
 
 function enable() {
