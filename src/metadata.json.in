@@ -1,10 +1,11 @@
 {
 "extension-id": "@extension_id@",
 "uuid": "@uuid@",
-"settings-schema": "@gschemaname@",
+"gschema-name": "@gschema_name@",
 "gettext-domain": "@gettext_domain@",
 "name": "MConnect",
 "description": "MConnect integration for Gnome Shell",
-"shell-version": [ "@shell_current@" ],
+"version": "@extension_version@",
+"shell-version": [ @shell_version@ ],
 "url": "@url@"
 }
