@@ -2,6 +2,7 @@ Makefile*
 POTFILES
 Rules-quot
 stamp-*
+*.gmo
 *.header
 *.pot
 *.sed
