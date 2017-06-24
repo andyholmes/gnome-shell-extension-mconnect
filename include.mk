@@ -1,13 +1,12 @@
-# Change these to modify how installation is performed
-topextensiondir = $(datadir)/gnome-shell/extensions
-
-gschemabase = org.gnome.shell.extensions
-
+#
 extension_id = mconnect
-extensionurl = https://github.com/andyholmes/gnome-shell-extension-mconnect
+extension_version = 0.1
+shell_version = \"3.24\", \"3.24.1\", \"3.24.2\"
+extensionurl = https://github.com/andyholmes/gnome-shell-extension-$(extension_id)
 uuid = $(extension_id)@andyholmes.github.io
-gschemaname = $(gschemabase).$(extension_id)
+gschema_name = org.gnome.shell.extensions.$(extension_id)
 
-extensiondir = $(topextensiondir)/$(uuid)
+# these cause hell if you rename them
+extensiondir = $(datadir)/gnome-shell/extensions/$(uuid)
 localextensiondir = $(HOME)/.local/share/gnome-shell/extensions/$(uuid)
 
