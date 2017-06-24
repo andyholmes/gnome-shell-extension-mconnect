@@ -1,0 +1,10 @@
+Makefile*
+POTFILES
+Rules-quot
+stamp-*
+*.header
+*.pot
+*.sed
+*.sin
+*.template
+
