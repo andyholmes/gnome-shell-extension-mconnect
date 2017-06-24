@@ -1,6 +1,9 @@
 /* -*- mode: js; js-basic-offset: 4; indent-tabs-mode: nil -*- */
 /*
   Copyright (c) 2011-2012, Giovanni Campagna <scampa.giovanni@gmail.com>
+  
+  Modifications and additional functions,
+  Copyright (c) 2017, Andy Holmes <andrew.g.r.holmes@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
@@ -29,29 +32,23 @@ const Gettext = imports.gettext;
 const Gio = imports.gi.Gio;
 
 const Config = imports.misc.config;
-const ExtensionUtils = imports.misc.extensionUtils;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Settings = getSettings();
 
 /**
  * initTranslations:
- * @domain: (optional): the gettext domain to use
  *
  * Initialize Gettext to load translations from extensionsdir/locale.
  * If @domain is not provided, it will be taken from metadata['gettext-domain']
  */
-function initTranslations(domain) {
-    let extension = ExtensionUtils.getCurrentExtension();
-
-    domain = domain || extension.metadata['gettext-domain'];
-
-    // check if this extension was built with "make zip-file", and thus
-    // has the locale files in a subfolder
-    // otherwise assume that extension has been installed in the
-    // same prefix as gnome-shell
-    let localeDir = extension.dir.get_child('locale');
+function initTranslations() {
+    // If the extension doesn't have the locale files in a subfolder, assume
+    // that extension has been installed in the same prefix as gnome-shell
+    let localeDir = Me.dir.get_child('locale');
     if (localeDir.query_exists(null))
-        Gettext.bindtextdomain(domain, localeDir.get_path());
+        Gettext.bindtextdomain(Me.metadata['gettext-domain'], localeDir.get_path());
     else
-        Gettext.bindtextdomain(domain, Config.LOCALEDIR);
+        Gettext.bindtextdomain(Me.metadata['gettext-domain'], Config.LOCALEDIR);
 }
 
 /**
@@ -62,32 +59,60 @@ function initTranslations(domain) {
  * in extensionsdir/schemas. If @schema is not provided, it is taken from
  * metadata['settings-schema'].
  */
-function getSettings(schema) {
-    let extension = ExtensionUtils.getCurrentExtension();
-
-    schema = schema || extension.metadata['settings-schema'];
-
+function getSettings() {
     const GioSSS = Gio.SettingsSchemaSource;
-
-    // check if this extension was built with "make zip-file", and thus
-    // has the schema files in a subfolder
-    // otherwise assume that extension has been installed in the
-    // same prefix as gnome-shell (and therefore schemas are available
-    // in the standard folders)
-    let schemaDir = extension.dir.get_child('schemas');
+    let schemaDir = Me.dir.get_child('schemas');
     let schemaSource;
-    if (schemaDir.query_exists(null))
-        schemaSource = GioSSS.new_from_directory(schemaDir.get_path(),
-                                                 GioSSS.get_default(),
-                                                 false);
-    else
+
+    // If the extension doesn't have the schema files in a subfolder, assume
+    // that extension has been installed in the same prefix as gnome-shell
+    if (schemaDir.query_exists(null)) {
+        schemaSource = GioSSS.new_from_directory(
+            schemaDir.get_path(),
+            GioSSS.get_default(),
+            false
+        );
+    } else {
         schemaSource = GioSSS.get_default();
+    }
 
-    let schemaObj = schemaSource.lookup(schema, true);
-    if (!schemaObj)
-        throw new Error('Schema ' + schema + ' could not be found for extension '
-                        + extension.metadata.uuid + '. Please check your installation.');
-
-    return new Gio.Settings({ settings_schema: schemaObj });
+    return new Gio.Settings({
+        settings_schema: schemaSource.lookup(Me.metadata['gschema-name'], true)
+    });
 }
 
+/**
+ * log:
+ * @msg: the message
+ *
+ * Prints a message to the log, prepended with the UUID of the extension
+ */
+function log(msg) {
+    global.log("[" + Me.metadata.uuid + "]: " + msg);
+}
+
+/**
+ * debug:
+ * @msg: the debugging message
+ *
+ * Uses Convenience.log() to print a message to the log, prepended with the
+ * UUID of the extension and "[DEBUG]".
+ */
+function debug(msg) {
+    if (Settings.get_boolean("debug")) {
+        log("[DEBUG]: " + msg);
+    };
+}
+
+/**
+ * assert:
+ * @condition: the condition to assert
+ * @msg: the assertion being made
+ *
+ * Throws Error with @msg, if @condition doesn't resolve to 'true'.
+ */
+function assert(condition, msg) {
+    if (Settings.get_boolean("debug") && condition !== true) {
+        throw new Error("Assertion failed: " + msg);
+    };
+};
