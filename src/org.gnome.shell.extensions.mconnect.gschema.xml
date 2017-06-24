@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="gnome-shell-extensions">
+<schemalist gettext-domain="gnome-shell-extension-mconnect">
   <schema path="/org/gnome/shell/extensions/mconnect/" id="org.gnome.shell.extensions.mconnect">
     <key type="b" name="debug">
       <default>false</default>
@@ -14,7 +14,7 @@
     <key type="b" name="show-offline">
       <default>false</default>
       <summary>Show offline devices</summary>
-      <description>If true, rememered devices will be shown in the interface even when they are offline.</description>
+      <description>If true, cached devices will be shown in the interface even when they are offline.</description>
     </key>
     <key type="b" name="show-unallowed">
       <default>false</default>

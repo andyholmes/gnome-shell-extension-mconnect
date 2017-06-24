@@ -1,0 +1,12 @@
+Makefile*
+POTFILES
+Rules-quot
+stamp-*
+*.gmo
+*.header
+*.mo
+*.pot
+*.sed
+*.sin
+*.template
+

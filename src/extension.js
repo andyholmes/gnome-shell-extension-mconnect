@@ -1,6 +1,8 @@
 "use strict";
 
 // Imports
+const Gettext = imports.gettext.domain('gnome-shell-extension-mconnect');
+const _ = Gettext.gettext;
 const Lang = imports.lang;
 const Signals = imports.signals;
 const Clutter = imports.gi.Clutter;
@@ -14,8 +16,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const { log, debug, assert, Settings } = Me.imports.logging;
+const { log, debug, assert, Settings } = Me.imports.lib;
 const MConnect = Me.imports.mconnect;
 const Sw = Me.imports.Sw;
 
@@ -465,7 +466,7 @@ const SystemIndicator = new Lang.Class({
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
                 text: "Disallow the " + device.type + " \"" + device.name + "\"",
-                secondary_text: "Disallowing this device will deny it access to your computer.",
+                secondary_text: _("Disallowing this device will deny it access to your computer."),
                 buttons: [
                     {text: "Cancel",
                     response: Sw.ResponseType.CANCEL,
@@ -483,7 +484,7 @@ const SystemIndicator = new Lang.Class({
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "feed-refresh-symbolic",
                 text: "Disallow the " + device.type + " \"" + device.name + "\"",
-                secondary_text: "A pairing request is currently in progress. Disallowing this device will cancel the request and deny it access to your computer.",
+                secondary_text: _("A pairing request is currently in progress. Disallowing this device will cancel the request and deny it access to your computer."),
                 buttons: [
                     {text: "Cancel",
                     response: Sw.ResponseType.CANCEL,
@@ -501,7 +502,7 @@ const SystemIndicator = new Lang.Class({
                 message_type: Sw.MessageType.QUESTION,
                 icon_name: "channel-insecure-symbolic",
                 text: "Allow the " + device.type + " \"" + device.name + "\"",
-                secondary_text: "Allowing this device will grant it access to your computer and may pose a serious security risk.",
+                secondary_text: _("Allowing this device will grant it access to your computer and may pose a serious security risk."),
                 buttons: [
                     {text: "Cancel",
                     response: Sw.ResponseType.CANCEL,
@@ -640,13 +641,13 @@ const SystemIndicator = new Lang.Class({
     }
 });
 
-
-var systemIndicator; // FIXME: not supposed to mix "let" and "var"
+// FIXME: not supposed to mix "let" and "var" but "const" doesn't hold
+var systemIndicator;
 
 function init() {
     debug("initializing extension");
-
-    // TODO: localization
+    
+    Me.imports.lib.initTranslations();
 }
 
 function enable() {

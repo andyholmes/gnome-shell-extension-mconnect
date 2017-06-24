@@ -1,19 +1,21 @@
 "use strict";
 
+const Gettext = imports.gettext.domain('gnome-shell-extension-mconnect');
+const _ = Gettext.gettext;
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const { log, debug, assert, Settings } = Me.imports.logging;
+const { log, debug, assert, Settings } = Me.imports.lib;
+Me.imports.lib.initTranslations();
 
 
 function init() {
     debug("initializing preferences");
     
-    // TODO: localization?
+    Me.imports.lib.initTranslations();
 }
 
 // Extension Preferences
