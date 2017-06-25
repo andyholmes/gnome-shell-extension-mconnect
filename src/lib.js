@@ -100,7 +100,7 @@ function log(msg) {
  */
 function debug(msg) {
     if (Settings.get_boolean("debug")) {
-        log("[DEBUG]: " + msg);
+        log("DEBUG: " + msg);
     };
 }
 
