@@ -17,9 +17,13 @@ po/*.pot
 po/*.sed
 po/*.sin
 po/*.template
+src/Makefile
+src/Makefile.in
+src/metadata.json
+src/*.gschema.valid
 zip-files/
 ABOUT-NLS
-ac-local.m4
+aclocal.m4
 config.log
 config.status
 configure
