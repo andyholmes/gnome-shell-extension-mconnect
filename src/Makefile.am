@@ -4,7 +4,10 @@ dist_extension_DATA = extension.js lib.js mconnect.js prefs.js prefs.ui \
 						stylesheet.css Sw.js
 nodist_extension_DATA = metadata.json
 
-EXTRA_DIST = metadata.json.in
+gsettings_SCHEMAS = $(gschema_name).gschema.xml
+
+EXTRA_DIST = metadata.json.in $(gsettings_SCHEMAS)
+CLEANFILES = metadata.json $(gsettings_SCHEMAS:.xml=.valid)
 
 metadata.json: metadata.json.in $(top_builddir)/config.status
 	$(AM_V_GEN) sed \
@@ -17,12 +20,5 @@ metadata.json: metadata.json.in $(top_builddir)/config.status
 		-e "s|[@]url@|$(extensionurl)|" \
 		$< > $@
 
-CLEANFILES = metadata.json
-
-gsettings_SCHEMAS = $(gschema_name).gschema.xml
-
 @GSETTINGS_RULES@
-
-CLEANFILES += $(gsettings_SCHEMAS:.xml=.valid)
-EXTRA_DIST += $(gsettings_SCHEMAS)
 
