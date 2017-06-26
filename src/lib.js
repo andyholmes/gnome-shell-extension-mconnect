@@ -1,8 +1,7 @@
-/* -*- mode: js; js-basic-offset: 4; indent-tabs-mode: nil -*- */
 /*
   Copyright (c) 2011-2012, Giovanni Campagna <scampa.giovanni@gmail.com>
   
-  Modifications and additional functions,
+  Except where noted, modifications and additional functions are:
   Copyright (c) 2017, Andy Holmes <andrew.g.r.holmes@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
@@ -116,3 +115,20 @@ function assert(condition, msg) {
         throw new Error("Assertion failed: " + msg);
     };
 };
+
+/**
+ * String.toCamelCase:
+ *
+ * The regex will match the first character if it starts with a capital letter,
+ * and any alphabetic character following a space, i.e. 2 or 3 times in the
+ * specified strings.
+ *
+ * Credits: https://stackoverflow.com/a/15829686/1108697
+ */
+String.prototype.toCamelCase = function() {
+    return this.replace(/^([A-Z])|\s(\w)/g, function(match, p1, p2, offset) {
+        if (p2) return p2.toUpperCase();
+        return p1.toLowerCase();        
+    });
+};
+
