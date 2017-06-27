@@ -37,8 +37,8 @@ const Settings = getSettings();
 /**
  * initTranslations:
  *
- * Initialize Gettext to load translations from extensionsdir/locale.
- * If @domain is not provided, it will be taken from metadata['gettext-domain']
+ * Initialize Gettext to load translations for metadata['gettext-domain'] from
+ * extensionsdir/locale.
  */
 function initTranslations() {
     // If the extension doesn't have the locale files in a subfolder, assume
@@ -54,9 +54,9 @@ function initTranslations() {
  * getSettings:
  * @schema: (optional): the GSettings schema id
  *
- * Builds and return a GSettings schema for @schema, using schema files
- * in extensionsdir/schemas. If @schema is not provided, it is taken from
- * metadata['settings-schema'].
+ * Builds and return a GSettings schema for metadata['settings-schema'], using
+ * schema files in extensionsdir/schemas. If @schema is not provided, it is
+ * taken from.
  */
 function getSettings() {
     const GioSSS = Gio.SettingsSchemaSource;
@@ -95,7 +95,7 @@ function log(msg) {
  * @msg: the debugging message
  *
  * Uses Convenience.log() to print a message to the log, prepended with the
- * UUID of the extension and "[DEBUG]".
+ * UUID of the extension and "DEBUG".
  */
 function debug(msg) {
     if (Settings.get_boolean("debug")) {
