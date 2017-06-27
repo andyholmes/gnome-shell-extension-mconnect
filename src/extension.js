@@ -117,20 +117,16 @@ const DeviceMenu = new Lang.Class({
 
     // Callbacks
     _activeChanged: function (device, active) {
-        // TODO: active seems to be a state of preparedness reached after a
-        //       device has been "allowed" but before it has "paired". It seems
-        //       to be of internal interest only
+        // TODO: "active" is a state of preparedness reached after a device has
+        //       been "allowed" but before the device acknowledges "paired".
         debug("extension.DeviceMenu._activeChanged(" + active + ")");
-        
-        //active = (typeof active === "boolean") ? active : this.device.active;
     },
 
     _batteryChanged: function (device, level, charging) {
         debug("extension.DeviceMenu._batteryChanged(" + [level, charging] + ")");
 
         // Battery plugin disabled/unallowed
-        if (!this.device.plugins.hasOwnProperty("battery") ||
-        !this.device.connected) {
+        if (!this.device.hasOwnProperty("battery") || !this.device.connected) {
             this.batteryButton.child.icon_name = "battery-missing-symbolic";
             this.batteryLabel.text = "";
             return;
@@ -138,8 +134,8 @@ const DeviceMenu = new Lang.Class({
         
         // Try the get data from the device itself
         if (!(typeof level === "number") || !(typeof charging === "boolean")) {
-            level = this.device.level;
-            charging = this.device.charging;
+            level = this.device.battery.level;
+            charging = this.device.battery.charging;
         }
 
         // uPower Style
@@ -199,29 +195,29 @@ const DeviceMenu = new Lang.Class({
     },
 
     _pluginsChanged: function (device, plugins) {
+        // TODO: mconnect.js loads plugins when device.active (because that's
+        //       when MConnect does), but plugins aren't usable until
+        //       device.connected (allowed, paired and reachable)
         debug("extension.DeviceMenu._pluginsChanged()");
 
         // Device Menu Buttons
-        let buttons = [
-            [this.smsButton, "sms"],
-            [this.findButton, "findmyphone"]
-        ];
+        let _plugins = { findmyphone: this.findButton, sms: this.smsButton };
 
-        buttons.forEach((button) => {
-            if (this.device.plugins.hasOwnProperty(button[1]) && this.device.connected) {
-                button[0].can_focus = true;
-                button[0].reactive = true;
-                button[0].track_hover = true;
-                button[0].opacity = 255;
+        for (let name in _plugins) {
+            if (this.device.hasOwnProperty(name) && this.device.connected) {
+                _plugins[name].can_focus = true;
+                _plugins[name].reactive = true;
+                _plugins[name].track_hover = true;
+                _plugins[name].opacity = 255;
             } else {
-                button[0].can_focus = false;
-                button[0].reactive = false;
-                button[0].track_hover = false;
-                button[0].opacity = 128;
+                _plugins[name].can_focus = false;
+                _plugins[name].reactive = false;
+                _plugins[name].track_hover = false;
+                _plugins[name].opacity = 128;
             }
-        });
+        }
     },
-    
+
     _settingsChanged: function () {
         debug("extension.DeviceMenu._settingsChanged()");
 
@@ -611,6 +607,11 @@ const SystemIndicator = new Lang.Class({
 
     _deviceRemoved: function (manager, detail, dbusPath) {
         debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
+        
+        // FIXME: some signal data is not getting through
+        debug("devrem: " + manager);
+        debug("devrem: " + detail);
+        debug("devrem: " + dbusPath);
 
         // Per-device indicator
         Main.panel.statusArea[dbusPath].destroy();

@@ -5,16 +5,17 @@ const Lang = imports.lang;
 const Signals = imports.signals;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const GObject = imports.gi.GObject;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.lib;
+const { log, debug, assert } = Me.imports.lib;
 
 
 // DBus Constants
 const BUS_NAME = "org.mconnect";
 
-const PropertiesProxy = Gio.DBusProxy.makeProxyWrapper('\
+const DeviceNode = new Gio.DBusNodeInfo.new_for_xml('\
 <node> \
   <interface name="org.freedesktop.DBus.Properties"> \
     <method name="Get"> \
@@ -37,12 +38,6 @@ const PropertiesProxy = Gio.DBusProxy.makeProxyWrapper('\
       <arg type="as" name="invalidated_properties"/> \
     </signal> \
   </interface> \
-</node> \
-');
-
-
-const DeviceNode = new Gio.DBusNodeInfo.new_for_xml('\
-<node> \
   <interface name="org.mconnect.Device"> \
     <property type="s" name="Id" access="readwrite"/> \
     <property type="s" name="Name" access="readwrite"/> \
@@ -67,6 +62,8 @@ const DeviceNode = new Gio.DBusNodeInfo.new_for_xml('\
 </node> \
 ');
 
+DeviceNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
+
 
 const ManagerNode = new Gio.DBusNodeInfo.new_for_xml('\
 <node> \
@@ -81,11 +78,15 @@ const ManagerNode = new Gio.DBusNodeInfo.new_for_xml('\
 </node> \
 ');
 
+ManagerNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
 
+// FIXME: unecessary and cludgy
 const Interface = {
-    DEVICE: DeviceNode.interfaces[0],
-    BATTERY: DeviceNode.interfaces[1],
-    PING: DeviceNode.interfaces[2],
+    DEVICE: DeviceNode.interfaces[1],
+    BATTERY: DeviceNode.interfaces[2],
+    PING: DeviceNode.interfaces[3],
+    FINDMYPHONE: DeviceNode.interfaces[3], // TODO: not actually supported
+    SMS: DeviceNode.interfaces[3], // TODO: not actually supported
     MANAGER: ManagerNode.interfaces[0]
 };
 
@@ -96,7 +97,7 @@ function startDaemon() {
     
     try {
         GLib.spawn_command_line_async("mconnect -d");
-        GLib.usleep(10000); // 10ms
+        GLib.usleep(10000); // 10ms TODO: still need this?
     } catch (e) {
         debug("mconnect.startDaemon(): " + e);
     }
@@ -111,7 +112,6 @@ function startPreferences() {
         GLib.spawn_command_line_async(
             "gnome-shell-extension-prefs mconnect@andyholmes.github.io"
         );
-        GLib.usleep(10000); // 10ms
     } catch (e) {
         debug("mconnect.startSettings(): " + e);
     }
@@ -121,8 +121,18 @@ function startPreferences() {
 const ProxyBase = new Lang.Class({
     Name: "ProxyBase",
     Extends: Gio.DBusProxy,
+    Signals: {
+        "received": {
+            flags: GObject.SignalFlags.RUN_FIRST | GObject.SignalFlags.DETAILED,
+            param_types: [ GObject.TYPE_VARIANT ]
+        },
+        "changed": {
+            flags: GObject.SignalFlags.RUN_FIRST | GObject.SignalFlags.DETAILED,
+            param_types: [ GObject.TYPE_VARIANT ]
+        }
+    },
     
-    _init: function (iface, dbusPath, props) {
+    _init: function (iface, dbusPath) {
         this.parent({
             gConnection: Gio.DBus.session,
             gInterfaceInfo: iface,
@@ -134,18 +144,17 @@ const ProxyBase = new Lang.Class({
         this.cancellable = new Gio.Cancellable();
         this.init(null);
         
-        // Create an org.freedesktop.DBus.Properties interface
-        if (props === true) {
-            this.props = new PropertiesProxy(
-                Gio.DBus.session,
-                BUS_NAME,
-                dbusPath
-            );
-        }
+        // Always wrap Properties and Signals
+        this._wrapProperties();
+        this._wrapSignals();
+        // PropertiesChanged picks up all properties on the object path, not 
+        // just the local interface; apply it on a per-object-path basis
+        //this._wrapPropertiesChanged();
     },
     
     // Wrapper functions
     _call: function (name, variant, callback) {
+        // TODO: check this
         debug("mconnect.ProxyBase._call(" + name + ")");
         
         let ret;
@@ -183,11 +192,16 @@ const ProxyBase = new Lang.Class({
     },
     
     _get: function (name) {
+        debug("mconnect.ProxyBase._get(" + name + ")");
+        
         let value = this.get_cached_property(name);
         return value ? value.deep_unpack() : null;
     },
 
     _set: function (name, value, signature) {
+        // TODO: simplify this (and use it)
+        debug("mconnect.ProxyBase._set(" + name + ")");
+        
         let variant = new GLib.Variant(signature, value);
         this.set_cached_property(name, variant);
 
@@ -209,22 +223,82 @@ const ProxyBase = new Lang.Class({
         );
     },
     
+    _wrapProperties: function () {
+        // Properties
+        debug("mconnect.ProxyBase._wrapPropertiesChanged()");
+        
+        let i;
+        let properties = this.gInterfaceInfo.properties;
+        
+        for (i = 0; i < properties.length; i++) {
+            let name = properties[i].name;
+            let signature = properties[i].signature;
+            
+            // Homogenize property names
+            let pname = (name.startsWith("Is")) ? name.slice(2) : name;
+            pname = (pname.startsWith("Device")) ? pname.slice(6) : pname;
+            pname = pname.toCamelCase();
+            
+            Object.defineProperty(this, pname, {
+                get: Lang.bind(this, this._get, name),
+                // TODO: not ready for prime-time
+                //set: Lang.bind(this, _propertySetter, name, signature),
+                configurable: true,
+                enumerable: true
+            });
+        }
+    },
+    
+    _wrapPropertiesChanged: function () {
+        // Wrap "g-properties-changed"
+        debug("mconnect.ProxyBase._wrapPropertiesChanged()");
+        
+        this.connect("g-properties-changed", (proxy, parameters) => {
+            debug("g-properties-changed emitted");
+            
+            parameters = parameters.deep_unpack();
+            
+            for (let name in parameters) {
+                debug("parameter name: " + name);
+                debug("parameter value: " + parameters[name].deep_unpack());
+                
+                // Homogenize property names
+                let pname = (name.startsWith("Is")) ? name.slice(2) : name;
+                pname = (pname.startsWith("Device")) ? pname.slice(6) : pname;
+                pname = pname.toCamelCase();
+                
+                debug("lowered param: " + name);
+                
+                this.emit("changed::" + name, parameters[name].deep_unpack())
+            }
+        });
+    },
+    
+    _wrapSignals: function (emitter) {
+        // Wrap signals
+        this.connect("g-signal",
+            (proxy, sender_name, signal_name, parameters) => {
+                debug("g-signal emitted");
+            
+                debug("g-signal proxy: " + proxy.gObjectPath);
+                debug("g-signal signal: " + signal_name);
+                debug("g-signal sender: " + sender_name);
+                debug("g-signal parameters: " + parameters);
+                
+                debug("proxy: " + proxy.gInterfaceName);
+                
+                emitter.emit("received::" + signal_name, parameters);
+            }
+        );
+    },
+    
+    // Override as needed
     destroy: function () {
-        // TODO
-        this.disconnectAll();
-        delete this.props;
+        //this.disconnectAll();
+        this.disconnect("g-properties-changed");
+        this.disconnect("g-signal");
     }
 });
-
-Signals.addSignalMethods(ProxyBase.prototype);
-
-
-// Our supported plugins mapping
-const Plugins = {
-    "battery": Interface.BATTERY,
-    "ping": Interface.PING,
-    "telephony": Interface.PING
-};
 
 
 // A DBus Interface wrapper for a device
@@ -233,99 +307,16 @@ const Device = new Lang.Class({
     Extends: ProxyBase,
     
     _init: function (dbusPath) {
-        this.parent(Interface.DEVICE, dbusPath, true);
+        this.parent(Interface.DEVICE, dbusPath);
         
-        // Properties
-        this.plugins = {};
-        
-        Object.defineProperties(this, {
-            // Static Properties
-            address: { get: () => { return this._get("Address"); } },
-            version: { get: () => { return this._get("ProtocolVersion"); } },
-            id: { get: () => { return this._get("Id"); } },
-            type: { get: () => { return this._get("DeviceType"); } },
-            // Dynamic Immutable Properties
-            name: { get: () => { return this._get("Name"); } },
-            active: { get: () => { return (this._get("IsActive") === true); } },
-            connected: { get: () => { return (this._get("IsConnected") === true); } },
-            paired: { get: () => { return (this._get("IsPaired") === true); } },
-            // TODO: still not clear on these two
-            incomingCapabilities: { get: () => { return this._get("IncomingCapabilities"); } },
-            outgoingCapabilities: { get: () => { return this._get("OutgoingCapabilities"); } },
-            // Dynamic Mutable Properties
-            allowed: { get: () => { return (this._get("Allowed") === true); } },
-            
-            // Plugin Properties
-            charging: { get: () => { return this.plugins.battery._get("Charging"); } },
-            level: { get: () => { return this.plugins.battery._get("Level"); } }
-        });
+        // Wrap "g-properties-changed"
+        this._wrapPropertiesChanged();
         
         // Plugins
+        // FIXME: signal _should_ replace the need for this
+        // this.connect("changed::incomingCapabilites", () => { this._pluginsChanged() } );
+        // this.connect("changed::outgoingCapabilites", () => { this._pluginsChanged() } );
         this._pluginsChanged();
-        
-        // Signals
-        this.props.connectSignal("PropertiesChanged",
-            (proxy, sender, data) => {
-                let [iface, props, user_data] = data;
-                
-                // Unpack the properties
-                for (let name in props) {
-                    props[name] = props[name].deep_unpack();
-                }
-                
-                if (iface === "org.mconnect.Device") {
-                    if (props.hasOwnProperty("Name")) {
-                        this.emit(
-                            "changed::name",
-                            props["Name"] || this.name
-                        );
-                    }
-                    
-                    if (props.hasOwnProperty("Allowed")) {
-                        this.emit(
-                            "changed::allowed",
-                            props["Allowed"] || this.allowed
-                        );
-                    }
-                    
-                    if (props.hasOwnProperty("IsPaired")) {
-                        this.emit(
-                            "changed::paired",
-                            props["IsPaired"] || this.paired
-                        );
-                    }
-                    
-                    if (props.hasOwnProperty("IsActive")) {
-                        this.emit(
-                            "changed::active",
-                            props["IsActive"] || this.active
-                        );
-                    }
-                    
-                    if (props.hasOwnProperty("IsConnected")) {
-                        this.emit(
-                            "changed::connected", 
-                            props["IsConnected"] || this.connected
-                        );
-                    }
-                    
-                    if (props.hasOwnProperty("IncomingCapabilities")) {
-                        this._pluginsChanged(this, this.plugins);
-                    } else if (props.hasOwnProperty("OutgoingCapabilities")) {
-                        this._pluginsChanged(this, this.plugins);
-                    }
-                } else if (iface === "org.mconnect.Device.Battery") {
-                    // Sometimes we get a battery packet before the plugin
-                    if (this.plugins.hasOwnProperty("battery")) {
-                        this.emit(
-                            "changed::battery",
-                            props["Level"] || this.level,
-                            props["Charging"] || this.charging
-                        );
-                    }
-                }
-            }
-        );
     },
     
     // Callbacks
@@ -334,60 +325,71 @@ const Device = new Lang.Class({
         // TODO: better
         debug("mconnect.Device._pluginsChanged()");
         
-        this.plugins = {};
+        //
+        let _plugins = {
+            battery: false,
+            ping: false,
+            findmyphone: false,
+            sms: false
+        };
         
-        for (let pluginName of this.outgoingCapabilities) {
-            switch (pluginName) {
-                case "kdeconnect.battery":
-                    this.plugins.battery = new ProxyBase(
-                        Interface.BATTERY,
-                        this.gObjectPath,
-                        false
-                    );
-                    break;
-                case "kdeconnect.ping":
-                    this.plugins.ping = new ProxyBase(
-                        Interface.PING,
-                        this.gObjectPath,
-                        false
-                    );
-                    
-                    this.plugins.ping.connectSignal(
-                        "Ping",
-                        (proxy, sender, data) => {
-                            this.emit("received::ping", null)
-                        }
-                    );
-                    
-                    break;
+        // Device has gone inactive 
+        if (!this.active) {
+            for (let plugin in _plugins) {
+                if (this.hasOwnProperty(plugin)) {
+                    this[plugin].destroy();
+                    delete this[plugin];
+                }
+            }
+            
+            return;
+        }
+        
+        this.outgoingCapabilities.forEach((plugin) => {
+            if (plugin === "kdeconnect.battery") { _plugins.battery = true; }
+            if (plugin === "kdeconnect.ping") { _plugins.ping = true; }
+        });
+        
+        this.incomingCapabilities.forEach((plugin) => {
+            if (plugin === "kdeconnect.findmyphone.request") {
+                _plugins.findmyphone = true;
+            }
+            if (plugin === "kdeconnect.sms.request") { _plugins.sms = true; }
+        });
+        
+        for (let plugin in _plugins) {
+            if (_plugins[plugin] === true) {
+                this[plugin] = new ProxyBase(
+                    Interface[plugin.toUpperCase()],
+                    this.gObjectPath
+                );
+                
+                // wrap "g-signal" and re-emit
+                if (plugin === "ping") {
+                    this[plugin]._wrapSignals();
+                }
+            } else {
+                this[plugin].destroy();
+                delete this[plugin];
             }
         }
         
-        for (let pluginName of this.incomingCapabilities) {
-            switch (pluginName) {
-                case "kdeconnect.findmyphone.request":
-                    this.plugins.findmyphone = new ProxyBase(
-                        Interface.PING, // TODO
-                        this.gObjectPath,
-                        true
-                    );
-                    
-                    break;
-                case "kdeconnect.sms.request":
-                    this.plugins.sms = new ProxyBase(
-                        Interface.PING, // TODO
-                        this.gObjectPath,
-                        true
-                    );
-                    
-                    break;
-            }
-        }
-        
-        this.emit("changed::plugins", null);
+        // FIXME: stupid type casting bs
+        this.emit("changed::plugins", new GLib.Variant("()", ""));
     },
     
     // Plugin Methods
+    ping: function () {
+        // TODO: outgoing pings are not supported yet
+        debug("mconnect.Device.ping()");
+        
+//        this._call(
+//            "org.mconnect.Device.Ping.Ping",
+//            new GLib.Variant("()", ""),
+//            true
+//        );
+    },
+    
     ring: function () {
         // TODO: findyphone is not supported yet
         debug("mconnect.Device.ring()");
@@ -416,7 +418,6 @@ const Device = new Lang.Class({
             this.plugins[pluginName].destroy();
             delete this.plugins[pluginName];
         }
-        delete this.props;
     }
 });
 
@@ -425,6 +426,12 @@ const Device = new Lang.Class({
 const DeviceManager = new Lang.Class({
     Name: "DeviceManager",
     Extends: ProxyBase,
+    Signals: {
+        "device": {
+            flags: GObject.SignalFlags.RUN_FIRST | GObject.SignalFlags.DETAILED,
+            param_types: [ GObject.TYPE_STRING ]
+        }
+    },
     
     _init: function () {
         this.parent(Interface.MANAGER, "/org/mconnect/manager");
@@ -454,7 +461,7 @@ const DeviceManager = new Lang.Class({
         debug("mconnect.DeviceManager._deviceAdded(" + dbusPath + ")");
         
         this.devices[dbusPath] = new Device(dbusPath);
-        this.emit("device::added", null, dbusPath);
+        this.emit("device::added", dbusPath);
     },
     
     _deviceRemoved: function (manager, dbusPath) {
@@ -463,7 +470,7 @@ const DeviceManager = new Lang.Class({
         
         this.devices[dbusPath].destroy();
         delete this.devices[dbusPath];
-        this.emit("device::removed", null,  dbusPath);
+        this.emit("device::removed", dbusPath);
     },
     
     // Methods
