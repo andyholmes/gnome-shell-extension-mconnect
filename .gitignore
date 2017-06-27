@@ -29,4 +29,5 @@ config.status
 configure
 Makefile
 Makefile.in
+*.zip
 
