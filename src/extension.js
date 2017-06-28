@@ -88,8 +88,7 @@ const DeviceMenu = new Lang.Class({
         Settings.connect("changed::show-offline", Lang.bind(this, this._settingsChanged));
         Settings.connect("changed::show-unallowed", Lang.bind(this, this._settingsChanged));
 
-
-        this._activeChanged();
+        //this._activeChanged();
         this._nameChanged();
         this._pluginsChanged(); // include _batteryChanged()
         this._batteryChanged();
@@ -119,7 +118,8 @@ const DeviceMenu = new Lang.Class({
     _activeChanged: function (device, active) {
         // TODO: "active" is a state of preparedness reached after a device has
         //       been "allowed" but before the device acknowledges "paired".
-        debug("extension.DeviceMenu._activeChanged(" + active + ")");
+        debug("extension.DeviceMenu._activeChanged(" + active.unpack() + ")");
+        
     },
 
     _batteryChanged: function (device, level, charging) {
@@ -605,14 +605,10 @@ const SystemIndicator = new Lang.Class({
         this._sync();
     },
 
-    _deviceRemoved: function (manager, detail, dbusPath) {
+    _deviceRemoved: function (manager, dbusPath) {
+        // FIXME: not detail on device::removed?
         debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
         
-        // FIXME: some signal data is not getting through
-        debug("devrem: " + manager);
-        debug("devrem: " + detail);
-        debug("devrem: " + dbusPath);
-
         // Per-device indicator
         Main.panel.statusArea[dbusPath].destroy();
 
@@ -625,7 +621,7 @@ const SystemIndicator = new Lang.Class({
     // Public Methods
     destroy: function () {
         this.manager.destroy();
-        this.manager = null;
+        delete this.manager;
 
         // Destroy the UI
         this.devicesSection.destroy();

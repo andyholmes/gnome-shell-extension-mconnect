@@ -9,7 +9,7 @@ const GObject = imports.gi.GObject;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert } = Me.imports.lib;
+const { log, debug } = Me.imports.lib;
 
 
 // DBus Constants
@@ -225,7 +225,7 @@ const ProxyBase = new Lang.Class({
     
     _wrapProperties: function () {
         // Properties
-        debug("mconnect.ProxyBase._wrapPropertiesChanged()");
+        debug("mconnect.ProxyBase._wrapProperties()");
         
         let i;
         let properties = this.gInterfaceInfo.properties;
@@ -261,21 +261,26 @@ const ProxyBase = new Lang.Class({
             for (let name in parameters) {
                 debug("parameter name: " + name);
                 debug("parameter value: " + parameters[name].deep_unpack());
+                debug("parameter typeof: " + parameters[name].toString());
                 
                 // Homogenize property names
                 let pname = (name.startsWith("Is")) ? name.slice(2) : name;
                 pname = (pname.startsWith("Device")) ? pname.slice(6) : pname;
                 pname = pname.toCamelCase();
                 
-                debug("lowered param: " + name);
+                debug("lowered param: " + pname);
                 
-                this.emit("changed::" + name, parameters[name].deep_unpack())
+                // FIXME: cast as variant
+                //this.emit("changed::" + pname, parameters[name].deep_unpack());
+                this.emit("changed::" + pname, parameters[name]);
             }
         });
     },
     
     _wrapSignals: function (emitter) {
         // Wrap signals
+        debug("mconnect.ProxyBase._wrapSignals()");
+        
         this.connect("g-signal",
             (proxy, sender_name, signal_name, parameters) => {
                 debug("g-signal emitted");
@@ -322,7 +327,7 @@ const Device = new Lang.Class({
     // Callbacks
     _pluginsChanged: function (proxy, sender, cb_data) {
         // NOTE: not actually a signal yet
-        // TODO: better
+        // FIXME: mad cludgy
         debug("mconnect.Device._pluginsChanged()");
         
         //
@@ -414,10 +419,12 @@ const Device = new Lang.Class({
     
     // Override Methods
     destroy: function () {
-        for (let pluginName in this.plugins) {
-            this.plugins[pluginName].destroy();
-            delete this.plugins[pluginName];
-        }
+        ["battery", "findmyphone", "ping", "sms"].forEach((plugin) => {
+            if (this.hasOwnProperty(plugin)) {
+                this[plugin].destroy();
+                delete this[plugin];
+            }
+        });
     }
 });
 
