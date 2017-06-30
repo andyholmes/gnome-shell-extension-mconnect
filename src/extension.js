@@ -33,20 +33,19 @@ const DeviceMenu = new Lang.Class({
         this.device = device;
 
         // Menu Items -> Info Bar
-        // TODO: should be dynamic
         this.infoBar = new PopupMenu.PopupSeparatorMenuItem(device.name);
         this.addMenuItem(this.infoBar);
-        // Menu Items -> Separator -> Battery label (eg. "85%")
+        // Menu Items -> InfoBar -> Battery label (eg. "85%")
         this.batteryLabel = new St.Label();
         this.infoBar.actor.add(this.batteryLabel);
-        // Menu Items -> Separator -> Battery Icon (eg. battery-good-symbolic)
+        // Menu Items -> Info Bar -> Battery Icon (eg. battery-good-symbolic)
         this.batteryButton = this._createButton(
             "status",
             "battery-missing-symbolic",
-            this._batteryChanged
+            this._batteryAction
         );
         this.infoBar.actor.add(this.batteryButton);
-        // Menu Items -> Separator -> Allow Icon
+        // Menu Items -> Info Bar -> Allow Icon
         this.allowButton = this._createButton(
             "status",
             "channel-insecure-symbolic",
