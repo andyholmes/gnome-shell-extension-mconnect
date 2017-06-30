@@ -141,15 +141,9 @@ const ProxyBase = new Lang.Class({
             gInterfaceName: iface.name
         });
         
+        this._signals = [];
         this.cancellable = new Gio.Cancellable();
         this.init(null);
-        
-        // Always wrap Properties and Signals
-        this._wrapProperties();
-        this._wrapSignals();
-        // PropertiesChanged picks up all properties on the object path, not 
-        // just the local interface; apply it on a per-object-path basis
-        //this._wrapPropertiesChanged();
     },
     
     // Wrapper functions
@@ -206,8 +200,8 @@ const ProxyBase = new Lang.Class({
         this.set_cached_property(name, variant);
 
         this.call(
-            'org.freedesktop.DBus.Properties.Set',
-            new GLib.Variant('(ssv)', [this.gInterfaceName, name, variant]),
+            "org.freedesktop.DBus.Properties.Set",
+            new GLib.Variant("(ssv)", [this.gInterfaceName, name, variant]),
             Gio.DBusCallFlags.NONE,
             -1,
             this.cancellable,
@@ -215,8 +209,8 @@ const ProxyBase = new Lang.Class({
                 try {
                     this.call_finish(result);
                 } catch (e) {
-                    log('Error setting ' + name + ' on ' + this.gObjectPath +
-                        ': ' + e.message
+                    log("Error setting " + name + " on " + this.gObjectPath +
+                        ": " + e.message
                     );
                 }
             }
@@ -227,81 +221,64 @@ const ProxyBase = new Lang.Class({
         // Properties
         debug("mconnect.ProxyBase._wrapProperties()");
         
-        let i;
-        let properties = this.gInterfaceInfo.properties;
-        
-        for (i = 0; i < properties.length; i++) {
-            let name = properties[i].name;
-            let signature = properties[i].signature;
-            
+        this.gInterfaceInfo.properties.forEach((property) => {
             // Homogenize property names
-            let pname = (name.startsWith("Is")) ? name.slice(2) : name;
-            pname = (pname.startsWith("Device")) ? pname.slice(6) : pname;
-            pname = pname.toCamelCase();
+            let name = property.name.replace("Is", "");
+            name = name.replace("Device", "").toCamelCase();
             
-            Object.defineProperty(this, pname, {
-                get: Lang.bind(this, this._get, name),
+            Object.defineProperty(this, name, {
+                get: Lang.bind(this, this._get, property.name),
                 // TODO: not ready for prime-time
                 //set: Lang.bind(this, _propertySetter, name, signature),
                 configurable: true,
                 enumerable: true
             });
-        }
+        });
     },
     
     _wrapPropertiesChanged: function () {
-        // Wrap "g-properties-changed"
+        // PropertiesChanged picks up all properties on the object path, not 
+        // just the local interface; apply it on a per-object-path basis
         debug("mconnect.ProxyBase._wrapPropertiesChanged()");
         
-        this.connect("g-properties-changed", (proxy, parameters) => {
-            debug("g-properties-changed emitted");
-            
-            parameters = parameters.deep_unpack();
-            
-            for (let name in parameters) {
-                debug("parameter name: " + name);
-                debug("parameter value: " + parameters[name].deep_unpack());
-                debug("parameter typeof: " + parameters[name].toString());
+        this._signals.push(
+            this.connect("g-properties-changed", (proxy, parameters) => {
+                debug("g-properties-changed emitted");
                 
-                // Homogenize property names
-                let pname = (name.startsWith("Is")) ? name.slice(2) : name;
-                pname = (pname.startsWith("Device")) ? pname.slice(6) : pname;
-                pname = pname.toCamelCase();
+                parameters = parameters.deep_unpack();
                 
-                debug("lowered param: " + pname);
-                
-                // FIXME: cast as variant
-                //this.emit("changed::" + pname, parameters[name].deep_unpack());
-                this.emit("changed::" + pname, parameters[name]);
-            }
-        });
+                for (let name in parameters) {
+                    let property = name.replace("Is", "");
+                    property = property.replace("Device", "").toCamelCase();
+                    
+                    this.notify(property, parameters[name].deep_unpack());
+                }
+            })
+        );
     },
     
     _wrapSignals: function (emitter) {
         // Wrap signals
+        // FIXME
         debug("mconnect.ProxyBase._wrapSignals()");
         
-        this.connect("g-signal",
-            (proxy, sender_name, signal_name, parameters) => {
+        this._signals.push(
+            this.connect("g-signal", (proxy, sender, name, parameters) => {
                 debug("g-signal emitted");
-            
-                debug("g-signal proxy: " + proxy.gObjectPath);
-                debug("g-signal signal: " + signal_name);
-                debug("g-signal sender: " + sender_name);
+                debug("g-signal signal: " + name);
+                debug("g-signal sender: " + sender);
                 debug("g-signal parameters: " + parameters);
                 
-                debug("proxy: " + proxy.gInterfaceName);
+                debug("interface: " + proxy.gInterfaceName);
                 
-                emitter.emit("received::" + signal_name, parameters);
-            }
+                emitter.emit("received::" + name, parameters);
+            })
         );
     },
     
     // Override as needed
     destroy: function () {
-        //this.disconnectAll();
-        this.disconnect("g-properties-changed");
-        this.disconnect("g-signal");
+        this._signals.forEach((signal) => { this.disconnect(signal); });
     }
 });
 
@@ -310,18 +287,137 @@ const ProxyBase = new Lang.Class({
 const Device = new Lang.Class({
     Name: "Device",
     Extends: ProxyBase,
+    Properties: {
+        "active": GObject.ParamSpec.boolean(
+            "active",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "address": GObject.ParamSpec.string(
+            "address",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "allowed": GObject.ParamSpec.boolean(
+            "allowed",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "connected": GObject.ParamSpec.boolean(
+            "connected",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "id": GObject.ParamSpec.string(
+            "id",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "name": GObject.ParamSpec.string(
+            "name",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "paired": GObject.ParamSpec.boolean(
+            "paired",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "protocolVersion": GObject.ParamSpec.int(
+            "protocolVersion",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "type": GObject.ParamSpec.string(
+            "type",
+            "ParamReadonly",
+            "A readonly parameter",
+            GObject.ParamFlags.READABLE,
+            ""
+        )
+    },
     
     _init: function (dbusPath) {
         this.parent(Interface.DEVICE, dbusPath);
         
         // Wrap "g-properties-changed"
+        //this._wrapProperties();
         this._wrapPropertiesChanged();
         
         // Plugins
         // FIXME: signal _should_ replace the need for this
-        // this.connect("changed::incomingCapabilites", () => { this._pluginsChanged() } );
-        // this.connect("changed::outgoingCapabilites", () => { this._pluginsChanged() } );
+        this.connect("changed::incomingCapabilites", () => { this._pluginsChanged() } );
+        this.connect("changed::outgoingCapabilites", () => { this._pluginsChanged() } );
         this._pluginsChanged();
+        
+        this.connect("changed::charging", (proxy, variant) => {
+            this.emit(
+                "changed::battery",
+                variant.deep_unpack(),
+                this.battery.level
+            );
+        });
+        
+        this.connect("changed::level", (proxy, variant) => {
+            this.emit(
+                "changed::battery",
+                this.battery.charging,
+                variant.deep_unpack()
+            );
+        });
+    },
+    
+    // Property Getters
+    get active() {
+        return this._get("IsActive");
+    },
+    
+    get address() {
+        return this._get("Address");
+    },
+    
+    get allowed() {
+        return this._get("Allowed");
+    },
+    
+    get connected() {
+        return this._get("IsConnected");
+    },
+    
+    get id() {
+        return this._get("Id");
+    },
+    
+    get name() {
+        return this._get("Name");
+    },
+    
+    get paired() {
+        return this._get("IsPaired");
+    },
+    
+    get protocolVersion() {
+        return this._get("ProtocolVersion");
+    },
+    
+    get type() {
+        return this._get("DeviceType");
     },
     
     // Callbacks
@@ -350,12 +446,12 @@ const Device = new Lang.Class({
             return;
         }
         
-        this.outgoingCapabilities.forEach((plugin) => {
+        this._get("OutgoingCapabilities").forEach((plugin) => {
             if (plugin === "kdeconnect.battery") { _plugins.battery = true; }
             if (plugin === "kdeconnect.ping") { _plugins.ping = true; }
         });
         
-        this.incomingCapabilities.forEach((plugin) => {
+        this._get("IncomingCapabilities").forEach((plugin) => {
             if (plugin === "kdeconnect.findmyphone.request") {
                 _plugins.findmyphone = true;
             }
@@ -370,8 +466,10 @@ const Device = new Lang.Class({
                 );
                 
                 // wrap "g-signal" and re-emit
-                if (plugin === "ping") {
-                    this[plugin]._wrapSignals();
+                if (plugin === "battery") {
+                    this[plugin]._wrapProperties();
+                } else if (plugin === "ping") {
+                    this[plugin]._wrapSignals(this);
                 }
             } else {
                 this[plugin].destroy();
@@ -425,6 +523,8 @@ const Device = new Lang.Class({
                 delete this[plugin];
             }
         });
+        
+        ProxyBase.prototype.destroy.call(this);
     }
 });
 
@@ -485,7 +585,7 @@ const DeviceManager = new Lang.Class({
         // Mark the device at *dbusPath* as allowed
         debug("mconnect.DeviceManager.allowDevice(" + dbusPath + ")");
         
-        this._call("AllowDevice", new GLib.Variant('(s)', [dbusPath]), true);
+        this._call("AllowDevice", new GLib.Variant("(s)", [dbusPath]), true);
     },
     
     disallowDevice: function (dbusPath) {
