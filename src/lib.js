@@ -37,13 +37,13 @@ const Settings = getSettings();
 /**
  * initTranslations:
  *
- * Initialize Gettext to load translations for metadata['gettext-domain'] from
- * extensionsdir/locale.
+ * Initialize Gettext to load translations for metadata['gettext-domain']. If
+ * the extension has no locale subfolder, assume that it was installed in the
+ * same prefix as gnome-shell
  */
 function initTranslations() {
-    // If the extension doesn't have the locale files in a subfolder, assume
-    // that extension has been installed in the same prefix as gnome-shell
     let localeDir = Me.dir.get_child('locale');
+    
     if (localeDir.query_exists(null)) {
         Gettext.bindtextdomain(
             Me.metadata['gettext-domain'],
@@ -59,19 +59,16 @@ function initTranslations() {
 
 /**
  * getSettings:
- * @schema: (optional): the GSettings schema id
  *
- * Builds and return a GSettings schema for metadata['settings-schema'], using
- * schema files in extensionsdir/schemas. If @schema is not provided, it is
- * taken from.
+ * Builds and return a GSettings schema for metadata['settings-schema']. If
+ * the extension has no schemas subfolder, assume that it was installed in the
+ * same prefix as gnome-shell
  */
 function getSettings() {
     const GioSSS = Gio.SettingsSchemaSource;
     let schemaDir = Me.dir.get_child('schemas');
     let schemaSource;
 
-    // If the extension doesn't have the schema files in a subfolder, assume
-    // that extension has been installed in the same prefix as gnome-shell
     if (schemaDir.query_exists(null)) {
         schemaSource = GioSSS.new_from_directory(
             schemaDir.get_path(),
