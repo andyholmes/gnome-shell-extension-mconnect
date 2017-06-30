@@ -77,25 +77,25 @@ const DeviceMenu = new Lang.Class({
         );
         this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
 
-        // Connect to "Device.notify::*" signals
+        // Connect to "Device.changed::*" signals
         device.connect(
-            "notify::battery",
+            "changed::battery",
             Lang.bind(this, this._batteryChanged)
         );
         device.connect(
-            "notify::name", 
+            "changed::name", 
             Lang.bind(this, this._nameChanged)
         );
         device.connect(
-            "notify::plugins",
+            "changed::plugins",
             Lang.bind(this, this._pluginsChanged)
         );
         
         // Status Properties
         ["active", "allowed", "connected", "paired"].forEach((property) => {
             device.connect(
-                "notify::" + property,
-                Lang.bind(this, this._statusChanged)
+                "changed::" + property,
+                Lang.bind(this, this._stateChanged)
             );
         });
         
@@ -125,7 +125,7 @@ const DeviceMenu = new Lang.Class({
             button.child.style_class = "popup-menu-icon";
         }
 
-        if (callback) { button.connect("clicked", () => (callback)); }
+        if (callback) { button.connect("clicked", Lang.bind(this, callback)); }
 
         return button;
     },
@@ -169,6 +169,7 @@ const DeviceMenu = new Lang.Class({
     _nameChanged: function (device, name) {
         debug("extension.DeviceMenu._nameChanged()");
         
+        name = name.deep_unpack();
         this.infoBar.label.text = (name === "string") ? name : device.name;
     },
 
@@ -180,19 +181,18 @@ const DeviceMenu = new Lang.Class({
 
         // Device Menu Buttons
         let buttons = { findmyphone: this.findButton, sms: this.smsButton };
-        let connected;
+        let sensitive;
 
         for (let name in buttons) {
-            connected = (device.hasOwnProperty(name) && device.connected);
-            buttons[name].can_focus = connected;
-            buttons[name].reactive = connected;
-            buttons[name].track_hover = connected;
-            buttons[name].opacity = connected ? 255 : 128;
+            sensitive = (device.hasOwnProperty(name) && device.connected);
+            buttons[name].can_focus = sensitive;
+            buttons[name].reactive = sensitive;
+            buttons[name].track_hover = sensitive;
+            buttons[name].opacity = sensitive ? 255 : 128;
         }
     },
 
     _settingsChanged: function () {
-        // TODO
         debug("extension.DeviceMenu._settingsChanged()");
 
         // Show unallowed
@@ -210,8 +210,8 @@ const DeviceMenu = new Lang.Class({
         }
     },
 
-    _statusChanged: function (device, state) {
-        debug("extension.DeviceMenu._statusChanged()");
+    _stateChanged: function (device, state) {
+        debug("extension.DeviceMenu._stateChanged(" + device.gObjectPath + ")");
 
         if (device.connected) {
             this.allowButton.child.icon_name = "channel-secure-symbolic";
@@ -220,13 +220,8 @@ const DeviceMenu = new Lang.Class({
         } else {
             this.allowButton.child.icon_name = "channel-insecure-symbolic";
         }
-
-        [this.findButton, this.smsButton].forEach((button) => {
-            button.can_focus = device.connected;
-            button.reactive = device.connected;
-            button.track_hover = device.connected;
-            button.opacity = device.connected ? 255 : 128;
-        });
+        
+        this._pluginsChanged(device);
     },
 
     // Action Button Callbacks
@@ -295,22 +290,6 @@ const DeviceMenu = new Lang.Class({
         dialog.open();
 
         this._getTopMenu().close(true);
-    },
-    
-    destroy: function () {
-        // infoBar
-        this.batteryLabel.destroy();
-        this.batteryButton.destroy();
-        this.infoBar.label.destroy();
-        this.infoBar.destroy();
-        
-        // actionBar
-        delete this.allowButton;
-        delete this.findButton;
-        delete this.smsButton;
-        this.actionBar.destroy();
-    
-        PopupMenu.PopupMenuSection.prototype.destroy.call(this);
     }
 });
 
@@ -346,7 +325,7 @@ const DeviceIndicator = new Lang.Class({
         });
         
         ["active", "allowed", "connected"].forEach((property) => {
-            device.connect("notify::" + property, () => { this._sync(); });
+            device.connect("changed::" + property, () => { this._sync(); });
         });
 
         // Sync

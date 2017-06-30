@@ -243,15 +243,13 @@ const ProxyBase = new Lang.Class({
         
         this._signals.push(
             this.connect("g-properties-changed", (proxy, parameters) => {
-                debug("g-properties-changed emitted");
-                
                 parameters = parameters.deep_unpack();
                 
                 for (let name in parameters) {
                     let property = name.replace("Is", "");
                     property = property.replace("Device", "").toCamelCase();
                     
-                    this.notify(property, parameters[name].deep_unpack());
+                    this.emit("changed::" + property, parameters[name]);
                 }
             })
         );
@@ -287,86 +285,26 @@ const ProxyBase = new Lang.Class({
 const Device = new Lang.Class({
     Name: "Device",
     Extends: ProxyBase,
-    Properties: {
-        "active": GObject.ParamSpec.boolean(
-            "active",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "address": GObject.ParamSpec.string(
-            "address",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "allowed": GObject.ParamSpec.boolean(
-            "allowed",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "connected": GObject.ParamSpec.boolean(
-            "connected",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "id": GObject.ParamSpec.string(
-            "id",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "name": GObject.ParamSpec.string(
-            "name",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "paired": GObject.ParamSpec.boolean(
-            "paired",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "protocolVersion": GObject.ParamSpec.int(
-            "protocolVersion",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        ),
-        "type": GObject.ParamSpec.string(
-            "type",
-            "ParamReadonly",
-            "A readonly parameter",
-            GObject.ParamFlags.READABLE,
-            ""
-        )
-    },
     
     _init: function (dbusPath) {
         this.parent(Interface.DEVICE, dbusPath);
         
         // Wrap "g-properties-changed"
-        //this._wrapProperties();
+        this._wrapProperties();
         this._wrapPropertiesChanged();
         
         // Plugins
         // FIXME: signal _should_ replace the need for this
-        this.connect("changed::incomingCapabilites", () => { this._pluginsChanged() } );
-        this.connect("changed::outgoingCapabilites", () => { this._pluginsChanged() } );
+        this.connect("changed::incomingCapabilities", () => {
+            this._pluginsChanged()
+        });
+        this.connect("changed::outgoingCapabilities", () => {
+            this._pluginsChanged()
+        });
         this._pluginsChanged();
         
-        this.connect("changed::charging", (proxy, variant) => {
+        // Re-wrap charging/level:changed as battery::changed
+        this.connect("changed::charging", (device, variant) => {
             this.emit(
                 "changed::battery",
                 variant.deep_unpack(),
@@ -374,50 +312,13 @@ const Device = new Lang.Class({
             );
         });
         
-        this.connect("changed::level", (proxy, variant) => {
+        this.connect("changed::level", (device, variant) => {
             this.emit(
                 "changed::battery",
                 this.battery.charging,
                 variant.deep_unpack()
             );
         });
-    },
-    
-    // Property Getters
-    get active() {
-        return this._get("IsActive");
-    },
-    
-    get address() {
-        return this._get("Address");
-    },
-    
-    get allowed() {
-        return this._get("Allowed");
-    },
-    
-    get connected() {
-        return this._get("IsConnected");
-    },
-    
-    get id() {
-        return this._get("Id");
-    },
-    
-    get name() {
-        return this._get("Name");
-    },
-    
-    get paired() {
-        return this._get("IsPaired");
-    },
-    
-    get protocolVersion() {
-        return this._get("ProtocolVersion");
-    },
-    
-    get type() {
-        return this._get("DeviceType");
     },
     
     // Callbacks
@@ -483,36 +384,18 @@ const Device = new Lang.Class({
     
     // Plugin Methods
     ping: function () {
-        // TODO: outgoing pings are not supported yet
-        debug("mconnect.Device.ping()");
-        
-//        this._call(
-//            "org.mconnect.Device.Ping.Ping",
-//            new GLib.Variant("()", ""),
-//            true
-//        );
+        // TODO
+        debug("mconnect.Device.ping(): Not Implemented");
     },
     
     ring: function () {
-        // TODO: findyphone is not supported yet
-        debug("mconnect.Device.ring()");
-        
-//        this._call(
-//            "org.mconnect.Device.FindMyPhone.Ring",
-//            new GLib.Variant("()", ""),
-//            true
-//        );
+        // TODO
+        debug("mconnect.Device.ring(): Not Implemented");
     },
     
     sendSMS: function (number, message) {
-        // TODO: sms/telephony is not supported yet
-        debug("mconnect.Device.sendSMS()");
-        
-//        this._call(
-//            "org.mconnect.Device.Telephony.SendSMS",
-//            new GLib.Variant("(ss)", [number, message]),
-//            true
-//        );
+        // TODO
+        debug("mconnect.Device.sendSMS(): Not Implemented");
     },
     
     // Override Methods
@@ -543,14 +426,15 @@ const DeviceManager = new Lang.Class({
     _init: function () {
         this.parent(Interface.MANAGER, "/org/mconnect/manager");
         
-        // Properties
+        // Track our device proxies, DBus path as key
         this.devices = {};
         
+        // Properties
         Object.defineProperties(this, {
             name: {
                 get: function () {
-                    // TODO: this is actually a read/write property for KDE 
-                    // Connect but mconnect always reports username@hostname.
+                    // TODO: this is actually a read/write property for KDE
+                    // Connect but MConnect always reports username@hostname
                     return GLib.get_user_name() + "@" + GLib.get_host_name();
                 }
             }
