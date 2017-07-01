@@ -217,6 +217,11 @@ const ProxyBase = new Lang.Class({
         );
     },
     
+    /**
+     * _wrapProperties:
+     *
+     * ...
+     */
     _wrapProperties: function () {
         // Properties
         debug("mconnect.ProxyBase._wrapProperties()");
@@ -236,29 +241,43 @@ const ProxyBase = new Lang.Class({
         });
     },
     
-    _wrapPropertiesChanged: function () {
-        // PropertiesChanged picks up all properties on the object path, not 
-        // just the local interface; apply it on a per-object-path basis
+    /**
+     * _wrapPropertiesChanged:
+     * @emitter: The object to have emit the signal. Defaults to "this".
+     *
+     * PropertiesChanged...
+     */
+    _wrapPropertiesChanged: function (emitter) {
         debug("mconnect.ProxyBase._wrapPropertiesChanged()");
         
+        emitter = (emitter === undefined) ? this : emitter;
+        
         this._signals.push(
-            this.connect("g-properties-changed", (proxy, parameters) => {
-                parameters = parameters.deep_unpack();
+            this.connect("g-properties-changed", (proxy, properties) => {
+                properties = properties.deep_unpack();
                 
-                for (let name in parameters) {
+                for (let name in properties) {
                     let property = name.replace("Is", "");
                     property = property.replace("Device", "").toCamelCase();
                     
-                    this.emit("changed::" + property, parameters[name]);
+                    emitter.emit("changed::" + property, properties[name]);
                 }
             })
         );
     },
     
+    /**
+     * _wrapSignals:
+     * @emitter: The object to have emit the signal. Defaults to "this".
+     *
+     * Connect to "g-signal" and re-emit each encapsulated signal via @emitter.
+     */
     _wrapSignals: function (emitter) {
         // Wrap signals
         // FIXME
         debug("mconnect.ProxyBase._wrapSignals()");
+        
+        emitter = (emitter === undefined) ? this : emitter;
         
         this._signals.push(
             this.connect("g-signal", (proxy, sender, name, parameters) => {
@@ -294,31 +313,31 @@ const Device = new Lang.Class({
         this._wrapPropertiesChanged();
         
         // Plugins
-        // FIXME: signal _should_ replace the need for this
         this.connect("changed::incomingCapabilities", () => {
             this._pluginsChanged()
         });
         this.connect("changed::outgoingCapabilities", () => {
             this._pluginsChanged()
         });
-        this._pluginsChanged();
         
         // Re-wrap charging/level:changed as battery::changed
         this.connect("changed::charging", (device, variant) => {
+            debug("emitting battery::changed");
             this.emit(
                 "changed::battery",
-                variant.deep_unpack(),
-                this.battery.level
+                new GLib.Variant("(bu)", [variant.deep_unpack(), this.battery.level])
             );
         });
         
         this.connect("changed::level", (device, variant) => {
+            debug("emitting battery::changed");
             this.emit(
                 "changed::battery",
-                this.battery.charging,
-                variant.deep_unpack()
+                new GLib.Variant("(bu)", [this.battery.charging, variant.deep_unpack()])
             );
         });
+        
+        this._pluginsChanged();// FIXME: signal _should_ replace this
     },
     
     // Callbacks
@@ -347,12 +366,12 @@ const Device = new Lang.Class({
             return;
         }
         
-        this._get("OutgoingCapabilities").forEach((plugin) => {
+        this.outgoingCapabilities.forEach((plugin) => {
             if (plugin === "kdeconnect.battery") { _plugins.battery = true; }
             if (plugin === "kdeconnect.ping") { _plugins.ping = true; }
         });
         
-        this._get("IncomingCapabilities").forEach((plugin) => {
+        this.incomingCapabilities.forEach((plugin) => {
             if (plugin === "kdeconnect.findmyphone.request") {
                 _plugins.findmyphone = true;
             }
@@ -369,6 +388,7 @@ const Device = new Lang.Class({
                 // wrap "g-signal" and re-emit
                 if (plugin === "battery") {
                     this[plugin]._wrapProperties();
+                    this[plugin]._wrapPropertiesChanged(this);
                 } else if (plugin === "ping") {
                     this[plugin]._wrapSignals(this);
                 }
@@ -378,7 +398,6 @@ const Device = new Lang.Class({
             }
         }
         
-        // FIXME: stupid type casting bs
         this.emit("changed::plugins", new GLib.Variant("()", ""));
     },
     

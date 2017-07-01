@@ -34,8 +34,23 @@ const DeviceMenu = new Lang.Class({
         this.device = device;
 
         // Menu Items -> Info Bar
-        this.infoBar = new PopupMenu.PopupSeparatorMenuItem(device.name);
+        this.infoBar = new PopupMenu.PopupBaseMenuItem({
+            reactive: false,
+            can_focus: false
+        });
         this.addMenuItem(this.infoBar);
+        // Menu Items -> InfoBar -> Device Name
+        this.nameLabel = new St.Label({
+            text: device.name,
+            x_expand: true,
+            opacity: 192
+        });
+        this.infoBar.actor.add(this.nameLabel);
+        
+        this.infoBar.actor.add(
+            new St.Widget({y_align: Clutter.ActorAlign.CENTER, width: 64 }),
+            { expand: true }
+        );
         // Menu Items -> InfoBar -> Battery label (eg. "85%")
         this.batteryLabel = new St.Label();
         this.infoBar.actor.add(this.batteryLabel);
@@ -76,6 +91,22 @@ const DeviceMenu = new Lang.Class({
             this._findAction
         );
         this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
+
+        // Menu Items -> Action Bar -> Find my phone Action
+        this.browseButton = this._createButton(
+            "action",
+            "folder-remote-symbolic",
+            this._findAction
+        );
+        this.actionBar.actor.add(this.browseButton, { expand: true, x_fill: false });
+
+        // Menu Items -> Action Bar -> Find my phone Action
+        this.sendButton = this._createButton(
+            "action",
+            "send-to-symbolic",
+            this._findAction
+        );
+        this.actionBar.actor.add(this.sendButton, { expand: true, x_fill: false });
 
         // Connect to "Device.changed::*" signals
         device.connect(
@@ -120,7 +151,7 @@ const DeviceMenu = new Lang.Class({
 
         if (type === "action") {
             button.style_class = "system-menu-action";
-            button.style = "padding: 8px; border-radius: 24px;";
+            button.style = "padding: 8px;";
         } else if (type === "status") {
             button.child.style_class = "popup-menu-icon";
         }
@@ -131,21 +162,10 @@ const DeviceMenu = new Lang.Class({
     },
 
     // Callbacks
-    _batteryChanged: function (device, charging, level) {
-        debug("extension.DeviceMenu._batteryChanged(" + [level, charging] + ")");
-
-        // Battery plugin disabled/unallowed
-        if (!device.hasOwnProperty("battery") || !device.connected) {
-            this.batteryButton.child.icon_name = "battery-missing-symbolic";
-            this.batteryLabel.text = "";
-            return;
-        }
+    _batteryChanged: function (device, variant) {
+        debug("extension.DeviceMenu._batteryChanged(" + device.gObjectPath + ")");
         
-        // Try the get data from the device itself
-        if (!(typeof level === "number") || !(typeof charging === "boolean")) {
-            level = device.battery.level;
-            charging = device.battery.charging;
-        }
+        let [charging, level] = variant.deep_unpack();
         
         // uPower Style
         let icon = "battery";
@@ -170,7 +190,7 @@ const DeviceMenu = new Lang.Class({
         debug("extension.DeviceMenu._nameChanged()");
         
         name = name.deep_unpack();
-        this.infoBar.label.text = (name === "string") ? name : device.name;
+        this.nameLabel.text = (name === "string") ? name : device.name;
     },
 
     _pluginsChanged: function (device, plugins) {
@@ -180,42 +200,50 @@ const DeviceMenu = new Lang.Class({
         debug("extension.DeviceMenu._pluginsChanged()");
 
         // Device Menu Buttons
-        let buttons = { findmyphone: this.findButton, sms: this.smsButton };
+        let buttons = {
+            browse: this.browseButton,
+            findmyphone: this.findButton,
+            send: this.sendButton,
+            sms: this.smsButton
+        };
         let sensitive;
 
         for (let name in buttons) {
-            sensitive = (device.hasOwnProperty(name) && device.connected);
+            sensitive = (device.hasOwnProperty(name) && device.connected === true);
             buttons[name].can_focus = sensitive;
             buttons[name].reactive = sensitive;
             buttons[name].track_hover = sensitive;
             buttons[name].opacity = sensitive ? 255 : 128;
         }
+        
+        this._batteryAction();
     },
 
     _settingsChanged: function () {
+        // FIXME: kind of confusing settings
         debug("extension.DeviceMenu._settingsChanged()");
 
         // Show unallowed
         if (Settings.get_boolean("show-unallowed")) {
             this.actor.visible = true;
         } else {
-            this.actor.visible = this.device.allowed;
+            this.actor.visible = (this.device.allowed === true);
         }
         
         // Show offline
         if (Settings.get_boolean("show-offline")) {
             this.actor.visible = true;
         } else {
-            this.actor.visible = this.device.active;
+            this.actor.visible = (this.device.active === true);
         }
     },
 
     _stateChanged: function (device, state) {
         debug("extension.DeviceMenu._stateChanged(" + device.gObjectPath + ")");
 
-        if (device.connected) {
+        if (device.connected === true) {
             this.allowButton.child.icon_name = "channel-secure-symbolic";
-        } else if (device.allowed) {
+        } else if (device.allowed === true) {
             this.allowButton.child.icon_name = "feed-refresh-symbolic";
         } else {
             this.allowButton.child.icon_name = "channel-insecure-symbolic";
@@ -236,57 +264,61 @@ const DeviceMenu = new Lang.Class({
     _batteryAction: function (button) {
         debug("extension.DeviceMenu._batteryAction()");
         
-        if (!this.device.hasOwnProperty("battery")) { return };
+        // Battery plugin disabled/unallowed
+        if (!this.device.hasOwnProperty("battery") || !this.device.connected) {
+            this.batteryButton.child.icon_name = "battery-missing-symbolic";
+            this.batteryLabel.text = "";
+            return;
+        }
         
         this._batteryChanged(
             this.device,
-            this.device.battery.charging,
-            this.device.battery.level
+            new GLib.Variant(
+                "(bu)",
+                [this.device.battery.charging, this.device.battery.level]
+            )
         );
     },
 
-    _findAction: function (button) {
-        debug("extension.DeviceMenu._findAction()");
+    _browseAction: function (button) {
+        debug("extension.DeviceMenu._browseAction(): Not Implemented");
         
-        let dialog = new Sw.MessageDialog({
-            message_type: Sw.MessageType.INFO,
-            text: "Unsupported Feature",
-            secondary_text: "Sorry, Find My Phone is not yet supported.",
-            buttons: Sw.ButtonsType.OK
-        });
+        this._unsupportedAction();
+        this._getTopMenu().close(true);
+    },
 
-        dialog.connect("response", (dialog, responseType) => {
-            dialog.close();
-            
-            if (responseType === Sw.ResponseType.OK) {
-                this.device.ring();
-            }
-        });
+    _findAction: function (button) {
+        debug("extension.DeviceMenu._findAction(): Not Implemented");
+        
+        this._unsupportedAction();
+        this._getTopMenu().close(true);
+    },
 
-        dialog.open();
-
+    _sendAction: function (button) {
+        debug("extension.DeviceMenu._sendAction(): Not Implemented");
+        
+        this._unsupportedAction();
         this._getTopMenu().close(true);
     },
 
     _smsAction: function (button) {
         // TODO: Shell.EmbeddedWindow
-        debug("extension.DeviceMenu._sms()");
+        debug("extension.DeviceMenu._smsAction(): Not Implemented");
         
+        this._unsupportedAction();
+        this._getTopMenu().close(true);
+    },
+    
+    _unsupportedAction: function () {
+        // TODO: just a placeholder function
         let dialog = new Sw.MessageDialog({
             message_type: Sw.MessageType.INFO,
             text: "Unsupported Feature",
-            secondary_text: "Sorry, sending SMS messages is not yet supported.",
+            secondary_text: "Sorry, this feature is not yet supported.",
             buttons: Sw.ButtonsType.OK
         });
 
-        dialog.connect("response", (dialog, responseType) => {
-            dialog.close();
-            
-            if (responseType === Sw.ResponseType.YES) {
-                this.device.send(dbusPath);
-            }
-        });
-
+        dialog.connect("response", () => { dialog.close(); });
         dialog.open();
 
         this._getTopMenu().close(true);
@@ -317,8 +349,6 @@ const DeviceIndicator = new Lang.Class({
         this.menu.addMenuItem(this.deviceMenu);
 
         // Signals
-        this._setSignals = [];
-        
         let sets = ["per-device-indicators", "show-offline", "show-unallowed"];
         sets.forEach((setting) => {
             Settings.connect("changed::" + setting, () => { this._sync(); });
@@ -338,10 +368,10 @@ const DeviceIndicator = new Lang.Class({
 
         // Device Visibility
         // TODO
-        if (!Settings.get_boolean("show-unallowed")) {
-            this.actor.visible = this.device.allowed;
-        } else {
+        if (Settings.get_boolean("show-unallowed")) {
             this.actor.visible = true;
+        } else {
+            this.actor.visible = (this.device.allowed === true);
         }
 
         // Indicator Visibility (User Setting)
@@ -356,9 +386,9 @@ const DeviceIndicator = new Lang.Class({
             icon = "smartphone";
         }
 
-        if (this.device.connected) {
+        if (this.device.connected === true) {
             this.icon.icon_name = icon + "-connected";
-        } else if (this.device.allowed) {
+        } else if (this.device.allowed === true) {
             this.icon.icon_name = icon + "-trusted";
         } else {
             this.icon.icon_name = icon + "-disconnected";
@@ -551,12 +581,6 @@ const SystemIndicator = new Lang.Class({
         // The DBus interface has vanished
         debug("extension.SystemIndicator._daemonVanished()");
 
-        // Stop watching for new and remove devices
-        // TODO: JS ERROR: Error: No signal connection device::added found
-        //       JS ERROR: Error: No signal connection device::removed found
-        //this.manager.disconnect("device::added");
-        //this.manager.disconnect("device::removed");
-
         // If a manager is initialized, destroy it
         if (this.manager) {
             this.manager.destroy();
@@ -591,7 +615,7 @@ const SystemIndicator = new Lang.Class({
         this.deviceMenus[dbusPath] = new DeviceMenu(device);
         this.deviceMenus[dbusPath].connect(
             "toggle::allowed",
-            Lang.bind(this.manager, this._toggleAllowed)
+            Lang.bind(this, this._toggleAllowed)
         );
         this.devicesSection.addMenuItem(this.deviceMenus[dbusPath]);
     },
