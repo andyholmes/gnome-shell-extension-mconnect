@@ -274,21 +274,14 @@ const ProxyBase = new Lang.Class({
      */
     _wrapSignals: function (emitter) {
         // Wrap signals
-        // FIXME
+        // FIXME: case
         debug("mconnect.ProxyBase._wrapSignals()");
         
         emitter = (emitter === undefined) ? this : emitter;
         
         this._signals.push(
             this.connect("g-signal", (proxy, sender, name, parameters) => {
-                debug("g-signal emitted");
-                debug("g-signal signal: " + name);
-                debug("g-signal sender: " + sender);
-                debug("g-signal parameters: " + parameters);
-                
-                debug("interface: " + proxy.gInterfaceName);
-                
-                emitter.emit("received::" + name, parameters);
+                emitter.emit("received::" + name.toCamelCase(), parameters);
             })
         );
     },
@@ -320,33 +313,16 @@ const Device = new Lang.Class({
             this._pluginsChanged()
         });
         
-        // Re-wrap charging/level:changed as battery::changed
-        this.connect("changed::charging", (device, variant) => {
-            debug("emitting battery::changed");
-            this.emit(
-                "changed::battery",
-                new GLib.Variant("(bu)", [variant.deep_unpack(), this.battery.level])
-            );
-        });
-        
-        this.connect("changed::level", (device, variant) => {
-            debug("emitting battery::changed");
-            this.emit(
-                "changed::battery",
-                new GLib.Variant("(bu)", [this.battery.charging, variant.deep_unpack()])
-            );
-        });
-        
-        this._pluginsChanged();// FIXME: signal _should_ replace this
+        //
+        this._pluginsChanged();
     },
     
     // Callbacks
     _pluginsChanged: function (proxy, sender, cb_data) {
         // NOTE: not actually a signal yet
-        // FIXME: mad cludgy
         debug("mconnect.Device._pluginsChanged()");
         
-        //
+        //FIXME: mad cludgy
         let _plugins = {
             battery: false,
             ping: false,
@@ -385,10 +361,37 @@ const Device = new Lang.Class({
                     this.gObjectPath
                 );
                 
-                // wrap "g-signal" and re-emit
+                // Battery Plugin
                 if (plugin === "battery") {
-                    this[plugin]._wrapProperties();
-                    this[plugin]._wrapPropertiesChanged(this);
+                    this.battery._wrapProperties();
+                    this.battery._wrapPropertiesChanged();
+        
+                    // Re-wrap changed::charging/level as changed::battery
+                    this.battery.connect("changed::charging", (proxy, variant) => {
+                        this.emit("changed::battery",
+                            new GLib.Variant(
+                                "(bu)",
+                                [variant.deep_unpack(), this.battery.level]
+                            )
+                        );
+                    });
+                    
+                    this.battery.connect("changed::level", (proxy, variant) => {
+                        this.emit("changed::battery",
+                            new GLib.Variant(
+                                "(bu)",
+                                [this.battery.charging, variant.deep_unpack()]
+                            )
+                        );
+                    });
+                    
+                    this.emit("changed::battery",
+                        new GLib.Variant(
+                            "(bu)",
+                            [this.battery.charging, this.battery.level]
+                        )
+                    );
+                    
                 } else if (plugin === "ping") {
                     this[plugin]._wrapSignals(this);
                 }

@@ -57,8 +57,7 @@ const DeviceMenu = new Lang.Class({
         // Menu Items -> Info Bar -> Battery Icon (eg. battery-good-symbolic)
         this.batteryButton = this._createButton(
             "status",
-            "battery-missing-symbolic",
-            this._batteryAction
+            "battery-missing-symbolic"
         );
         this.infoBar.actor.add(this.batteryButton);
         // Menu Items -> Info Bar -> Allow Icon
@@ -82,7 +81,7 @@ const DeviceMenu = new Lang.Class({
             "user-available-symbolic",
             this._smsAction
         );
-        this.actionBar.actor.add(this.smsButton, { expand: true, x_fill: false });
+        this.actionBar.actor.add(this.smsButton, {expand: true, x_fill: false});
 
         // Menu Items -> Action Bar -> Find my phone Action
         this.findButton = this._createButton(
@@ -90,7 +89,7 @@ const DeviceMenu = new Lang.Class({
             "find-location-symbolic",
             this._findAction
         );
-        this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
+        this.actionBar.actor.add(this.findButton, {expand: true, x_fill: false});
 
         // Menu Items -> Action Bar -> Find my phone Action
         this.browseButton = this._createButton(
@@ -98,7 +97,7 @@ const DeviceMenu = new Lang.Class({
             "folder-remote-symbolic",
             this._findAction
         );
-        this.actionBar.actor.add(this.browseButton, { expand: true, x_fill: false });
+        this.actionBar.actor.add(this.browseButton, {expand: true, x_fill: false});
 
         // Menu Items -> Action Bar -> Find my phone Action
         this.sendButton = this._createButton(
@@ -106,7 +105,7 @@ const DeviceMenu = new Lang.Class({
             "send-to-symbolic",
             this._findAction
         );
-        this.actionBar.actor.add(this.sendButton, { expand: true, x_fill: false });
+        this.actionBar.actor.add(this.sendButton, {expand: true, x_fill: false});
 
         // Connect to "Device.changed::*" signals
         device.connect(
@@ -129,25 +128,22 @@ const DeviceMenu = new Lang.Class({
                 Lang.bind(this, this._stateChanged)
             );
         });
+        // TODO: MConnect doesn't call PropertiesChanged on cached devices?
+        this._stateChanged(device);
         
-        Settings.connect(
-            "changed::show-offline",
-            Lang.bind(this, this._settingsChanged)
-        );
-        Settings.connect(
-            "changed::show-unallowed",
-            Lang.bind(this, this._settingsChanged)
-        );
-
-        this._batteryAction();
-        this._pluginsChanged(device);
-        
+        // Settings
+        ["show-offline", "show-unallowed"].forEach((setting) => {
+            Settings.connect(
+                "changed::" + setting,
+                Lang.bind(this, this._settingsChanged)
+            )
+        });
         this._settingsChanged();
     },
 
     _createButton: function (type, name, callback) {
         let button = new St.Button();
-            button.child = new St.Icon({ icon_name: name });
+        button.child = new St.Icon({ icon_name: name });
 
         if (type === "action") {
             button.style_class = "system-menu-action";
@@ -163,23 +159,21 @@ const DeviceMenu = new Lang.Class({
 
     // Callbacks
     _batteryChanged: function (device, variant) {
-        debug("extension.DeviceMenu._batteryChanged(" + device.gObjectPath + ")");
+        debug("extension.DeviceMenu._batteryChanged(" + variant.deep_unpack() + ")");
         
         let [charging, level] = variant.deep_unpack();
-        
-        // uPower Style
         let icon = "battery";
 
         if (level < 3) {
-            icon += charging === true ? "-empty-charging" : "-empty";
+            icon += charging ? "-empty-charging" : "-empty";
         } else if (level < 10) {
-            icon += charging === true ? "-caution-charging" : "-caution";
+            icon += charging ? "-caution-charging" : "-caution";
         } else if (level < 30) {
-            icon += charging === true ? "-low-charging" : "-low";
+            icon += charging ? "-low-charging" : "-low";
         } else if (level < 60) {
-            icon += charging === true ? "-good-charging" : "-good";
+            icon += charging ? "-good-charging" : "-good";
         } else if (level >= 60) {
-            icon += charging === true ? "-full-charging" : "-full";
+            icon += charging ? "-full-charging" : "-full";
         }
 
         this.batteryButton.child.icon_name = icon + "-symbolic";
@@ -216,7 +210,20 @@ const DeviceMenu = new Lang.Class({
             buttons[name].opacity = sensitive ? 255 : 128;
         }
         
-        this._batteryAction();
+        // Battery plugin disabled/unallowed
+        if (!device.hasOwnProperty("battery") || !device.connected) {
+            this.batteryButton.child.icon_name = "battery-missing-symbolic";
+            this.batteryLabel.text = "";
+            return;
+        }
+        
+        this._batteryChanged(
+            device,
+            new GLib.Variant(
+                "(bu)",
+                [device.battery.charging, device.battery.level]
+            )
+        );
     },
 
     _settingsChanged: function () {
@@ -259,25 +266,6 @@ const DeviceMenu = new Lang.Class({
         // allowDevice() is a DeviceManager method so kick this up the chain
         this.emit("toggle::allowed", this.device.gObjectPath);
         this._getTopMenu().close(true);
-    },
-    
-    _batteryAction: function (button) {
-        debug("extension.DeviceMenu._batteryAction()");
-        
-        // Battery plugin disabled/unallowed
-        if (!this.device.hasOwnProperty("battery") || !this.device.connected) {
-            this.batteryButton.child.icon_name = "battery-missing-symbolic";
-            this.batteryLabel.text = "";
-            return;
-        }
-        
-        this._batteryChanged(
-            this.device,
-            new GLib.Variant(
-                "(bu)",
-                [this.device.battery.charging, this.device.battery.level]
-            )
-        );
     },
 
     _browseAction: function (button) {
