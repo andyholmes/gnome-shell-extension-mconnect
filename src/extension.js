@@ -107,7 +107,7 @@ const DeviceMenu = new Lang.Class({
         );
         this.actionBar.actor.add(this.sendButton, {expand: true, x_fill: false});
 
-        // Connect to "Device.changed::*" signals
+        // Property signals
         device.connect(
             "changed::battery",
             Lang.bind(this, this._batteryChanged)
@@ -301,8 +301,8 @@ const DeviceMenu = new Lang.Class({
         // TODO: just a placeholder function
         let dialog = new Sw.MessageDialog({
             message_type: Sw.MessageType.INFO,
-            text: "Unsupported Feature",
-            secondary_text: "Sorry, this feature is not yet supported.",
+            text: _("Unsupported Feature"),
+            secondary_text: _("Sorry, this feature is not yet supported."),
             buttons: Sw.ButtonsType.OK
         });
 
@@ -342,7 +342,7 @@ const DeviceIndicator = new Lang.Class({
             Settings.connect("changed::" + setting, () => { this._sync(); });
         });
         
-        ["active", "allowed", "connected"].forEach((property) => {
+        ["active", "allowed", "connected", "paired"].forEach((property) => {
             device.connect("changed::" + property, () => { this._sync(); });
         });
 
@@ -369,10 +369,7 @@ const DeviceIndicator = new Lang.Class({
 
         // Indicator Icon
         let icon = this.device.type;
-
-        if (this.device.type === "phone") {
-            icon = "smartphone";
-        }
+        icon = (icon === "phone") ? "smartphone" : icon;
 
         if (this.device.connected === true) {
             this.icon.icon_name = icon + "-connected";
@@ -487,9 +484,9 @@ const SystemIndicator = new Lang.Class({
                 text: "Disallow the " + device.type + " \"" + device.name + "\"",
                 secondary_text: _("Disallowing this device will deny it access to your computer."),
                 buttons: [
-                    {text: "Cancel", response: Sw.ResponseType.CANCEL,
+                    {text: _("Cancel"), response: Sw.ResponseType.CANCEL,
                     isDefault: false, key: Clutter.KEY_Escape},
-                    {text: "Disallow", response: 1, isDefault: true}
+                    {text: _("Disallow"), response: 1, isDefault: true}
                 ]
             };
 
@@ -501,9 +498,9 @@ const SystemIndicator = new Lang.Class({
                 text: "Disallow the " + device.type + " \"" + device.name + "\"",
                 secondary_text: _("A pairing request is currently in progress. Disallowing this device will cancel the request and deny it access to your computer."),
                 buttons: [
-                    {text: "Cancel", response: Sw.ResponseType.CANCEL,
+                    {text: _("Cancel"), response: Sw.ResponseType.CANCEL,
                     isDefault: false, key: Clutter.KEY_Escape},
-                    {text: "Disallow", response: 1, isDefault: true}
+                    {text: _("Disallow"), response: 1, isDefault: true}
                 ]
             };
 
@@ -515,9 +512,9 @@ const SystemIndicator = new Lang.Class({
                 text: "Allow the " + device.type + " \"" + device.name + "\"",
                 secondary_text: _("Allowing this device will grant it access to your computer and may pose a serious security risk."),
                 buttons: [
-                    {text: "Cancel", response: Sw.ResponseType.CANCEL,
+                    {text: _("Cancel"), response: Sw.ResponseType.CANCEL,
                     isDefault: false, key: Clutter.KEY_Escape},
-                    {text: "Allow", response: 1, isDefault: true}
+                    {text: _("Allow"), response: 1, isDefault: true}
                 ]
             };
 
