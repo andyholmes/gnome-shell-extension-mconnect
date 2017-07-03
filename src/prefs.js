@@ -27,10 +27,10 @@ function buildPrefsWidget() {
     // and a label named "gsetting-key-label". The preferences widget is
     // then programatically built and each option connect to GSettings.
     let optionsList = [
-        "per-device-indicators",
+        "device-indicators",
         "show-offline",
-        "show-unallowed",
-        "start-daemon",
+        "show-unpaired",
+        "start-mconnect",
         "debug"
     ];
     

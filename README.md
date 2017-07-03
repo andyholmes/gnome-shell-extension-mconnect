@@ -35,7 +35,7 @@ If MConnect is in your `PATH`, it can be started from the User Menu or the
 extension can be configured to start it automatically. Once you have run `make`
 you may install it as a package if `checkinstall` is available:
 
-    checkinstall --type=<slackware|rpm|debian>
+    sudo checkinstall --type=<slackware|rpm|debian>
 
     
 ### Extension

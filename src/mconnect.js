@@ -313,7 +313,13 @@ const Device = new Lang.Class({
             this._pluginsChanged()
         });
         
-        //
+        ["active", "allowed", "connected", "paired"].forEach((property) => {
+            this.connect("changed::" + property, () => {
+                this._pluginsChanged()
+            });
+        });
+        
+        // TODO: this shouldn't be necessary
         this._pluginsChanged();
     },
     
@@ -385,6 +391,7 @@ const Device = new Lang.Class({
                         );
                     });
                     
+                    // Kickstart the plugin
                     this.emit("changed::battery",
                         new GLib.Variant(
                             "(bu)",
@@ -495,10 +502,10 @@ const DeviceManager = new Lang.Class({
     },
     
     disallowDevice: function (dbusPath) {
-        // TODO: not a method yet
-        // Unmark the device at *dbusPath* as unallowed
         debug("mconnect.DeviceManager.disallowDevice(" + dbusPath + ")");
-        debug("mconnect.DeviceManager.disallowDevice(): Not Implemented")
+        // Unmark the device at *dbusPath* as unallowed
+        
+        this._call("DisallowDevice", new GLib.Variant("(s)", [dbusPath]), true);
     },
     
     listDevices: function () {

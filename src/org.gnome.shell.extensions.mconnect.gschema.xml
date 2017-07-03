@@ -6,25 +6,25 @@
       <summary>Print debug messages to log</summary>
       <description>If true the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
-    <key type="b" name="per-device-indicators">
+    <key type="b" name="device-indicators">
       <default>false</default>
-      <summary>Show per-device indicators</summary>
-      <description>If true, show an indicator in the Status Area for each device. If false, devices will be available in the User Menu.</description>
+      <summary>Show device indicators</summary>
+      <description>If true, each device will be given an indicator in the Status Area. If false, each device will be given a submenu in the User Menu.</description>
     </key>
     <key type="b" name="show-offline">
       <default>false</default>
       <summary>Show offline devices</summary>
       <description>If true, cached devices will be shown in the interface even when they are offline.</description>
     </key>
-    <key type="b" name="show-unallowed">
-      <default>false</default>
-      <summary>Show unallowed devices</summary>
-      <description>If true, devices will be shown in the interface even if they have not been marked allowed or formally paired.</description>
-    </key>
-    <key type="b" name="start-daemon">
+    <key type="b" name="show-unpaired">
       <default>true</default>
-      <summary>Start the daemon automatically</summary>
-      <description>If true the daemon will be automatically started and restarted if it stops. If false the extension will wait for the daemon to be started.</description>
+      <summary>Show unpaired devices</summary>
+      <description>If true, devices will be shown in the interface even if they have not been paired.</description>
+    </key>
+    <key type="b" name="start-mconnect">
+      <default>true</default>
+      <summary>Start MConnect automatically</summary>
+      <description>If true, MConnect will be automatically started and restarted if it stops. If false the extension will wait for MConnect to be started.</description>
     </key>
   </schema>
 </schemalist>

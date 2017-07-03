@@ -8,7 +8,7 @@ const St = imports.gi.St;
 
 const ModalDialog = imports.ui.modalDialog;
 
-//
+// Helper Functions
 function hasValue(obj, value) {
     for (let key in obj) {
         if (obj[key] === value) {

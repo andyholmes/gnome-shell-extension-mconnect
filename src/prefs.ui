@@ -117,7 +117,7 @@
                             <property name="can_focus">False</property>
                             <property name="valign">center</property>
                             <child>
-                              <object class="GtkLabel" id="show-unallowed-label">
+                              <object class="GtkLabel" id="show-unpaired-label">
                                 <property name="height_request">32</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
@@ -136,7 +136,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSwitch" id="show-unallowed">
+                              <object class="GtkSwitch" id="show-unpaired">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="halign">end</property>
@@ -167,7 +167,7 @@
                             <property name="can_focus">False</property>
                             <property name="valign">center</property>
                             <child>
-                              <object class="GtkLabel" id="per-device-indicators-label">
+                              <object class="GtkLabel" id="device-indicators-label">
                                 <property name="height_request">32</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
@@ -186,7 +186,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSwitch" id="per-device-indicators">
+                              <object class="GtkSwitch" id="device-indicators">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="halign">end</property>
@@ -261,7 +261,7 @@
                             <property name="can_focus">False</property>
                             <property name="valign">center</property>
                             <child>
-                              <object class="GtkLabel" id="start-daemon-label">
+                              <object class="GtkLabel" id="start-mconnect-label">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
@@ -278,7 +278,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSwitch" id="start-daemon">
+                              <object class="GtkSwitch" id="start-mconnect">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="halign">end</property>

@@ -1,1 +1,14 @@
 /* This extensions requires no special styling */
+
+.mconnect-property-name {
+    font-weight: bold;
+}
+
+.mconnect-property-box {
+    padding: 1em 2em;
+    spacing: 1em;
+}
+
+.mconnect-status-label {
+    padding: 0 1em;
+}
