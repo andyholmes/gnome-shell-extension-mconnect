@@ -40,14 +40,14 @@ you may install it as a package if `checkinstall` is available:
     
 ### Extension
 
-The extension will not appear on the extension website until reasonably
-complete and useful. To follow along now you may:
+The extension will appear on the extension website when reasonably useful. You
+may build and install the extension now with [Meson](http://mesonbuild.com):
 
     git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
-    cd gnome-shell-extension-mconnect
-    autoreconf -if
-    ./configure --prefix=/usr
-    make install-zip
+    mkdir builddir
+    cd builddir
+    meson ../gnome-shell-extension-mconnect .
+    ninja install-zip
     
 
 ## Preferences
