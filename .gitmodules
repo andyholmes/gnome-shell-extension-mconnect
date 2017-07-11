@@ -1,0 +1,4 @@
+[submodule "src/gsxl"]
+	path = src/gsxl
+	url = ssh://git@github.com/andyholmes/gsxl.git
+	branch = master

@@ -86,6 +86,7 @@ const Interface = {
     BATTERY: DeviceNode.interfaces[2],
     PING: DeviceNode.interfaces[3],
     FINDMYPHONE: DeviceNode.interfaces[3], // TODO: not actually supported
+    SHARE: DeviceNode.interfaces[3], // TODO: not actually supported
     SMS: DeviceNode.interfaces[3], // TODO: not actually supported
     MANAGER: ManagerNode.interfaces[0]
 };
@@ -333,6 +334,7 @@ const Device = new Lang.Class({
             battery: false,
             ping: false,
             findmyphone: false,
+            share: false,
             sms: false
         };
         
@@ -356,6 +358,9 @@ const Device = new Lang.Class({
         this.incomingCapabilities.forEach((plugin) => {
             if (plugin === "kdeconnect.findmyphone.request") {
                 _plugins.findmyphone = true;
+            }
+            if (plugin === "kdeconnect.share.request") {
+                _plugins.share = true;
             }
             if (plugin === "kdeconnect.sms.request") { _plugins.sms = true; }
         });
@@ -425,6 +430,11 @@ const Device = new Lang.Class({
     sendSMS: function (number, message) {
         // TODO
         debug("mconnect.Device.sendSMS(): Not Implemented");
+    },
+    
+    sendFile: function (filePath) {
+        // TODO
+        debug("mconnect.Device.share(" + filePath + "): Not Implemented");
     },
     
     // Override Methods

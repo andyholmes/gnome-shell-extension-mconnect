@@ -47,8 +47,8 @@ project(
 # The display name of the extension that users will see. It may contain spaces.
 Name = 'MConnect'
 
-# A description of the extension's functionality
-Description = '''MConnect integration for Gnome Shell'''
+# A description of the extension's functionality. No default.
+Description = 'MConnect integration for Gnome Shell'
 
 # By default the extension version is set to the the project version, and
 # extension versions are typically whole numbers (eg. 51 vs 5.1).
@@ -73,18 +73,14 @@ UUID = ExtensionId + '@' + 'andyholmes.github.io'
 # A website or repository where more information or updates may be found
 URL = 'https://github.com/andyholmes/gnome-shell-extension-mconnect'
 
-# A list of gnome-shell versions that is known to be supported
+# A list of gnome-shell versions that is known to be supported. By default this
+# is the version installed on the build machine.
 # Shell = [ run_command('gnome-shell', '--version').split(' ')[2] ]
 Shell = [ '3.24', '3.24.1', '3.24.2' ]
 
 
-# Meson isn't scary like Make, but you shouldn't need to edit anything below.
+# You shouldn't need to edit anything below.
 #------------------------------------------------------------------------------
-
-# GSEL
-if run_command('[', '-e', 'subprojects/gnome-shell-extension-library.wrap', ']').returncode() == 0
-  gsel_sp = subproject('gnome-shell-extension-library')
-endif
 
 # ZIP targets
 run_target('make-zip', command: ['meson/zip.sh', UUID])
