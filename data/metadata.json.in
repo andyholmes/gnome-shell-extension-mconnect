@@ -1,7 +1,7 @@
 {
 "extension-id": "@EXTENSION_ID@",
 "uuid": "@UUID@",
-"gettings-schema": "@GSETTINGS_SCHEMA@",
+"settings-schema": "@GSETTINGS_SCHEMA@",
 "gettext-domain": "@GETTEXT_DOMAIN@",
 "name": "@NAME@",
 "description": "@DESCRIPTION@",

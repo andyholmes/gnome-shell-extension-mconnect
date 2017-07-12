@@ -9,7 +9,7 @@ const GObject = imports.gi.GObject;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug } = Me.imports.lib;
+const { log } = Me.imports.library;
 
 
 // DBus Constants
@@ -94,27 +94,27 @@ const Interface = {
 
 // Start the backend daemon
 function startDaemon() {
-    debug("spawning mconnect daemon");
+    log("Spawning MConnect daemon");
     
     try {
         GLib.spawn_command_line_async("mconnect -d");
         GLib.usleep(10000); // 10ms TODO: still need this?
     } catch (e) {
-        debug("mconnect.startDaemon(): " + e);
+        log("Error spawning MConnect daemon: " + e);
     }
 }
 
 
 // Open the extension preferences window
 function startPreferences() {
-    debug("spawning mconnect settings");
+    log("spawning MConnect settings");
     
     try {
         GLib.spawn_command_line_async(
             "gnome-shell-extension-prefs mconnect@andyholmes.github.io"
         );
     } catch (e) {
-        debug("mconnect.startSettings(): " + e);
+        log("Error spawning MConnect settings: " + e);
     }
 }
 
@@ -150,8 +150,6 @@ const ProxyBase = new Lang.Class({
     // Wrapper functions
     _call: function (name, variant, callback) {
         // TODO: check this
-        debug("mconnect.ProxyBase._call(" + name + ")");
-        
         let ret;
         
         if (typeof callback === "function" || callback === true) {
@@ -187,16 +185,12 @@ const ProxyBase = new Lang.Class({
     },
     
     _get: function (name) {
-        debug("mconnect.ProxyBase._get(" + name + ")");
-        
         let value = this.get_cached_property(name);
         return value ? value.deep_unpack() : null;
     },
 
     _set: function (name, value, signature) {
         // TODO: simplify this (and use it)
-        debug("mconnect.ProxyBase._set(" + name + ")");
-        
         let variant = new GLib.Variant(signature, value);
         this.set_cached_property(name, variant);
 
@@ -225,8 +219,6 @@ const ProxyBase = new Lang.Class({
      */
     _wrapProperties: function () {
         // Properties
-        debug("mconnect.ProxyBase._wrapProperties()");
-        
         this.gInterfaceInfo.properties.forEach((property) => {
             // Homogenize property names
             let name = property.name.replace("Is", "");
@@ -249,8 +241,6 @@ const ProxyBase = new Lang.Class({
      * PropertiesChanged...
      */
     _wrapPropertiesChanged: function (emitter) {
-        debug("mconnect.ProxyBase._wrapPropertiesChanged()");
-        
         emitter = (emitter === undefined) ? this : emitter;
         
         this._signals.push(
@@ -276,8 +266,6 @@ const ProxyBase = new Lang.Class({
     _wrapSignals: function (emitter) {
         // Wrap signals
         // FIXME: case
-        debug("mconnect.ProxyBase._wrapSignals()");
-        
         emitter = (emitter === undefined) ? this : emitter;
         
         this._signals.push(
@@ -327,8 +315,6 @@ const Device = new Lang.Class({
     // Callbacks
     _pluginsChanged: function (proxy, sender, cb_data) {
         // NOTE: not actually a signal yet
-        debug("mconnect.Device._pluginsChanged()");
-        
         //FIXME: mad cludgy
         let _plugins = {
             battery: false,
@@ -419,22 +405,22 @@ const Device = new Lang.Class({
     // Plugin Methods
     ping: function () {
         // TODO
-        debug("mconnect.Device.ping(): Not Implemented");
+        log("mconnect.Device.ping(): Not Implemented");
     },
     
     ring: function () {
         // TODO
-        debug("mconnect.Device.ring(): Not Implemented");
+        log("mconnect.Device.ring(): Not Implemented");
     },
     
     sendSMS: function (number, message) {
         // TODO
-        debug("mconnect.Device.sendSMS(): Not Implemented");
+        log("mconnect.Device.sendSMS(): Not Implemented");
     },
     
     sendFile: function (filePath) {
         // TODO
-        debug("mconnect.Device.share(" + filePath + "): Not Implemented");
+        log("mconnect.Device.share(" + filePath + "): Not Implemented");
     },
     
     // Override Methods
@@ -488,7 +474,7 @@ const DeviceManager = new Lang.Class({
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
-        debug("mconnect.DeviceManager._deviceAdded(" + dbusPath + ")");
+        log("device added: " + dbusPath);
         
         this.devices[dbusPath] = new Device(dbusPath);
         this.emit("device::added", dbusPath);
@@ -496,7 +482,7 @@ const DeviceManager = new Lang.Class({
     
     _deviceRemoved: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
-        debug("mconnect.DeviceManager._deviceRemoved(" + dbusPath + ")");
+        log("device removed: " + dbusPath);
         
         this.devices[dbusPath].destroy();
         delete this.devices[dbusPath];
@@ -506,21 +492,19 @@ const DeviceManager = new Lang.Class({
     // Methods
     allowDevice: function (dbusPath) {
         // Mark the device at *dbusPath* as allowed
-        debug("mconnect.DeviceManager.allowDevice(" + dbusPath + ")");
+        log("allowing device: " + dbusPath);
         
         this._call("AllowDevice", new GLib.Variant("(s)", [dbusPath]), true);
     },
     
     disallowDevice: function (dbusPath) {
-        debug("mconnect.DeviceManager.disallowDevice(" + dbusPath + ")");
-        // Unmark the device at *dbusPath* as unallowed
+        // Unmark the device at *dbusPath* as allowed
+        log("disallowing device: " + dbusPath);
         
         this._call("DisallowDevice", new GLib.Variant("(s)", [dbusPath]), true);
     },
     
     listDevices: function () {
-        debug("mconnect.DeviceManager.listDevices()");
-        
         return this._call("ListDevices", new GLib.Variant("()", ""));
     },
     

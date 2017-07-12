@@ -1,5 +1,4 @@
-# Source Files:
-#   Subsitute any '@VARIABLE@' found in ext_metadata and install the file.
+# Source Files
 src = [
   # standard files
   'extension.js',
@@ -7,9 +6,7 @@ src = [
   'prefs.js',
   # non-standard files
   'mconnect.js',
-  'prefs.ui',
-  'share.js',
-  'util.js'
+  'prefs.ui'
 ]
 
 foreach file : src
@@ -20,6 +17,7 @@ foreach file : src
   )
 endforeach
 
+# Gnome Shell Extension Library
 if run_command('[', '-d', 'gsxl', ']').returncode() == 0
     subdir('gsxl')
 endif

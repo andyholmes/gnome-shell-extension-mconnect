@@ -19,9 +19,8 @@ const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.lib;
+const { log, debug, assert, Settings } = Me.imports.library;
 const MConnect = Me.imports.mconnect;
-const widget = Me.imports.widget;
 
 
 const StatusBar = new Lang.Class({
@@ -337,7 +336,7 @@ const DeviceMenu = new Lang.Class({
         
         this._getTopMenu().close(true);
         
-        let dialog = new widget.FileChooserDialog({
+        let dialog = new Me.imports.library.FileChooserDialog({
             message_type: Gtk.MessageType.INFO,
             text: _("Send file..."),
             secondary_text: _("Select a file to send."),
@@ -358,7 +357,7 @@ const DeviceMenu = new Lang.Class({
     
     _unsupportedAction: function () {
         // TODO: just a placeholder function
-        let dialog = new widget.MessageDialog({
+        let dialog = new Me.imports.library.MessageDialog({
             message_type: Gtk.MessageType.INFO,
             text: _("Unsupported Feature"),
             secondary_text: _("Sorry, this feature is not yet supported."),
@@ -661,7 +660,7 @@ var systemIndicator;
 function init() {
     debug("initializing extension");
     
-    Me.imports.lib.initTranslations();
+    Me.imports.library.initTranslations();
 }
 
 function enable() {
