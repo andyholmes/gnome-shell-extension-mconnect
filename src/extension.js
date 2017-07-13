@@ -14,13 +14,15 @@ const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
 const Main = imports.ui.main;
+const ModalDialog = imports.ui.modalDialog;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.library;
+const { log, debug, assert, getSettings } = Me.imports.convenience;
 const MConnect = Me.imports.mconnect;
+const Settings = getSettings();
 
 
 const StatusBar = new Lang.Class({
@@ -336,15 +338,25 @@ const DeviceMenu = new Lang.Class({
         
         this._getTopMenu().close(true);
         
-        let dialog = new Me.imports.library.FileChooserDialog({
-            message_type: Gtk.MessageType.INFO,
-            text: _("Send file..."),
-            secondary_text: _("Select a file to send."),
-            buttons: Gtk.ButtonsType.OK_CANCEL
+        let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
+            GLib.getenv('HOME'),            // working dir
+            ["gjs", Me.path + "/share.js"], // argv
+            null,                           // envp
+            GLib.SpawnFlags.SEARCH_PATH,    // enables PATH
+            null                            // child_setup (func)
+        );
+
+        let stdout = new Gio.DataInputStream({
+            base_stream: new Gio.UnixInputStream({ fd: out_fd })
         });
 
-        dialog.connect("response", () => { dialog.close(); });
-        dialog.open();
+        stdout.read_line_async(GLib.PRIORITY_DEFAULT, null, (stream, res) => {
+            let [filePath, length] = stdout.read_line_finish(res);
+    
+            if (filePath !== null) {
+                this.device.sendFile(filePath);
+            }
+        });
     },
 
     _smsAction: function (button) {
@@ -357,15 +369,15 @@ const DeviceMenu = new Lang.Class({
     
     _unsupportedAction: function () {
         // TODO: just a placeholder function
-        let dialog = new Me.imports.library.MessageDialog({
-            message_type: Gtk.MessageType.INFO,
-            text: _("Unsupported Feature"),
-            secondary_text: _("Sorry, this feature is not yet supported."),
-            buttons: Gtk.ButtonsType.OK
-        });
+//        let dialog = new Me.imports.library.MessageDialog({
+//            message_type: Gtk.MessageType.INFO,
+//            text: _("Unsupported Feature"),
+//            secondary_text: _("Sorry, this feature is not yet supported."),
+//            buttons: Gtk.ButtonsType.OK
+//        });
 
-        dialog.connect("response", () => { dialog.close(); });
-        dialog.open();
+//        dialog.connect("response", () => { dialog.close(); });
+//        dialog.open();
 
         this._getTopMenu().close(true);
     }
@@ -660,7 +672,7 @@ var systemIndicator;
 function init() {
     debug("initializing extension");
     
-    Me.imports.library.initTranslations();
+    Me.imports.convenience.initTranslations();
 }
 
 function enable() {

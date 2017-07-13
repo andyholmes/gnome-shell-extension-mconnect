@@ -14,7 +14,7 @@ install_data(
 )
 
 # GSettings
-gschema_path = ext_metadata.get('GSETTINGS_SCHEMA') + '.gschema.xml'
+gschema_path = ext_metadata.get('GSCHEMA_ID') + '.gschema.xml'
 
 if run_command('[', '-e', gschema_path, ']').returncode() == 0
     install_data(
@@ -25,11 +25,11 @@ if run_command('[', '-e', gschema_path, ']').returncode() == 0
 endif
 
 # GResources
-gresource_path = ext_metadata.get('GSETTINGS_SCHEMA') + '.gresource.xml'
+gresource_path = ext_metadata.get('GSCHEMA_ID') + '.gresource.xml'
 
 if run_command('[', '-e', gresource_path, ']').returncode() == 0
 ext_resource = gnome.compile_resources(
-  ext_metadata.get('GSETTINGS_SCHEMA'),
+  ext_metadata.get('GSCHEMA_ID'),
   gresource_path,
   source_dir: '.',
   gresource_bundle: true,

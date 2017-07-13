@@ -8,14 +8,12 @@ const Lang = imports.lang;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.lib;
-Me.imports.lib.initTranslations();
+const { initTranslations, getSettings } = Me.imports.convenience;
+const Settings = getSettings();
 
 
 function init() {
-    debug("initializing preferences");
-    
-    Me.imports.lib.initTranslations();
+    initTranslations();
 }
 
 // Extension Preferences
@@ -23,9 +21,9 @@ function buildPrefsWidget() {
     let builder = new Gtk.Builder();
     builder.add_from_file(Me.path + "/prefs.ui");
     
-    // Each GSetting key is given an associated widget named "gsetting-key"
-    // and a label named "gsetting-key-label". The preferences widget is
-    // then programatically built and each option connect to GSettings.
+    // Each GSetting key is given an associated widget named "<gsetting-key>"
+    // and a label named "<gsetting-key>-label". The preferences widget is
+    // then programatically built and each option connected to GSettings.
     let optionsList = [
         "device-indicators",
         "show-offline",
@@ -38,6 +36,7 @@ function buildPrefsWidget() {
     
     optionsList.forEach((option) => {
         label = builder.get_object(option + "-label");
+        global.log("LOG: " + Settings.settings_schema.get_key(option).get_summary())
         label.set_label(Settings.settings_schema.get_key(option).get_summary());
         Settings.bind(
             option,

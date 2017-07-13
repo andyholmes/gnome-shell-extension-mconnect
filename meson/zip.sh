@@ -5,6 +5,7 @@ ZIP_FILE="${MESON_BUILD_ROOT}/${1}.zip"
 
 INSTALL_DIR="${HOME}/.local/share/gnome-shell/extensions/${1}"
 GSCHEMA_DIR="${ZIP_DIR}/usr/local/share/glib-2.0/schemas"
+LOCALE_DIR="${ZIP_DIR}/usr/local/share/locale"
 
 # BUILD
 rm -rf ${ZIP_DIR} ${ZIP_FILE}
@@ -15,12 +16,12 @@ DESTDIR=${ZIP_DIR} ninja install
 cp -pr ${ZIP_DIR}/usr/local/share/gnome-shell/extensions/${1}/* ${ZIP_DIR}
 
 if [ -d ${GSCHEMA_DIR} ]; then
-    mkdir ${ZIP_DIR}/schemas
-    glib-compile-schemas --targetdir=${ZIP_DIR}/schemas ${GSCHEMA_DIR}
+    cp -pr ${GSCHEMA_DIR} ${ZIP_DIR}
+    glib-compile-schemas ${ZIP_DIR}/schemas
 fi
 
 if [ -d ${ZIP_DIR}/usr/local/share/locale ]; then
-    cp -pr ${ZIP_DIR}/usr/local/share/locale ${ZIP_DIR}
+    cp -pr ${LOCALE_DIR} ${ZIP_DIR}
 fi
 
 rm -rf "${ZIP_DIR}/usr"

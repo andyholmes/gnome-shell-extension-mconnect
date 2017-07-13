@@ -7,10 +7,6 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 
-// Local Imports
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log } = Me.imports.library;
-
 
 // DBus Constants
 const BUS_NAME = "org.mconnect";
