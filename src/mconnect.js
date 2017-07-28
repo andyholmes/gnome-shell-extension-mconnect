@@ -67,6 +67,9 @@ const ManagerNode = new Gio.DBusNodeInfo.new_for_xml('\
     <method name="AllowDevice"> \
       <arg type="s" name="path" direction="in"/> \
     </method> \
+    <method name="DisallowDevice"> \
+      <arg type="s" name="path" direction="in"/> \
+    </method> \
     <method name="ListDevices"> \
       <arg type="ao" name="result" direction="out"/> \
     </method> \
@@ -76,25 +79,13 @@ const ManagerNode = new Gio.DBusNodeInfo.new_for_xml('\
 
 ManagerNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
 
-// FIXME: unecessary and cludgy
-const Interface = {
-    DEVICE: DeviceNode.interfaces[1],
-    BATTERY: DeviceNode.interfaces[2],
-    PING: DeviceNode.interfaces[3],
-    FINDMYPHONE: DeviceNode.interfaces[3], // TODO: not actually supported
-    SHARE: DeviceNode.interfaces[3], // TODO: not actually supported
-    SMS: DeviceNode.interfaces[3], // TODO: not actually supported
-    MANAGER: ManagerNode.interfaces[0]
-};
 
-
-// Start the backend daemon
-function startDaemon() {
+// Start the service backend
+function startService() {
     log("Spawning MConnect daemon");
     
     try {
         GLib.spawn_command_line_async("mconnect -d");
-        GLib.usleep(10000); // 10ms TODO: still need this?
     } catch (e) {
         log("Error spawning MConnect daemon: " + e);
     }
@@ -103,7 +94,7 @@ function startDaemon() {
 
 // Open the extension preferences window
 function startPreferences() {
-    log("spawning MConnect settings");
+    log("Spawning MConnect settings");
     
     try {
         GLib.spawn_command_line_async(
@@ -138,56 +129,87 @@ const ProxyBase = new Lang.Class({
             gInterfaceName: iface.name
         });
         
-        this._signals = [];
         this.cancellable = new Gio.Cancellable();
         this.init(null);
     },
     
     // Wrapper functions
-    _call: function (name, variant, callback) {
-        // TODO: check this
-        let ret;
+    _call: function (name, callback) {
+        /* Convert arg_array to a *real* array */
+        let args = Array.prototype.slice.call(arguments, 2);
+        let methodInfo = this.gInterfaceInfo.lookup_method(name);
+        let signature = [];
+        let i, ret;
         
-        if (typeof callback === "function" || callback === true) {
-            this.call(
-                name,
-                variant,
-                Gio.DBusCallFlags.NONE,
-                -1,
-                null,
-                (proxy, result) => {
-                    try {
-                        ret = this.call_finish(result);
-                        
-                        if (typeof callback === "function") {
-                            callback(ret);
-                        }
-                    } catch (e) {
-                        log("Error calling " + name + ": " + e.message);
-                    }
-                }
-            );
-        } else {
-            ret = this.call_sync(
-                name,
-                variant,
-                Gio.DBusCallFlags.NONE,
-                -1,
-                this.cancellable
-            );
+        for (i = 0; i < methodInfo.in_args.length; i++) {
+            signature.push(methodInfo.in_args[i].signature);
         }
         
-        return (ret) ? ret.deep_unpack()[0] : null;
+        let variant = new GLib.Variant("(" + signature.join("") + ")", args);
+        
+        if (callback) {
+            this.call(name, variant, 0, -1, null, (proxy, result) => {
+                let succeeded = false;
+                
+                try {
+                    ret = this.call_finish(result);
+                    succeeded = true;
+                } catch (e) {
+                    log("Error calling " + name + ": " + e.message);
+                }
+                
+                if (succeeded && typeof callback === "function") {
+                    return callback(ret);
+                }
+            });
+        } else {
+            ret = this.call_sync(name, variant, 0, -1, this.cancellable);
+        }
+        
+        // If return has single arg, only return that
+        if (methodInfo.out_args.length === 1) {
+            return (ret) ? ret.deep_unpack()[0] : null;
+        } else {
+            return (ret) ? ret.deep_unpack() : null;
+        }
     },
     
     _get: function (name) {
         let value = this.get_cached_property(name);
         return value ? value.deep_unpack() : null;
     },
+    
+    _geta: function (name) {
+        let ret;
 
-    _set: function (name, value, signature) {
-        // TODO: simplify this (and use it)
-        let variant = new GLib.Variant(signature, value);
+        this.call(
+            "org.freedesktop.DBus.Properties.Get",
+            new GLib.Variant("(ss)", [this.gInterfaceName, name]),
+            Gio.DBusCallFlags.NONE,
+            -1,
+            this.cancellable,
+            (proxy, result) => {
+                try {
+                    ret = this.call_finish(result).deep_unpack();
+                    log("DBus.Property '" + name + "':");
+                    log("    value: " + ret[0].deep_unpack());
+                    log("    type: " + typeof ret[0].deep_unpack());
+        
+                    return (ret.length === 1) ? ret[0].deep_unpack() : ret;
+                } catch (e) {
+                    log("Error getting " + name + " on " + this.gObjectPath +
+                        ": " + e.message
+                    );
+                }
+            }
+        );
+    },
+
+    _set: function (name, value) {
+        let propertyInfo = this.gInterfaceInfo.lookup_property(name);
+        let variant = new GLib.Variant(propertyInfo.signature, value);
+        
+        // Set the cached property first
         this.set_cached_property(name, variant);
 
         this.call(
@@ -206,229 +228,209 @@ const ProxyBase = new Lang.Class({
                 }
             }
         );
-    },
-    
-    /**
-     * _wrapProperties:
-     *
-     * ...
-     */
-    _wrapProperties: function () {
-        // Properties
-        this.gInterfaceInfo.properties.forEach((property) => {
-            // Homogenize property names
-            let name = property.name.replace("Is", "");
-            name = name.replace("Device", "").toCamelCase();
-            
-            Object.defineProperty(this, name, {
-                get: Lang.bind(this, this._get, property.name),
-                // TODO: not ready for prime-time
-                //set: Lang.bind(this, _propertySetter, name, signature),
-                configurable: true,
-                enumerable: true
-            });
-        });
-    },
-    
-    /**
-     * _wrapPropertiesChanged:
-     * @emitter: The object to have emit the signal. Defaults to "this".
-     *
-     * PropertiesChanged...
-     */
-    _wrapPropertiesChanged: function (emitter) {
-        emitter = (emitter === undefined) ? this : emitter;
-        
-        this._signals.push(
-            this.connect("g-properties-changed", (proxy, properties) => {
-                properties = properties.deep_unpack();
-                
-                for (let name in properties) {
-                    let property = name.replace("Is", "");
-                    property = property.replace("Device", "").toCamelCase();
-                    
-                    emitter.emit("changed::" + property, properties[name]);
-                }
-            })
-        );
-    },
-    
-    /**
-     * _wrapSignals:
-     * @emitter: The object to have emit the signal. Defaults to "this".
-     *
-     * Connect to "g-signal" and re-emit each encapsulated signal via @emitter.
-     */
-    _wrapSignals: function (emitter) {
-        // Wrap signals
-        // FIXME: case
-        emitter = (emitter === undefined) ? this : emitter;
-        
-        this._signals.push(
-            this.connect("g-signal", (proxy, sender, name, parameters) => {
-                emitter.emit("received::" + name.toCamelCase(), parameters);
-            })
-        );
-    },
-    
-    // Override as needed
-    destroy: function () {
-        this._signals.forEach((signal) => { this.disconnect(signal); });
     }
 });
 
+/** A base class for backend Battery implementations */
+const Battery = new Lang.Class({
+    Name: "Battery",
+    Extends: ProxyBase,
+    Properties: {
+        "charging": GObject.ParamSpec.boolean(
+            "charging",
+            "BatteryCharging",
+            "Whether the battery is charging or not",
+            GObject.ParamFlags.READABLE,
+            false
+        ),
+        "level": GObject.ParamSpec.int(
+            "level",
+            "BatteryLevel",
+            "The battery level",
+            GObject.ParamFlags.READABLE,
+            0, 100,
+            0
+        )
+    },
+    
+    _init: function (dbusPath) {
+        this.parent(DeviceNode.interfaces[2], dbusPath);
+        
+        //
+        this.connect("g-properties-changed", (proxy, properties) => {
+            properties = properties.deep_unpack();
+            
+            if (properties.hasOwnProperty("Charging")) {
+                this.notify("charging");
+            }
+            
+            if (properties.hasOwnProperty("Level")) {
+                this.notify("level");
+            }
+        });
+    },
+    
+    get charging () { return this._get("Charging"); },
+    get level () { return this._get("Level"); }
+});
 
-// A DBus Interface wrapper for a device
+/** A base class for backend Device implementations */
 const Device = new Lang.Class({
     Name: "Device",
     Extends: ProxyBase,
-    
-    _init: function (dbusPath) {
-        this.parent(Interface.DEVICE, dbusPath);
-        
-        // Wrap "g-properties-changed"
-        this._wrapProperties();
-        this._wrapPropertiesChanged();
-        
-        // Plugins
-        this.connect("changed::incomingCapabilities", () => {
-            this._pluginsChanged()
-        });
-        this.connect("changed::outgoingCapabilities", () => {
-            this._pluginsChanged()
-        });
-        
-        ["active", "allowed", "connected", "paired"].forEach((property) => {
-            this.connect("changed::" + property, () => {
-                this._pluginsChanged()
-            });
-        });
-        
-        // TODO: this shouldn't be necessary
-        this._pluginsChanged();
+    Properties: {
+        "id": GObject.ParamSpec.string(
+            "id",
+            "DeviceId",
+            "The device Id",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "name": GObject.ParamSpec.string(
+            "name",
+            "DeviceName",
+            "The device name",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "reachable": GObject.ParamSpec.boolean(
+            "reachable",
+            "DeviceState",
+            "The device status",
+            GObject.ParamFlags.READABLE,
+            false
+        ),
+        "trusted": GObject.ParamSpec.boolean(
+            "trusted",
+            "DeviceTrusted",
+            "Whether the device is trusted or not",
+            GObject.ParamFlags.READABLE,
+            false
+        ),
+        "type": GObject.ParamSpec.string(
+            "type",
+            "DeviceType",
+            "The device type",
+            GObject.ParamFlags.READABLE,
+            "unknown"
+        )
     },
     
-    // Callbacks
-    _pluginsChanged: function (proxy, sender, cb_data) {
-        // NOTE: not actually a signal yet
-        //FIXME: mad cludgy
-        let _plugins = {
-            battery: false,
-            ping: false,
-            findmyphone: false,
-            share: false,
-            sms: false
-        };
+    _init: function (dbusPath) {
+        this.parent(DeviceNode.interfaces[1], dbusPath);
         
-        // Device has gone inactive 
-        if (!this.active) {
-            for (let plugin in _plugins) {
-                if (this.hasOwnProperty(plugin)) {
-                    this[plugin].destroy();
-                    delete this[plugin];
+        // Connect to PropertiesChanged
+        this.connect("g-properties-changed", (proxy, properties) => {
+            properties = properties.deep_unpack();
+            
+            for (let name in properties) {
+                if (name === "Id") {
+                    this.notify("id");
+                } else if (name === "Name") {
+                    this.notify("name");
+                } else if (name === "IsActive" || name === "IsConnected") {
+                    this.notify("reachable");
+                } else if (name === "Allowed") {
+                    this.notify("trusted");
+                } else if (name === "DeviceType") {
+                    this.notify("type");
                 }
             }
             
-            return;
-        }
-        
-        this.outgoingCapabilities.forEach((plugin) => {
-            if (plugin === "kdeconnect.battery") { _plugins.battery = true; }
-            if (plugin === "kdeconnect.ping") { _plugins.ping = true; }
+            this._reloadPlugins();
         });
         
-        this.incomingCapabilities.forEach((plugin) => {
-            if (plugin === "kdeconnect.findmyphone.request") {
-                _plugins.findmyphone = true;
-            }
-            if (plugin === "kdeconnect.share.request") {
-                _plugins.share = true;
-            }
-            if (plugin === "kdeconnect.sms.request") { _plugins.sms = true; }
-        });
+        this._reloadPlugins();
+    },
+    
+    // Properties
+    get id () { return this._get("Id"); },
+    get name () { return this._get("Name"); },
+    get reachable () {
+        return (this._get("IsActive") || this._get("IsConnected"));
+    },
+    get trusted () { return this._get("Allowed"); },
+    get type () { return this._get("DeviceType"); },
+    
+    // Methods
+    ping: function () { throw Error("Not Implemented"); },
+    ring: function () { throw Error("Not Implemented"); },
+    sms: function (number, message) { throw Error("Not Implemented"); },
+    shareURI: function (filePath) { throw Error("Not Implemented"); },
+    
+    pair: function () {
+        log("pairing with device: " + this.gObjectPath);
         
-        for (let plugin in _plugins) {
-            if (_plugins[plugin] === true) {
-                this[plugin] = new ProxyBase(
-                    Interface[plugin.toUpperCase()],
-                    this.gObjectPath
+        this._manager._call(
+            "AllowDevice",
+            new GLib.Variant("(s)", [this.gObjectPath]),
+            true
+        );
+    },
+    
+    unpair: function () {
+        log("unpairing with device: " + this.gObjectPath);
+        
+        this._manager._call(
+            "DisallowDevice",
+            new GLib.Variant("(s)", [this.gObjectPath]),
+            true
+        );
+    },
+    
+    //
+    _reloadPlugins: function () {
+        // FIXME: when Device has gone inactive
+        let incoming = this._get("IncomingCapabilities");
+        let outgoing = this._get("OutgoingCapabilities");
+        
+        if (outgoing.indexOf("kdeconnect.battery") > -1 ) {
+            this.battery = new Battery(this.gObjectPath);
+            
+            this.battery.connect("notify", (battery) => {
+                this.emit("changed::battery",
+                    new GLib.Variant(
+                        "(bu)",
+                        [this.battery.charging, this.battery.level]
+                    )
                 );
-                
-                // Battery Plugin
-                if (plugin === "battery") {
-                    this.battery._wrapProperties();
-                    this.battery._wrapPropertiesChanged();
-        
-                    // Re-wrap changed::charging/level as changed::battery
-                    this.battery.connect("changed::charging", (proxy, variant) => {
-                        this.emit("changed::battery",
-                            new GLib.Variant(
-                                "(bu)",
-                                [variant.deep_unpack(), this.battery.level]
-                            )
-                        );
-                    });
-                    
-                    this.battery.connect("changed::level", (proxy, variant) => {
-                        this.emit("changed::battery",
-                            new GLib.Variant(
-                                "(bu)",
-                                [this.battery.charging, variant.deep_unpack()]
-                            )
-                        );
-                    });
-                    
-                    // Kickstart the plugin
-                    this.emit("changed::battery",
-                        new GLib.Variant(
-                            "(bu)",
-                            [this.battery.charging, this.battery.level]
-                        )
-                    );
-                    
-                } else if (plugin === "ping") {
-                    this[plugin]._wrapSignals(this);
-                }
-            } else {
-                this[plugin].destroy();
-                delete this[plugin];
-            }
+            });
+            
+            // Kickstart the plugin
+            this.emit("changed::battery",
+                new GLib.Variant(
+                    "(bu)",
+                    [this.battery.charging, this.battery.level]
+                )
+            );
+        } else {
+            delete this.battery;
         }
+        
+//        if (outgoing.indexOf("kdeconnect.ping") > -1 ) {
+//            this.ping = new ProxyBase(
+//                DeviceNode.interfaces[3],
+//                this.gObjectPath
+//            );
+//            this.ping._wrapSignals(this);
+//        } else {
+//            delete this.ping;
+//        }
         
         this.emit("changed::plugins", new GLib.Variant("()", ""));
     },
     
-    // Plugin Methods
-    ping: function () {
-        // TODO
-        log("mconnect.Device.ping(): Not Implemented");
-    },
-    
-    ring: function () {
-        // TODO
-        log("mconnect.Device.ring(): Not Implemented");
-    },
-    
-    sendSMS: function (number, message) {
-        // TODO
-        log("mconnect.Device.sendSMS(): Not Implemented");
-    },
-    
-    sendFile: function (filePath) {
-        // TODO
-        log("mconnect.Device.share(" + filePath + "): Not Implemented");
-    },
-    
     // Override Methods
     destroy: function () {
-        ["battery", "findmyphone", "ping", "sms"].forEach((plugin) => {
+        ["battery",
+        "findmyphone",
+        "ping",
+        "share",
+        "telephony"].forEach((plugin) => {
             if (this.hasOwnProperty(plugin)) {
-                this[plugin].destroy();
                 delete this[plugin];
             }
         });
-        
-        ProxyBase.prototype.destroy.call(this);
     }
 });
 
@@ -437,6 +439,15 @@ const Device = new Lang.Class({
 const DeviceManager = new Lang.Class({
     Name: "DeviceManager",
     Extends: ProxyBase,
+    Properties: {
+        "name": GObject.ParamSpec.string(
+            "name",
+            "DeviceName",
+            "The host's device name",
+            GObject.ParamFlags.READABLE,
+            ""
+        )
+    },
     Signals: {
         "device": {
             flags: GObject.SignalFlags.RUN_FIRST | GObject.SignalFlags.DETAILED,
@@ -445,26 +456,22 @@ const DeviceManager = new Lang.Class({
     },
     
     _init: function () {
-        this.parent(Interface.MANAGER, "/org/mconnect/manager");
+        this.parent(ManagerNode.interfaces[0], "/org/mconnect/manager");
         
         // Track our device proxies, DBus path as key
         this.devices = {};
-        
-        // Properties
-        Object.defineProperties(this, {
-            name: {
-                get: function () {
-                    // TODO: this is actually a read/write property for KDE
-                    // Connect but MConnect always reports username@hostname
-                    return GLib.get_user_name() + "@" + GLib.get_host_name();
-                }
-            }
-        });
         
         // Add currently managed devices
         this.listDevices().forEach((dbusPath) => {
             this._deviceAdded(this, dbusPath);
         });
+    },
+    
+    //
+    get name () {
+        // This is actually a read/write property for KDE Connect but MConnect
+        // always reports username@hostname
+        return GLib.get_user_name() + "@" + GLib.get_host_name();
     },
     
     // Callbacks
@@ -473,6 +480,7 @@ const DeviceManager = new Lang.Class({
         log("device added: " + dbusPath);
         
         this.devices[dbusPath] = new Device(dbusPath);
+        this.devices[dbusPath]._manager = this;
         this.emit("device::added", dbusPath);
     },
     
@@ -485,23 +493,8 @@ const DeviceManager = new Lang.Class({
         this.emit("device::removed", dbusPath);
     },
     
-    // Methods
-    allowDevice: function (dbusPath) {
-        // Mark the device at *dbusPath* as allowed
-        log("allowing device: " + dbusPath);
-        
-        this._call("AllowDevice", new GLib.Variant("(s)", [dbusPath]), true);
-    },
-    
-    disallowDevice: function (dbusPath) {
-        // Unmark the device at *dbusPath* as allowed
-        log("disallowing device: " + dbusPath);
-        
-        this._call("DisallowDevice", new GLib.Variant("(s)", [dbusPath]), true);
-    },
-    
     listDevices: function () {
-        return this._call("ListDevices", new GLib.Variant("()", ""));
+        return this._call("ListDevices", false);
     },
     
     // Override Methods

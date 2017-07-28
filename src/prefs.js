@@ -1,15 +1,14 @@
 "use strict";
 
+const Lang = imports.lang;
 const Gettext = imports.gettext.domain('gnome-shell-extension-mconnect');
 const _ = Gettext.gettext;
-const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
-const Lang = imports.lang;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { initTranslations, getSettings } = Me.imports.convenience;
-const Settings = getSettings();
+const { initTranslations, AboutDialog, SettingsWidget, Settings } = Me.imports.convenience;
 
 
 function init() {
@@ -18,61 +17,44 @@ function init() {
 
 // Extension Preferences
 function buildPrefsWidget() {
-    let builder = new Gtk.Builder();
-    builder.add_from_file(Me.path + "/prefs.ui");
+    let widget = new SettingsWidget();
     
-    // Each GSetting key is given an associated widget named "<gsetting-key>"
-    // and a label named "<gsetting-key>-label". The preferences widget is
-    // then programatically built and each option connected to GSettings.
-    let optionsList = [
-        "device-indicators",
-        "show-offline",
-        "show-unpaired",
-        "start-mconnect",
-        "debug"
-    ];
-    
-    let label;
-    
-    optionsList.forEach((option) => {
-        label = builder.get_object(option + "-label");
-        global.log("LOG: " + Settings.settings_schema.get_key(option).get_summary())
-        label.set_label(Settings.settings_schema.get_key(option).get_summary());
-        Settings.bind(
-            option,
-            builder.get_object(option),
-            "active",
-            Gio.SettingsBindFlags.DEFAULT
-        );
+    let ifaceSection = widget.add_section(_("Interface"));
+    ["device-indicators",
+    "device-visibility"].forEach((option) => {
+        widget.add_setting(ifaceSection, option);
     });
-
-    // About
-    // FIXME: Gtk.show_about_dialog()
-//    Gtk.show_about_dialog (
-//        window,
-//        "artists", artists,
-//        "authors", authors,
-//        "translator-credits", "translator-credits",
-//        "program-name", Me.metadata.name.toString(),
-//        "title", "About " + Me.metadata.name.toString(),
-//        "comments", Me.metadata.description.toString(),
-//        "copyright", "Copyright 2017 Andy Holmes",
-//        "license-type", Gtk.License.GPL_2_0,
-//        "logo-icon-name", "x-office-address-book",
-//        "version", Me.metadata.version.toString(),
-//        "website", Me.metadata.url.toString(),
-//        "wrap-license", true);
-//    }
-//    
-    builder.get_object("extension-name").set_label(Me.metadata.name.toString());
-    builder.get_object("extension-description").set_label(Me.metadata.description.toString());
-    builder.get_object("extension-url").set_uri(Me.metadata.url.toString());
-    //builder.get_object("extension-version").set_label(Me.metadata.version.toString());
     
-    //
-    let widget = builder.get_object("prefs-widget");
+    let desktopSection = widget.add_section(_("Service"));
+    ["service-autostart",
+    "service-backend"].forEach((option) => {
+        widget.add_setting(desktopSection, option);
+    });
+    
+    let develSection = widget.add_section(_("Development"));
+    widget.add_setting(develSection, "debug");
+    
+    // TODO: everything below is only testing TODO //
+    let testSection = widget.add_section(_("Test Section"));
+    ["int-key",
+    "range-key",
+    "choices-key",
+    "str-key",
+    "other-key",
+    "mb-key"].forEach((option) => {
+        widget.add_setting(testSection, option);
+    });
+    
+    let butt = new Gtk.Button({ label: "About" });
+    butt.connect("clicked", () => {
+        let di = new AboutDialog();
+        di.run();
+        di.destroy();
+    });
+    
+    widget.box.add(butt);
+    
     widget.show_all();
-    
     return widget;
 }
 

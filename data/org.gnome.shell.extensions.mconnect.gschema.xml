@@ -1,30 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="gnome-shell-extension-mconnect">
+  <enum id="org.gnome.shell.extensions.mconnect.ServiceBackend">
+    <value nick="MCONNECT" value="0"/>
+    <value nick="KDECONNECT" value="1"/>
+  </enum>
+  <flags id="org.gnome.shell.extensions.mconnect.DeviceVisibility">
+    <value nick="OFFLINE" value="1"/>
+    <value nick="UNPAIRED" value="2"/>
+    <value nick="RESERVED" value="4"/>
+  </flags>
   <schema path="/org/gnome/shell/extensions/mconnect/" id="org.gnome.shell.extensions.mconnect">
     <key type="b" name="debug">
       <default>false</default>
       <summary>Print debug messages to log</summary>
       <description>If true the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
-    <key type="b" name="device-indicators">
+    <key name="device-indicators" type="b">
       <default>false</default>
       <summary>Show device indicators</summary>
       <description>If true, each device will be given an indicator in the Status Area. If false, each device will be given a submenu in the User Menu.</description>
     </key>
-    <key type="b" name="show-offline">
-      <default>false</default>
-      <summary>Show offline devices</summary>
-      <description>If true, cached devices will be shown in the interface even when they are offline.</description>
-    </key>
-    <key type="b" name="show-unpaired">
+    <key name="service-autostart" type="b">
       <default>true</default>
-      <summary>Show unpaired devices</summary>
-      <description>If true, devices will be shown in the interface even if they have not been paired.</description>
+      <summary>Start the service automatically</summary>
+      <description>If true, the service will be automatically started and restarted if it stops. If false the extension will wait for the service to be started.</description>
     </key>
-    <key type="b" name="start-mconnect">
+    <key name="service-backend" enum="org.gnome.shell.extensions.mconnect.ServiceBackend">
+      <default>'MCONNECT'</default>
+      <summary>The backend to use as the service</summary>
+      <description>ENUM description</description>
+    </key>
+    <key name="choices-key" type="s">
+      <choices>
+        <choice value='Elisabeth'/>
+        <choice value='Annabeth'/>
+        <choice value='Joe'/>
+      </choices>
+      <aliases>
+        <alias value='Anna' target='Annabeth'/>
+        <alias value='Beth' target='Elisabeth'/>
+      </aliases>
+      <default>'Joe'</default>
+      <summary>CHOICES: summary</summary>
+      <description>CHOICES: description</description>
+    </key>
+    <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
+      <default>["OFFLINE", "UNPAIRED"]</default>
+      <summary>Display mode</summary>
+      <description>Display mode</description>
+    </key>
+    <key type="t" name="int-key">
+      <default>10</default>
+      <summary>INT: summary</summary>
+      <description>INT: description</description>
+    </key>
+    <key name="range-key" type="i">
+      <range min="1" max="100"/>
+      <default>10</default>
+      <summary>RANGE: summary</summary>
+      <description>RANGE: description</description>
+    </key>
+    <key type="s" name='str-key'>
+      <default>'foobar'</default>
+      <summary>String: summary</summary>
+      <description>String: description</description>
+    </key>
+    <key type="(uu)" name='other-key'>
+      <default>(10, 20)</default>
+      <summary>Other: summary</summary>
+      <description>Other: description</description>
+    </key>
+    <key type="mb" name='mb-key'>
       <default>true</default>
-      <summary>Start MConnect automatically</summary>
-      <description>If true, MConnect will be automatically started and restarted if it stops. If false the extension will wait for MConnect to be started.</description>
+      <summary>MAYBE summary</summary>
+      <description>MAYBE description</description>
     </key>
   </schema>
 </schemalist>

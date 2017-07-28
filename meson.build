@@ -59,6 +59,7 @@ Description = 'MConnect integration for Gnome Shell'
 Version = meson.project_version()
 
 # By default the extension ID is set to the project name without the prefix
+# https://wiki.gnome.org/HowDoI/ChooseApplicationID FIXME
 ExtensionId = meson.project_name().split('gnome-shell-extension-')[1]
 
 # The UUID is a usually a combination of the extension ID and a domain in the
@@ -82,17 +83,18 @@ URL = 'https://github.com/andyholmes/gnome-shell-extension-mconnect'
 # Shell = [ run_command('gnome-shell', '--version').split(' ')[2] ]
 Shell = [ '3.24', '3.24.1', '3.24.2' ]
 
-# A list of src files to include. The directory tree will be flattened
-ext_src = files(
+# A list of files to be copied to the extension directory without modification.
+Files = files(
   # standard files
   'src/extension.js',
   'src/convenience.js',
   'src/stylesheet.css',
   'src/prefs.js',
   # non-standard files
+  'src/kdeconnect.js',
   'src/mconnect.js',
-  'src/prefs.ui',
-  'src/share.js'
+  'src/share.js',
+  'src/sms.js'
 )
 
 
@@ -107,7 +109,7 @@ extdatadir = join_paths(get_option('datadir'), 'gnome-shell/extensions', UUID)
 
 # Extension Source
 install_data(
-  ext_src,
+  Files,
   install_dir: extdatadir,
   install_mode: 'rw-r--r--'
 )
