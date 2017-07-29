@@ -28,16 +28,14 @@ function getPath() {
 }
 
 imports.searchPath.push(getPath());
-const MConnect = imports.mconnect;
-const KDEConnect = imports.kdeconnect;
 const Convenience = imports.lib;
 
 // infer backend and init Device()
 if (ARGV[0].split("/")[2] === "mconnect") {
-    var DEVICE = new MConnect.Device(ARGV[0]);
+    var DEVICE = new imports.mconnect.Device(ARGV[0]);
 } else {
     log("KDE");
-    var DEVICE = new KDEConnect.Device(ARGV[0]);
+    var DEVICE = new imports.kdeconnect.Device(ARGV[0]);
 }
 
 
@@ -168,7 +166,7 @@ const ContactCompletion = new Lang.Class({
         if (!this.service) { throw Error("failed to load Google Contacts"); }
         
         // Retrieve the contacts if there is
-        // TODO: multi-page/truncated feeds
+        // TODO: multi-page/truncated feeds?
         this.contacts = [];
         let query = new GData.Query({ q: "" });
         let count = 0;
@@ -559,8 +557,7 @@ const ApplicationWindow = new Lang.Class({
         // Send to each contactNumber
         for (let number of contactNumbers) {
             log("Sending message to '" + number + "': " + entry.text);
-            // FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME
-            //DEVICE.sms(number, entry.text);
+            DEVICE.sms(number, entry.text);
         }
         
         // Log the sent message in the Conversation View and clear the entry

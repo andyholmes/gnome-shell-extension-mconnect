@@ -38,70 +38,6 @@ const DeviceVisibility = {
 
 /** Composite Widgets */
 
-/** MessageWidget */
-const SMSWidget = new Lang.Class({
-    Name: "SMSWidget",
-    Extends: PopupMenu.PopupMenuSection,
-    
-    _init: function (device) {
-        this.parent();
-        
-        this.titleBar = new PopupMenu.PopupBaseMenuItem({
-            reactive: false,
-            can_focus: false
-        });
-        this.addMenuItem(this.titleBar, { expand: true });
-        
-        this.closeButton = new St.Button({
-            child: new St.Icon({
-                icon_name: "go-previous-symbolic",
-                icon_size: 16
-            })
-        });
-        this.titleBar.actor.add(this.closeButton);
-        
-        this.label = new St.Label({
-            text: _("New Message"),
-            x_expand: true,
-            x_align: Clutter.ActorAlign.CENTER
-        });
-        this.titleBar.actor.add(this.label);
-        
-        this.detachButton = new St.Button({
-            child: new St.Icon({
-                icon_name: "detach-symbolic",
-                icon_size: 16
-            })
-        });
-        this.titleBar.actor.add(this.detachButton);
-    
-        // Phone Number/Contact Entry
-        this.contactEntry = new St.Entry({
-            input_purpose: Gtk.InputPurpose.NUMBER,
-            hint_text: _("Phone number...")
-        });
-        this.actor.add(this.contactEntry, { expand: true });
-        
-        // Message View
-        this.messageView = new St.Label({
-            text: "Test",
-            style: "padding: 2em 1em;",
-            style_class: "popup-sub-menu"
-        });
-        this.actor.add(this.messageView, { expand: true });
-        
-        // Message Entry
-        this.messageEntry = new St.Entry();
-        this.messageEntry.set_secondary_icon(
-            new St.Icon({
-                icon_name: "mail-reply-sender-symbolic",
-                icon_size: 16
-            })
-        );
-        this.actor.add(this.messageEntry, { expand: true });
-    }
-});
-
 // A PopupMenu used as an information and control center for a device,
 // accessible either as a User Menu submenu or Indicator popup-menu.
 const DeviceMenu = new Lang.Class({
@@ -178,10 +114,7 @@ const DeviceMenu = new Lang.Class({
 
         this.smsButton = this._addActionButton(
             "user-available-symbolic",
-            () => {
-                this.smsItem.actor.visible = true;
-                this.actionBar.actor.visible = false;
-            }
+            Lang.bind(this, this._smsAction)
         );
         this.findButton = this._addActionButton(
             "find-location-symbolic",
@@ -195,38 +128,16 @@ const DeviceMenu = new Lang.Class({
             "send-to-symbolic",
             Lang.bind(this, this._shareAction)
         );
-        
-        // SMS section
-        this.smsItem = new SMSWidget(device);
-        this.smsItem.actor.visible = false;
-        // SMS Section -> Detach Button "clicked" (launch Gtk SMS App)
-        this.smsItem.detachButton.connect("clicked", () => {
-            GLib.spawn_command_line_async(
-                "gjs " + Me.path + "/sms.js \"" + device.gObjectPath + "\""
-            );
-            
-            this.smsItem.actor.visible = false;
-            this.actionBar.actor.visible = true;
-            this._getTopMenu().close(true);
-        });
-        // SMS Section -> Close "clicked" (shut SMS widget)
-        this.smsItem.closeButton.connect("clicked", () => {
-            this.smsItem.actor.visible = false;
-            this.actionBar.actor.visible = true;
-        });
-        this.addMenuItem(this.smsItem);
-        // SMS Section -> Menu closed while SMS Widget open
-        this._getTopMenu().connect("menu-closed", () => {
-            this.smsItem.actor.visible = false;
-            this._stateChanged(this.device);
-        });
 
         // Property signals
         device.connect(
             "changed::battery",
             Lang.bind(this, this._batteryChanged)
         );
-        device.connect("notify::name", Lang.bind(this, this._nameChanged));
+        device.connect(
+            "notify::name",
+            Lang.bind(this, this._nameChanged)
+        );
         device.connect(
             "changed::plugins",
             Lang.bind(this, this._pluginsChanged)
@@ -255,10 +166,8 @@ const DeviceMenu = new Lang.Class({
     _addActionButton: function (name, callback) {
         let button = new St.Button({ style_class: "system-menu-action" });
         button.child = new St.Icon({ icon_name: name });
-
         button.style = "padding: 8px;";
-        
-        if (callback) { button.connect("clicked", callback); }
+        button.connect("clicked", callback);
 
         this.actionBar.actor.add(button, { expand: true, x_fill: false });
         
@@ -375,8 +284,8 @@ const DeviceMenu = new Lang.Class({
 
     _findAction: function (button) {
         debug("extension.DeviceMenu._findAction()");
-        this.device.ring();
         this._getTopMenu().close(true);
+        this.device.ring();
     },
 
     _shareAction: function (button) {
@@ -406,16 +315,22 @@ const DeviceMenu = new Lang.Class({
     },
 
     _smsAction: function (button) {
-        debug("extension.DeviceMenu._smsAction(): Not Implemented");
+        debug("extension.DeviceMenu._smsAction()");
         
         this._getTopMenu().close(true);
+        
+        GLib.spawn_command_line_async(
+            "gjs " + Me.path + "/sms.js \"" + this.device.gObjectPath + "\""
+        );
     }
 });
 
 Signals.addSignalMethods(DeviceMenu.prototype);
 
-// An indicator representing a device in Menu.panel.statusArea, used as an
-// optional location for a DeviceMenu.
+/**
+ * An indicator representing a device in Menu.panel.statusArea, used as an
+ * optional location for a DeviceMenu.
+ */
 const DeviceIndicator = new Lang.Class({
     Name: "DeviceIndicator",
     Extends: PanelMenu.Button,
@@ -436,8 +351,7 @@ const DeviceIndicator = new Lang.Class({
         this.menu.addMenuItem(this.deviceMenu);
 
         // Signals
-        let sets = ["device-indicators", "device-visibility"];
-        sets.forEach((setting) => {
+        ["device-indicators", "device-visibility"].forEach((setting) => {
             Settings.connect("changed::" + setting, () => { this._sync(); });
         });
         

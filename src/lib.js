@@ -145,7 +145,7 @@ const AboutDialog = new Lang.Class({
             website: Me.metadata.url,
             //website_label: Me.metadata.name + _(" Website"),
             
-            authors: [ "Andy Holmes <andrew.g.r.holmes@gmail.com>" ],
+            authors: [ "Andy Holmes <andrew.g.r.holmes@gmail.com>" ], // TODO
             //artists: Me.metadata.artists,
             translator_credits: _("translator-credits"),
             copyright: "Copyright 2017 Andy Holmes", // TODO
@@ -712,26 +712,12 @@ function initTranslations() {
  *  - log
  *  - debug
  *  - assert
- *
  */
 
 /**
  * Prints a message to the log, prepended with the UUID of the extension
  * @param {String} msg - the message
  */
- 
-// FIXME: "[@UUID@]: , @LOG_MESSAGE@"
-//log = (function (stockLog, msg) {
-//    stockLog("[" + Me.metadata.uuid + "]: " + msg);
-//})(log);
-//(function () {
-//    var old = log;
-//    log = function () {
-//        Array.prototype.unshift.call(arguments, "[" + Me.metadata.uuid + "]: ");
-//        old.apply(this, arguments)
-//    }
-//})();
-
 function log(msg) {
     global.log("[" + Me.metadata.uuid + "]: " + msg);
 }
