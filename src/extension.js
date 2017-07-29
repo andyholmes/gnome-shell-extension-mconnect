@@ -20,7 +20,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.convenience;
+const { log, debug, assert, Settings } = Me.imports.lib;
 const MConnect = Me.imports.mconnect;
 const KDEConnect = Me.imports.kdeconnect;
 
@@ -689,7 +689,7 @@ var systemIndicator;
 function init() {
     debug("initializing extension");
     
-    Me.imports.convenience.initTranslations();
+    Me.imports.lib.initTranslations();
 }
 
 function enable() {

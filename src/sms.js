@@ -30,7 +30,7 @@ function getPath() {
 imports.searchPath.push(getPath());
 const MConnect = imports.mconnect;
 const KDEConnect = imports.kdeconnect;
-const Convenience = imports.convenience;
+const Convenience = imports.lib;
 
 // infer backend and init Device()
 if (ARGV[0].split("/")[2] === "mconnect") {

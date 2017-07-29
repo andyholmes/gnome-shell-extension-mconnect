@@ -52,7 +52,7 @@ project(
 Name = 'MConnect'
 
 # A description of the extension's functionality. No default.
-Description = 'MConnect integration for Gnome Shell'
+Description = 'KDE Connect/MConnect integration for Gnome Shell'
 
 # By default the extension version is set to the the project version, and
 # extension versions are typically whole numbers (eg. 51 vs 5.1).
@@ -87,9 +87,9 @@ Shell = [ '3.24', '3.24.1', '3.24.2' ]
 Files = files(
   # standard files
   'src/extension.js',
-  'src/convenience.js',
-  'src/stylesheet.css',
+  'src/lib.js',
   'src/prefs.js',
+  'src/stylesheet.css',
   # non-standard files
   'src/kdeconnect.js',
   'src/mconnect.js',

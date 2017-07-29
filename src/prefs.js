@@ -8,7 +8,7 @@ const Gtk = imports.gi.Gtk;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { initTranslations, AboutDialog, SettingsWidget, Settings } = Me.imports.convenience;
+const { initTranslations, AboutDialog, SettingsWidget, Settings } = Me.imports.lib;
 
 
 function init() {
