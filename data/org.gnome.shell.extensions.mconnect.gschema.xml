@@ -20,20 +20,20 @@
       <summary>Show device indicators</summary>
       <description>If true, each device will be given an indicator in the Status Area. If false, each device will be given a submenu in the User Menu.</description>
     </key>
+    <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
+      <default>["OFFLINE", "UNPAIRED"]</default>
+      <summary>Display visibility</summary>
+      <description>In what states a device will be made visible to the user. Possible options are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.</description>
+    </key>
     <key name="service-autostart" type="b">
-      <default>true</default>
+      <default>false</default>
       <summary>Start the service automatically</summary>
       <description>If true, the service will be automatically started and restarted if it stops. If false the extension will wait for the service to be started.</description>
     </key>
     <key name="service-backend" enum="org.gnome.shell.extensions.mconnect.ServiceBackend">
       <default>'MCONNECT'</default>
-      <summary>The backend to use as the service</summary>
-      <description>ENUM description</description>
-    </key>
-    <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
-      <default>["OFFLINE", "UNPAIRED"]</default>
-      <summary>Display mode</summary>
-      <description>Display mode</description>
+      <summary>Backend service</summary>
+      <description>The backend to use as the service. Possible options are 'MCONNECT' and 'KDECONNECT'.</description>
     </key>
   </schema>
 </schemalist>

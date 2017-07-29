@@ -1,6 +1,6 @@
-# MConnect integration for Gnome Shell 3.24+
-This extension provides integration for MConnect into Gnome Shell, in the most
-native way possible.
+# KDE Connect/MConnect integration for Gnome Shell 3.24+
+This extension aims to provide integration for KDE Connect/MConnect in Gnome
+Shell, in the most native way possible. 
 
 [MConnect](https://github.com/bboozzoo/mconnect) is a KDE Connect protocol
 implementation in Vala/C.
@@ -11,13 +11,25 @@ and a desktop server to securely exchange data, allowing plugins to offer
 file sharing, notification sharing, sending of text messages and many other
 features.
 
-**NOTE:** MConnect and this extension are in an early stage of development.
+**NOTE:** This extension is still in an early stage of development.
 
 ## Installation
 
+### Extension
+
+The extension will appear on the extension website when reasonably useful and
+stable. Pre-release builds are available in the [Releases page](https://github.com/andyholmes/gnome-shell-extension-mconnect/releases),
+or you may build and install from git with [Meson](http://mesonbuild.com):
+
+    git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
+    meson gnome-shell-extension-mconnect/ builddir
+    cd build
+    ninja install-zip
+    
+
 ### MConnect
 
-As of June 2017, this extension currently relies on the
+As of July 2017, MConnect support is limited and currently relies on the
 [dbus-support](https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support)
 branch of MConnect. First build mconnect (see repository for dependencies):
 
@@ -36,42 +48,34 @@ extension can be configured to start it automatically. Once you have run `make`
 you may install it as a package if `checkinstall` is available:
 
     sudo checkinstall --type=<slackware|rpm|debian>
-
     
-### Extension
 
-The extension will appear on the extension website when reasonably useful. You
-may build and install the extension now with [Meson](http://mesonbuild.com):
+### KDE Connect
 
-    git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
-    mkdir builddir
-    cd builddir
-    meson ../gnome-shell-extension-mconnect .
-    ninja install-zip
+KDE Connect should be installed through normal, stable distribution channels.
     
 
 ## Preferences
 
 The following options are available in the extension preferences:
 
-* **per-device-indicators** - Show per-device indicators
+* **device-indicators** - Show per-device indicators
 
     If true, show an indicator in the Status Area for each device. If false,
     devices will be available in the User Menu.
 
-* **show-offline** - Show offline devices
+* **device-visibility** - Device visibility
 
-    If true, cached devices will be shown in the interface even when they are
-    offline.
+    In what states a device will be made visible to the user. Possible options
+    are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.
 
-* **show-unallowed** - Show unallowed devices
+* **service-autostart** - Start the service automatically
+    If true, the service will be automatically started and restarted if it
+    stops. If false the extension will wait for the service to be started.
 
-    If true, devices will be shown in the interface even if they have not been
-    marked allowed or formally paired.
-
-* **start-daemon** - Start the daemon automatically
-    If true the daemon will be automatically started and restarted if it stops.
-    If false the extension will wait for the daemon to be started.
+* **service-backend** - Backend service
+    The backend to use as the service. Possible options are 'MCONNECT' and
+    'KDECONNECT'.
     
 * **debug** - Print debug messages to the log
     
@@ -81,12 +85,25 @@ The following options are available in the extension preferences:
 
 ## Usage
 
-Functionality is still limited. Currently you may:
+Controls for each device are in a menu, available either as a submenu in the
+User Menu or via a status indicator, depending on the value of
+**device-indicators**.
 
-* mark devices as allowed (but not unallowed)
+Functionality with MConnect is still limited by the underlying service, however
+moving forward this will be the preferred backend service as it does not depend
+on KDE libraries. If you have experience with Vala, consider contributing to
+the project. Currently you may:
+
+* initiate pairing with devices (but not unpair)
 * receive and forward notifications (automatically handled by MConnect)
 * monitor battery level and charging state
 
-Controls for each device are in a menu, available either as a submenu in the
-User Menu or via a status indicator, depending on your settings.
+Functionality with KDE Connect is far more complete but still lacks features,
+contains bugs and has usability issues. Missing functionality includes, but is
+not limited to:
+
+* mounting and browsing remote devices
+* file manager integration (Nautilus, Nemo, Thunar, Caja, etc)
+* wayland support is unknown
+* encryption information is not viewable in the extension
 
