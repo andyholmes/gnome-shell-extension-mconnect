@@ -722,7 +722,7 @@ const DeviceManager = new Lang.Class({
             array_[index_] = "/modules/kdeconnect/devices/" + id;
         });
         
-        return devices
+        return devices;
     },
     
     // Override Methods

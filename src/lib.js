@@ -34,38 +34,6 @@ function getCurrentExtension() {
 
 const Me = getCurrentExtension();
 
-/**
- * The regex will match the first character if it starts with a capital letter,
- * and any alphabetic character following a space, i.e. 2 or 3 times in the
- * specified strings.
- *
- * Credits: https://stackoverflow.com/a/15829686/1108697
- */
-String.prototype.toCamelCase = function() {
-    return this.replace(/^([A-Z])|\s(\w)/g, function(match, p1, p2, offset) {
-        if (p2) return p2.toUpperCase();
-        return p1.toLowerCase();        
-    });
-};
-
-/**
- * Turns someCrazyName into Some Crazy Name
- * Decent job of acroynyms:
- * ABCAcryonym => ABC Acryoynm
- * xmlHTTPRequest => Xml HTTP Request
- *
- * Credits: https://gist.github.com/mattwiebe/1005915
- */
-String.prototype.unCamelCase = function(){
-	return this
-		// insert a space between lower & upper
-		.replace(/([a-z])([A-Z])/g, '$1 $2')
-		// space before last upper in a sequence followed by lower
-		.replace(/\b([A-Z]+)([A-Z])([a-z])/, '$1 $2$3')
-		// uppercase the first character
-		.replace(/^./, function(str){ return str.toUpperCase(); });
-}
-
 // https://gist.github.com/andrei-m/982927#gistcomment-2059365
 String.prototype.levenshtein = function(b){
 	var a = this, tmp;

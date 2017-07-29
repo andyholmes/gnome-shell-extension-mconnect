@@ -159,7 +159,7 @@ const DeviceMenu = new Lang.Class({
             Settings.connect(
                 "changed::device-visibility",
                 Lang.bind(this, this._settingsChanged)
-            )
+            );
         });
         this._settingsChanged();
     },
@@ -579,7 +579,7 @@ const SystemIndicator = new Lang.Class({
             Main.panel.statusArea[dbusPath].destroy();
             // Menus
             this.deviceMenus[dbusPath].destroy();
-            delete this.deviceMenus[dbusPath]
+            delete this.deviceMenus[dbusPath];
         }
 
         // Destroy the UI
