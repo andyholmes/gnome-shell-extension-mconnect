@@ -20,7 +20,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, Settings } = Me.imports.lib;
+const { log, debug, assert, initTranslations, Settings } = Me.imports.lib;
 const MConnect = Me.imports.mconnect;
 const KDEConnect = Me.imports.kdeconnect;
 
@@ -97,7 +97,7 @@ const DeviceMenu = new Lang.Class({
         this.statusBar.statusContent.add(this.statusBar.label);
         
         // Status Bar -> Pair Button
-        this.statusBar.button = new PopupMenu.PopupMenuItem(_("Send pair request"))
+        this.statusBar.button = new PopupMenu.PopupMenuItem(_("Send pair request"));
         this.statusBar.button.label.x_expand = true;
         this.statusBar.button.label.x_align = Clutter.ActorAlign.CENTER;
         this.statusBar.button.connect("activate", (item) => {
@@ -112,6 +112,7 @@ const DeviceMenu = new Lang.Class({
         }); 
         this.addMenuItem(this.actionBar);
 
+        // Action Bar -> Plugin Buttons
         this.smsButton = this._addActionButton(
             "user-available-symbolic",
             Lang.bind(this, this._smsAction)
@@ -247,7 +248,7 @@ const DeviceMenu = new Lang.Class({
         let { reachable, trusted } = this.device;
         let flags = Settings.get_flags("device-visibility");
         
-        // FIXME: kind of confusing settings
+        // TODO: check online & unpaired are available to pair
         if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
             this.actor.visible = false;
         } else if (!(flags & DeviceVisibility.OFFLINE) && !reachable) {
@@ -603,7 +604,7 @@ var systemIndicator;
 function init() {
     debug("initializing extension");
     
-    Me.imports.lib.initTranslations();
+    initTranslations();
 }
 
 function enable() {
