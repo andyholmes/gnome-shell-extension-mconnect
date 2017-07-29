@@ -13,9 +13,9 @@ const GLib = imports.gi.GLib;
 /** TODO: device selector, if !ARGV[0] */
 
 
-Gtk.init(null)
+Gtk.init(null);
 
-let application_name = _("GSM Connect");
+let application_name = _("MConnect");
 
 GLib.set_prgname(application_name);
 GLib.set_application_name(application_name);

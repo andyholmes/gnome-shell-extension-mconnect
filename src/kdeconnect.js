@@ -491,7 +491,6 @@ const Device = new Lang.Class({
             properties = properties.deep_unpack();
             
             for (let name in properties) {
-                log("property '" + name + "' changed");
                 if (name === "name") {
                     this.notify("name");
                 } else if (name === "isReachable") {

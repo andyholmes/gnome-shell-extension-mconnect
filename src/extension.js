@@ -503,7 +503,7 @@ const SystemIndicator = new Lang.Class({
         this.manager = new this._backend.DeviceManager();
 
         for (let dbusPath in this.manager.devices) {
-            systemIndicator._deviceAdded(this.manager, null, dbusPath);
+            this._deviceAdded(this.manager, null, dbusPath);
         }
 
         // Sync the UI
@@ -565,7 +565,7 @@ const SystemIndicator = new Lang.Class({
 
         // User menu entry
         this.deviceMenus[dbusPath].destroy();
-        delete this.deviceMenus[dbusPath]
+        delete this.deviceMenus[dbusPath];
     },
 
     // Public Methods

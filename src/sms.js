@@ -141,7 +141,7 @@ const ContactCompletion = new Lang.Class({
         for (let goaAccount in goaAccounts) {
             let acct = goaAccounts[goaAccount].get_account();
             
-            if (acct.provider_type == "google" && !acct.contacts_disabled) {
+            if (acct.provider_type === "google" && !acct.contacts_disabled) {
                 this.service = new GData.ContactsService({
                     authorizer: new GData.GoaAuthorizer({
                         goa_object: goaClient.lookup_by_id(acct.id)
@@ -244,7 +244,7 @@ const ContactCompletion = new Lang.Class({
         // Avatar
         let avatarCell = new Gtk.CellRendererPixbuf();
         this.pack_start(avatarCell, false);
-        this.add_attribute(avatarCell, "pixbuf", 0)
+        this.add_attribute(avatarCell, "pixbuf", 0);
         // Title
         this.set_text_column(1);
         // Type Icon
@@ -260,7 +260,7 @@ const ContactCompletion = new Lang.Class({
         let model = completion.get_model();
         let title = model.get_value(tree_iter, 1).toLowerCase();
         let number = model.get_value(tree_iter, 2);
-		let oldContacts = key.split(",").slice(0, -1);
+        let oldContacts = key.split(",").slice(0, -1);
         
         // Set key to the last or only search item, trimmed of whitespace
         if (key.indexOf(",") > -1) { key = key.split(",").pop().trim(); }
@@ -279,25 +279,25 @@ const ContactCompletion = new Lang.Class({
         }
     },
     
-	_select: function (completion, model, tree_iter) {
-		let entry = completion.get_entry();
-		let oldContacts = entry.text.split(",").slice(0, -1);
-		let newContact = model.get_value(tree_iter, 1);
-		
-		// Ignore duplicate selections
-		if (oldContacts.indexOf(newContact) > -1) { return; }
-		
-		entry.set_text(
-		    oldContacts.join(", ")
-			+ ((oldContacts.length) ? ", " : "")
-			+ newContact + ", "
-		);
-		
-		entry.set_position(-1);
-		this._matched = [];
-		
-		return true;
-	}
+    _select: function (completion, model, tree_iter) {
+        let entry = completion.get_entry();
+        let oldContacts = entry.text.split(",").slice(0, -1);
+        let newContact = model.get_value(tree_iter, 1);
+        
+        // Ignore duplicate selections
+        if (oldContacts.indexOf(newContact) > -1) { return; }
+        
+        entry.set_text(
+            oldContacts.join(", ")
+            + ((oldContacts.length) ? ", " : "")
+            + newContact + ", "
+        );
+        
+        entry.set_position(-1);
+        this._matched = [];
+        
+        return true;
+    }
 });
 
 /** A Gtk.Entry subclass for contact names and phone numbers */
@@ -339,28 +339,28 @@ const ContactEntry = new Lang.Class({
         });
     },
     
-	_select: function (entry) {
-		let completion = entry.get_completion();
-		
-		if (completion._matched.length > 0) {
-		    let iter_path = completion._matched["0"];
-		    let [b, iter] = completion.model.get_iter_from_string(iter_path);
-		    let oldContacts = entry.text.split(",").slice(0, -1);
-		    let newContact = completion.model.get_value(iter, 1);
-		
-		    // Ignore duplicate selections
-		    if (oldContacts.indexOf(newContact) > -1) { return; }
-		
-		    entry.set_text(
-		        oldContacts.join(", ")
-			    + ((oldContacts.length) ? ", " : "")
-			    + newContact + ", "
-		    );
-		
-		    entry.set_position(-1);
-		    completion._matched = [];
-		}
-	}
+    _select: function (entry) {
+        let completion = entry.get_completion();
+        
+        if (completion._matched.length > 0) {
+            let iter_path = completion._matched["0"];
+            let [b, iter] = completion.model.get_iter_from_string(iter_path);
+            let oldContacts = entry.text.split(",").slice(0, -1);
+            let newContact = completion.model.get_value(iter, 1);
+        
+            // Ignore duplicate selections
+            if (oldContacts.indexOf(newContact) > -1) { return; }
+        
+            entry.set_text(
+                oldContacts.join(", ")
+                + ((oldContacts.length) ? ", " : "")
+                + newContact + ", "
+            );
+        
+            entry.set_position(-1);
+            completion._matched = [];
+        }
+    }
 });
 
 const MessageEntry = new Lang.Class({

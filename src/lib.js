@@ -63,7 +63,7 @@ String.prototype.unCamelCase = function(){
 		// space before last upper in a sequence followed by lower
 		.replace(/\b([A-Z]+)([A-Z])([a-z])/, '$1 $2$3')
 		// uppercase the first character
-		.replace(/^./, function(str){ return str.toUpperCase(); })
+		.replace(/^./, function(str){ return str.toUpperCase(); });
 }
 
 // https://gist.github.com/andrei-m/982927#gistcomment-2059365
@@ -345,7 +345,7 @@ const MaybeSetting = new Lang.Class({
         });
         this.box.add(falseButton);
         
-        this.connect("clicked", () => { this.popover.show_all() });
+        this.connect("clicked", () => { this.popover.show_all(); });
         
         let val = Settings.get_value(setting).deep_unpack();
         
@@ -540,31 +540,27 @@ const SettingsWidget = new Lang.Class({
     Extends: Gtk.ScrolledWindow,
     
     _init: function (params) {
-        this.parent({
+        let defaults = {
             height_request: 400,
             can_focus: true,
             hscrollbar_policy: Gtk.PolicyType.NEVER
-        });
-        
-        // FIXME: removed dependancy on imports.misc.params without replacing
-        // functionality
-        if (params === undefined) {
-            params = { margin: 80};
-        } else if (params.margin === undefined) {
-            params.margin = 80;
         }
+        
+        this.parent(Object.assign(defaults, params));
+        
+        // FIXME: check this
         
         this.box = new Gtk.Box({
             visible: true,
             can_focus: false,
-            margin_left: params.margin,
-            margin_right: params.margin,
+            margin_left: 80,
+            margin_right: 80,
             margin_top: 18,
             margin_bottom: 18,
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 18
         });
-        this.add(this.box)
+        this.add(this.box);
     },
     
     /**
@@ -730,7 +726,7 @@ function log(msg) {
 function debug(msg) {
     if (Settings.get_boolean("debug")) {
         log("DEBUG: " + msg);
-    };
+    }
 }
 
 /**
@@ -741,6 +737,6 @@ function debug(msg) {
 function assert(condition, msg) {
     if (Settings.get_boolean("debug") && !condition) {
         throw new Error("Assertion failed: " + msg || "unknown");
-    };
-};
+    }
+}
 
