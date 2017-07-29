@@ -30,50 +30,10 @@
       <summary>The backend to use as the service</summary>
       <description>ENUM description</description>
     </key>
-    <key name="choices-key" type="s">
-      <choices>
-        <choice value='Elisabeth'/>
-        <choice value='Annabeth'/>
-        <choice value='Joe'/>
-      </choices>
-      <aliases>
-        <alias value='Anna' target='Annabeth'/>
-        <alias value='Beth' target='Elisabeth'/>
-      </aliases>
-      <default>'Joe'</default>
-      <summary>CHOICES: summary</summary>
-      <description>CHOICES: description</description>
-    </key>
     <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
       <default>["OFFLINE", "UNPAIRED"]</default>
       <summary>Display mode</summary>
       <description>Display mode</description>
-    </key>
-    <key type="t" name="int-key">
-      <default>10</default>
-      <summary>INT: summary</summary>
-      <description>INT: description</description>
-    </key>
-    <key name="range-key" type="i">
-      <range min="1" max="100"/>
-      <default>10</default>
-      <summary>RANGE: summary</summary>
-      <description>RANGE: description</description>
-    </key>
-    <key type="s" name='str-key'>
-      <default>'foobar'</default>
-      <summary>String: summary</summary>
-      <description>String: description</description>
-    </key>
-    <key type="(uu)" name='other-key'>
-      <default>(10, 20)</default>
-      <summary>Other: summary</summary>
-      <description>Other: description</description>
-    </key>
-    <key type="mb" name='mb-key'>
-      <default>true</default>
-      <summary>MAYBE summary</summary>
-      <description>MAYBE description</description>
     </key>
   </schema>
 </schemalist>

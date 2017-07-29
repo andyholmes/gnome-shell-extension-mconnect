@@ -34,26 +34,6 @@ function buildPrefsWidget() {
     let develSection = widget.add_section(_("Development"));
     widget.add_setting(develSection, "debug");
     
-    // TODO: everything below is only testing TODO //
-    let testSection = widget.add_section(_("Test Section"));
-    ["int-key",
-    "range-key",
-    "choices-key",
-    "str-key",
-    "other-key",
-    "mb-key"].forEach((option) => {
-        widget.add_setting(testSection, option);
-    });
-    
-    let butt = new Gtk.Button({ label: "About" });
-    butt.connect("clicked", () => {
-        let di = new AboutDialog();
-        di.run();
-        di.destroy();
-    });
-    
-    widget.box.add(butt);
-    
     widget.show_all();
     return widget;
 }

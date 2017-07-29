@@ -78,6 +78,18 @@ const SVG_TYPE_WORK = GdkPixbuf.Pixbuf.new_from_stream(
     null
 );
 
+const SVG_TYPE_OTHER = GdkPixbuf.Pixbuf.new_from_stream(
+    Gio.MemoryInputStream.new_from_bytes(
+        GLib.Bytes.new('\
+            <svg fill="#888" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"> \
+                <path d="M0 0h24v24H0z" fill="none"/> \
+                <path d="M3 6h18V4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v-2H3V6zm10 6H9v1.78c-.61.55-1 1.33-1 2.22s.39 1.67 1 2.22V20h4v-1.78c.61-.55 1-1.34 1-2.22s-.39-1.67-1-2.22V12zm-2 5.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM22 8h-6c-.5 0-1 .5-1 1v10c0 .5.5 1 1 1h6c.5 0 1-.5 1-1V9c0-.5-.5-1-1-1zm-1 10h-4v-8h4v8z"/> \
+            </svg>'
+        )
+    ),
+    null
+);
+
 const SVG_TYPE_DEFAULT = GdkPixbuf.Pixbuf.new_from_stream(
     Gio.MemoryInputStream.new_from_bytes(
         GLib.Bytes.new('\
@@ -107,6 +119,16 @@ const NON_SMS_TYPES = [
     GData.GD_PHONE_NUMBER_FAX,
     GData.GD_PHONE_NUMBER_OTHER_FAX,
     GData.GD_PHONE_NUMBER_WORK_FAX
+];
+
+/** Phone Number types that support receiving texts */
+const SUPPORTED_TYPES = [
+    GData.GD_PHONE_NUMBER_HOME,
+    GData.GD_PHONE_NUMBER_WORK,
+    GData.GD_PHONE_NUMBER_OTHER,
+    GData.GD_PHONE_NUMBER_MOBILE,
+    GData.GD_PHONE_NUMBER_MAIN,
+    GData.GD_PHONE_NUMBER_PAGER
 ];
 
 
@@ -200,7 +222,7 @@ const ContactCompletion = new Lang.Class({
             for (let phoneNumber of contact.get_phone_numbers()) {
                 // Exclude number types that are unable to receive texts and
                 // append the number type to the  the text column
-                if (NON_SMS_TYPES.indexOf(phoneNumber.relation_type) < 0) {
+                if (SUPPORTED_TYPES.indexOf(phoneNumber.relation_type) > -1) {
                     let title = [
                         contact.title, " <", phoneNumber.uri.slice(4), ">"
                     ].join("");
@@ -217,6 +239,9 @@ const ContactCompletion = new Lang.Class({
                             break;
                         case GData.GD_PHONE_NUMBER_WORK:
                             type = SVG_TYPE_WORK;
+                            break;
+                        case GData.GD_PHONE_NUMBER_OTHER:
+                            type = SVG_TYPE_OTHER;
                             break;
                         default:
                             type = SVG_TYPE_DEFAULT;

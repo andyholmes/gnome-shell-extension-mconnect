@@ -199,6 +199,7 @@ const DeviceMenu = new Lang.Class({
         // SMS section
         this.smsItem = new SMSWidget(device);
         this.smsItem.actor.visible = false;
+        // SMS Section -> Detach Button "clicked" (launch Gtk SMS App)
         this.smsItem.detachButton.connect("clicked", () => {
             GLib.spawn_command_line_async(
                 "gjs " + Me.path + "/sms.js \"" + device.gObjectPath + "\""
@@ -208,11 +209,17 @@ const DeviceMenu = new Lang.Class({
             this.actionBar.actor.visible = true;
             this._getTopMenu().close(true);
         });
+        // SMS Section -> Close "clicked" (shut SMS widget)
         this.smsItem.closeButton.connect("clicked", () => {
             this.smsItem.actor.visible = false;
             this.actionBar.actor.visible = true;
         });
         this.addMenuItem(this.smsItem);
+        // SMS Section -> Menu closed while SMS Widget open
+        this._getTopMenu().connect("menu-closed", () => {
+            this.smsItem.actor.visible = false;
+            this._stateChanged(this.device);
+        });
 
         // Property signals
         device.connect(
@@ -342,9 +349,9 @@ const DeviceMenu = new Lang.Class({
     },
 
     _stateChanged: function (device, state) {
-        debug("extension.DeviceMenu._stateChanged(" + device.gObjectPath + ")");
+        debug("extension.DeviceMenu._stateChanged(" + this.device.gObjectPath + ")");
         
-        let { reachable, trusted } = device;
+        let { reachable, trusted } = this.device;
         
         this.actionBar.actor.visible = (reachable && trusted);
         this.statusBar.actor.visible = (!reachable || !trusted);
@@ -356,7 +363,7 @@ const DeviceMenu = new Lang.Class({
             this.statusBar.label.text = _("Device is offline");
         }
         
-        this._pluginsChanged(device);
+        this._pluginsChanged(this.device);
     },
 
     // Plugin Callbacks
