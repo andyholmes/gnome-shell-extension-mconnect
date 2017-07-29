@@ -42,12 +42,6 @@ function getCurrentExtension() {
     let m = new RegExp("@(.+):\\d+").exec((new Error()).stack.split("\n")[1]);
     let dir = Gio.File.new_for_path(m[1]).get_parent();
     
-    // FIXME LOCAL TESTING --------------------------------------------------//
-    dir = Gio.File.new_for_path(
-        "/home/andrew/.local/share/gnome-shell/extensions/mconnect@andyholmes.github.io"
-    );
-    // FIXME REMOVE ---------------------------------------------------------//
-    
     let [s, meta, tag] = dir.get_child("metadata.json").load_contents(null);
     
     return {

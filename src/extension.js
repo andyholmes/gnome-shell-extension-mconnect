@@ -557,8 +557,8 @@ const SystemIndicator = new Lang.Class({
             Lang.bind(this, this._serviceVanished)
         );
 
-        // Watch "start-mconnect" setting
-        Settings.connect("changed::start-mconnect", (settings, key) => {
+        // Watch "service-autostart" setting
+        Settings.connect("changed::service-autostart", (settings, key) => {
             if (Settings.get_boolean(key) && this.manager === null) {
                 this._backend.startService();
             }
@@ -673,9 +673,9 @@ const SystemIndicator = new Lang.Class({
         this.extensionIndicator.destroy();
         this.menu.destroy();
 
-        // Stop watching "start-mconnect" & DBus
+        // Stop watching "service-autostart" & DBus
         // TODO: instance '0x55ff988e3920' has no handler with id '9223372036854775808'
-        //Settings.disconnect("changed::start-mconnect");
+        //Settings.disconnect("changed::service-autostart");
 
         // Stop watching for DBus Service
         Gio.bus_unwatch_name(this._watchdog);
