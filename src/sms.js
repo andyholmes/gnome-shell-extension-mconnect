@@ -34,7 +34,6 @@ const Convenience = imports.lib;
 if (ARGV[0].split("/")[2] === "mconnect") {
     var DEVICE = new imports.mconnect.Device(ARGV[0]);
 } else {
-    log("KDE");
     var DEVICE = new imports.kdeconnect.Device(ARGV[0]);
 }
 
@@ -112,13 +111,6 @@ const SVG_ACTION_SEND = GdkPixbuf.Pixbuf.new_from_stream(
     null
 );
 
-/** Phone Number types that cannot receive texts */
-const NON_SMS_TYPES = [
-    GData.GD_PHONE_NUMBER_FAX,
-    GData.GD_PHONE_NUMBER_OTHER_FAX,
-    GData.GD_PHONE_NUMBER_WORK_FAX
-];
-
 /** Phone Number types that support receiving texts */
 const SUPPORTED_TYPES = [
     GData.GD_PHONE_NUMBER_HOME,
@@ -147,14 +139,12 @@ const ContactCompletion = new Lang.Class({
         let goaAccounts = goaClient.get_accounts();
         
         for (let goaAccount in goaAccounts) {
-            goaAccount = goaAccounts[goaAccount].get_account();
-            let isGoogle = (goaAccount.provider_type == "google");
-            let hasContacts = (goaAccount.contacts_disabled != true);
+            let acct = goaAccounts[goaAccount].get_account();
             
-            if (isGoogle && hasContacts) {
+            if (acct.provider_type == "google" && !acct.contacts_disabled) {
                 this.service = new GData.ContactsService({
                     authorizer: new GData.GoaAuthorizer({
-                        goa_object: goaClient.lookup_by_id(goaAccount.id)
+                        goa_object: goaClient.lookup_by_id(acct.id)
                     })
                 });
                 
@@ -162,31 +152,31 @@ const ContactCompletion = new Lang.Class({
             }
         }
         
-        // Throw an error if there isn't one
-        if (!this.service) { throw Error("failed to load Google Contacts"); }
-        
-        // Retrieve the contacts if there is
+        // Retrieve the contacts if a Contacts account was found
         // TODO: multi-page/truncated feeds?
         this.contacts = [];
-        let query = new GData.Query({ q: "" });
-        let count = 0;
         
-        while (true) {
-            let feed = this.service.query_contacts(
-                query, // query,
-                null, // cancellable
-                (contact) => {
-                    if (contact.get_phone_numbers().length > 0) {
-                        this.contacts.push(contact);
-                    }
-                },
-                null
-            );
+        if (this.service) {
+            let query = new GData.Query({ q: "" });
+            let count = 0;
             
-            count += feed.items_per_page;
-            query.start_index = count;
-            
-            if (count > feed.total_results) { break; }
+            while (true) {
+                let feed = this.service.query_contacts(
+                    query, // query,
+                    null, // cancellable
+                    (contact) => {
+                        if (contact.get_phone_numbers().length > 0) {
+                            this.contacts.push(contact);
+                        }
+                    },
+                    null
+                );
+                
+                count += feed.items_per_page;
+                query.start_index = count;
+                
+                if (count > feed.total_results) { break; }
+            }
         }
         
         // Define a completion model
@@ -207,15 +197,6 @@ const ContactCompletion = new Lang.Class({
         // Populate the completion model
         for (let contact of this.contacts) {
             // TODO: BUG: https://bugzilla.gnome.org/show_bug.cgi?id=785207
-//            try {
-//                let [photoBytes, contentType] = contact.get_photo(
-//                    this.service,
-//                    null
-//                );
-//            } catch (e) {
-//                log("Failed to retrieve contact photo: " + e.message);
-//            }
-            
             // Each phone number gets its own completion entry
             for (let phoneNumber of contact.get_phone_numbers()) {
                 // Exclude number types that are unable to receive texts and
@@ -329,31 +310,25 @@ const ContactEntry = new Lang.Class({
             hexpand: true,
             placeholder_text: _("Phone number..."),
             primary_icon_name: "call-start-symbolic",
-            input_purpose: Gtk.InputPurpose.PHONE
+            primary_icon_activatable: false,
+            primary_icon_sensitive: true,
+            input_purpose: Gtk.InputPurpose.PHONE,
+            completion: new ContactCompletion()
         };
         
         this.parent(Object.assign(defaults, params));
         
-        // Try to retrieve Gtk.EntryCompletion for Google Contacts 
-        try {
-            this.completion = new ContactCompletion();
+        // Try to retrieve Gtk.EntryCompletion for Google Contacts
+        if (this.completion.model.iter_n_children(null)) {
             this.placeholder_text = _("Search contacts");
             this.primary_icon_name = "goa-account-google";
-            // TODO: https://bugzilla.gnome.org/show_bug.cgi?id=780938
-            //this.primary_icon_tooltip_text = _("Google Contacts");
-            this.primary_icon_activatable = false;
-            this.primary_icon_sensitive = true;
             this.input_purpose = Gtk.InputPurpose.FREE_FORM;
-        
-            // Select the first completion suggestion on "activate"
-            this.connect("activate", () => { this._select(this); });
-            this._has_completion = true;
-        } catch (e) {
-            log("Error initialize autocomplete: " + e.message);
-            this._has_completion = false;
         }
+    
+        // Select the first completion suggestion on "activate"
+        this.connect("activate", () => { this._select(this); });
         
-        // Remove error class if 
+        // Remove error class on "changed"
         this.connect("changed", (entry) => {
             entry.secondary_icon_name = "";
             let styleContext = entry.get_style_context();
@@ -384,8 +359,6 @@ const ContactEntry = new Lang.Class({
 		
 		    entry.set_position(-1);
 		    completion._matched = [];
-		} else {
-		    //self.body.grab_focus()
 		}
 	}
 });
@@ -400,8 +373,6 @@ const MessageEntry = new Lang.Class({
             placeholder_text: _("Type message here..."),
             //secondary_icon_name: "mail-reply-sender-symbolic",
             secondary_icon_pixbuf: SVG_ACTION_SEND,
-            // TODO: https://bugzilla.gnome.org/show_bug.cgi?id=780938
-            //secondary_icon_tooltip_text: _("Send..."),
             secondary_icon_activatable: true,
             secondary_icon_sensitive: false
         };
@@ -498,27 +469,21 @@ const ApplicationWindow = new Lang.Class({
         });
         let contactNumbers = [];
         let styleContext = this.contactEntry.get_style_context();
-        let model;
-        
-        if (this.contactEntry._has_completion) {
-            model = this.contactEntry.get_completion().get_model();
-        }
+        let model = this.contactEntry.get_completion().get_model();
         
         for (let item of contactItems) {
             item = item.trim();
             let contactNumber = false;
             
             // Search the completion (if present) for an exact contact match
-            if (this.contactEntry._has_completion) {
-                model.foreach((model, path, iter) => {
-                    if (item === model.get_value(iter, 1)) {
-                        contactNumber = model.get_value(iter, 2);
-                        return true;
-                    }
-                    
-                    contactNumber = false;
-                });
-            }
+            model.foreach((model, path, iter) => {
+                if (item === model.get_value(iter, 1)) {
+                    contactNumber = model.get_value(iter, 2);
+                    return true;
+                }
+                
+                contactNumber = false;
+            });
             
             // Found a matching Contact
             if (contactNumber) {
@@ -582,7 +547,7 @@ const SMSApplication = new Lang.Class({
             register_session: true
         });
         
-        let application_name = _("GSM Connect");
+        let application_name = _("MConnect");
 
         GLib.set_prgname(application_name);
         GLib.set_application_name(application_name);
@@ -596,7 +561,6 @@ const SMSApplication = new Lang.Class({
 
     vfunc_activate: function() {
         log("GtkApplication::activated");
-        
         this._window.present();
     },
 
