@@ -58,21 +58,18 @@ KDE Connect should be installed through normal, stable distribution channels.
 
 The following options are available in the extension preferences:
 
-* **device-indicators** - Show per-device indicators
-
-    If true, show an indicator in the Status Area for each device. If false,
-    devices will be available in the User Menu.
-
 * **device-visibility** - Device visibility
 
     In what states a device will be made visible to the user. Possible options
     are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.
 
 * **service-autostart** - Start the service automatically
+
     If true, the service will be automatically started and restarted if it
     stops. If false the extension will wait for the service to be started.
 
 * **service-backend** - Backend service
+
     The backend to use as the service. Possible options are 'MCONNECT' and
     'KDECONNECT'.
     

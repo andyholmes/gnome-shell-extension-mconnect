@@ -20,10 +20,7 @@ function buildPrefsWidget() {
     let widget = new SettingsWidget();
     
     let ifaceSection = widget.add_section(_("Interface"));
-    ["device-indicators",
-    "device-visibility"].forEach((option) => {
-        widget.add_setting(ifaceSection, option);
-    });
+    widget.add_setting(ifaceSection, "device-visibility");
     
     let desktopSection = widget.add_section(_("Service"));
     ["service-autostart",

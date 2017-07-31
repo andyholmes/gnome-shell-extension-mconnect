@@ -15,11 +15,6 @@
       <summary>Print debug messages to log</summary>
       <description>If true the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
-    <key name="device-indicators" type="b">
-      <default>false</default>
-      <summary>Show device indicators</summary>
-      <description>If true, each device will be given an indicator in the Status Area. If false, each device will be given a submenu in the User Menu.</description>
-    </key>
     <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
       <default>["OFFLINE", "UNPAIRED"]</default>
       <summary>Display visibility</summary>

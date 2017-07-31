@@ -118,7 +118,7 @@ const DeviceMenu = new Lang.Class({
         // Status Content
         this.statusBar.statusContent = new St.BoxLayout({
             vertical: false,
-            style_class: "popup-menu-item"
+            style: "margin: 0.5em 1em;"
         });
         this.statusBar.actor.add(this.statusBar.statusContent);
         
@@ -170,13 +170,6 @@ const DeviceMenu = new Lang.Class({
         });
         // TODO: MConnect doesn't call PropertiesChanged on cached devices?
         this._stateChanged(device);
-        
-        // Device Visibility Settings
-        Settings.connect(
-            "changed::device-visibility",
-            Lang.bind(this, this._settingsChanged)
-        );
-        this._settingsChanged();
     },
 
     _addActionButton: function (name, callback, toggle = false) {
@@ -258,22 +251,6 @@ const DeviceMenu = new Lang.Class({
         } else {
             this.batteryIcon.visible = false;
             this.batteryLabel.text = "";
-        }
-    },
-
-    _settingsChanged: function () {
-        debug("extension.DeviceMenu._settingsChanged()");
-        
-        let { reachable, trusted } = this.device;
-        let flags = Settings.get_flags("device-visibility");
-        
-        // TODO: check online & unpaired are available to pair
-        if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
-            this.actor.visible = false;
-        } else if (!(flags & DeviceVisibility.OFFLINE) && !reachable) {
-            this.actor.visible = false;
-        } else {
-            this.actor.visible = true;
         }
     },
 
@@ -401,13 +378,12 @@ const DeviceIndicator = new Lang.Class({
         this.menu.addMenuItem(this.deviceMenu);
 
         // Signals
-        ["device-indicators", "device-visibility"].forEach((setting) => {
-            Settings.connect("changed::" + setting, () => { this._sync(); });
+        Settings.connect("changed::device-visibility", () => {
+            this._sync();
         });
         
-        ["reachable", "trusted"].forEach((property) => {
-            device.connect("notify::" + property, () => { this._sync(); });
-        });
+        device.connect("notify::reachable", () => { this._sync(); });
+        device.connect("notify::trusted", () => { this._sync(); });
 
         // Sync
         this._sync(device);
@@ -417,29 +393,24 @@ const DeviceIndicator = new Lang.Class({
     _sync: function (sender, cb_data) {
         debug("extension.DeviceIndicator._sync()");
 
-        // Device Visibility
         let flags = Settings.get_flags("device-visibility");
+        let { reachable, trusted, type } = this.device;
         
-        if (!(flags & DeviceVisibility.UNPAIRED) && !this.device.trusted) {
+        // Device Visibility
+        if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
             this.actor.visible = false;
-        } else if (!(flags & DeviceVisibility.OFFLINE) && !this.device.reachable) {
+        } else if (!(flags & DeviceVisibility.OFFLINE) && !reachable) {
             this.actor.visible = false;
         } else {
             this.actor.visible = true;
         }
 
-        // Indicator Visibility (User Setting)
-        if (this.actor.visible) {
-            this.actor.visible = Settings.get_boolean("device-indicators");
-        }
-
         // Indicator Icon
-        let icon = this.device.type;
-        icon = (icon === "phone") ? "smartphone" : icon;
+        let icon = (type === "phone") ? "smartphone" : type;
 
-        if (this.device.trusted && this.device.reachable) {
+        if (trusted && reachable) {
             this.icon.icon_name = icon + "-connected";
-        } else if (this.device.trusted) {
+        } else if (trusted) {
             this.icon.icon_name = icon + "-trusted";
         } else {
             this.icon.icon_name = icon + "-disconnected";
@@ -462,6 +433,7 @@ const SystemIndicator = new Lang.Class({
         this.parent();
 
         this.manager = false;
+        this._indicators = {};
         
         // Select the backend service
         if (Settings.get_enum("service-backend") === ServiceBackend.MCONNECT) {
@@ -470,14 +442,11 @@ const SystemIndicator = new Lang.Class({
             this._backend = KDEConnect;
         }
 
-        // device submenus
-        this.deviceMenus = {};
-
         // System Indicator
         this.extensionIndicator = this._addIndicator();
         this.extensionIndicator.icon_name = "smartphone-symbolic";
         let userMenuTray = Main.panel.statusArea.aggregateMenu._indicators;
-        userMenuTray.insert_child_at_index(this.indicators, 0);
+        userMenuTray.insert_child_at_index(this.indicators, 0); // TODO ?
 
         // Extension Menu
         this.extensionMenu = new PopupMenu.PopupSubMenuMenuItem(
@@ -486,10 +455,6 @@ const SystemIndicator = new Lang.Class({
         );
         this.extensionMenu.icon.icon_name = "smartphone-symbolic";
         this.menu.addMenuItem(this.extensionMenu);
-
-        // Extension Menu -> Devices Section -> [ DeviceMenu, ... ]
-        this.devicesSection = new PopupMenu.PopupMenuSection();
-        this.extensionMenu.menu.addMenuItem(this.devicesSection);
 
         // Extension Menu -> [ Enable Item ]
         this.enableItem = this.extensionMenu.menu.addAction(
@@ -505,12 +470,6 @@ const SystemIndicator = new Lang.Class({
 
         //
         Main.panel.statusArea.aggregateMenu.menu.addMenuItem(this.menu, 4);
-
-        // Watch "device-indicators" setting
-        Settings.connect(
-            "changed::device-indicators",
-            Lang.bind(this, this._sync)
-        );
 
         // Watch for DBus service
         this._watchdog = Gio.bus_watch_name(
@@ -529,34 +488,16 @@ const SystemIndicator = new Lang.Class({
         });
     },
 
-    // UI Settings callbacks
-    _sync: function () {
-        debug("extension.SystemIndicator._sync()");
-
-        // Show "Enable" if backend not running
-        this.enableItem.actor.visible = (this.manager) ? false : true;
-
-        // Show per-device indicators OR user menu entries
-        if (Settings.get_boolean("device-indicators")) {
-            this.devicesSection.actor.visible = false;
-        } else {
-            this.devicesSection.actor.visible = true;
-        }
-    },
-
-    // DBus Callbacks
+    // The DBus interface has appeared
     _serviceAppeared: function (conn, name, name_owner, cb_data) {
-        // The DBus interface has appeared
         debug("extension.SystemIndicator._serviceAppeared()");
         
         this.manager = new this._backend.DeviceManager();
+        this.enableItem.actor.visible = (this.manager) ? false : true;
 
         for (let dbusPath in this.manager.devices) {
             this._deviceAdded(this.manager, null, dbusPath);
         }
-
-        // Sync the UI
-        this._sync();
 
         // Watch for new and removed devices
         this.manager.connect(
@@ -570,8 +511,8 @@ const SystemIndicator = new Lang.Class({
         );
     },
 
+    // The DBus interface has vanished
     _serviceVanished: function (conn, name, name_owner, cb_data) {
-        // The DBus interface has vanished
         debug("extension.SystemIndicator._serviceVanished()");
 
         // If a manager is initialized, destroy it
@@ -580,8 +521,7 @@ const SystemIndicator = new Lang.Class({
             this.manager = false;
         }
 
-        // Sync the UI
-        this._sync();
+        this.enableItem.actor.visible = (this.manager) ? false : true;
 
         // Start the service or wait for it to start
         if (Settings.get_boolean("service-autostart")) {
@@ -595,26 +535,18 @@ const SystemIndicator = new Lang.Class({
         debug("extension.SystemIndicator._deviceAdded(" + dbusPath + ")");
 
         let device = this.manager.devices[dbusPath];
-
-        // Per-device indicator
         let indicator = new DeviceIndicator(device);
+        
+        this._indicators[dbusPath] = indicator;
         Main.panel.addToStatusArea(dbusPath, indicator);
-
-        // User menu entry
-        this.deviceMenus[dbusPath] = new DeviceMenu(device);
-        this.devicesSection.addMenuItem(this.deviceMenus[dbusPath]);
     },
 
     _deviceRemoved: function (manager, dbusPath) {
-        // FIXME: not detail on device::removed?
+        // FIXME: no detail on device::removed?
         debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
         
-        // Per-device indicator
         Main.panel.statusArea[dbusPath].destroy();
-
-        // User menu entry
-        this.deviceMenus[dbusPath].destroy();
-        delete this.deviceMenus[dbusPath];
+        delete this._indicators[dbusPath];
     },
 
     // Public Methods
@@ -622,17 +554,12 @@ const SystemIndicator = new Lang.Class({
         this.manager.destroy();
         delete this.manager;
         
-        // There should be matching deviceMenus and deviceIndicators
-        for (let dbusPath in this.deviceMenus) {
-            // Indicators
+        for (let dbusPath in this._indicators) {
             Main.panel.statusArea[dbusPath].destroy();
-            // Menus
-            this.deviceMenus[dbusPath].destroy();
-            delete this.deviceMenus[dbusPath];
+            delete this._indicators[dbusPath];
         }
 
         // Destroy the UI
-        this.devicesSection.destroy();
         this.extensionMenu.destroy();
         this.extensionIndicator.destroy();
         this.menu.destroy();
@@ -643,8 +570,6 @@ const SystemIndicator = new Lang.Class({
 
         // Stop watching for DBus Service
         Gio.bus_unwatch_name(this._watchdog);
-        
-        this.indicators.destroy();
     }
 });
 
