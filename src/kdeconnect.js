@@ -437,7 +437,7 @@ const Battery = new Lang.Class({
         });
     },
     
-    get charging () { return (this._call("isCharging") === true); }, // TODO
+    get charging () { return (this._call("isCharging") === true); }, // TODO ?
     get level () { return this._call("charge"); }
 });
 
@@ -463,7 +463,7 @@ const Device = new Lang.Class({
         "reachable": GObject.ParamSpec.boolean(
             "reachable",
             "DeviceState",
-            "The device status",
+            "Whether the device is reachable/online",
             GObject.ParamFlags.READABLE,
             false
         ),
@@ -480,6 +480,13 @@ const Device = new Lang.Class({
             "The device type",
             GObject.ParamFlags.READABLE,
             "unknown"
+        ),
+        "mounted": GObject.ParamSpec.boolean(
+            "mounted",
+            "DeviceMounted",
+            "Whether the device is mounted or not",
+            GObject.ParamFlags.READABLE,
+            false
         )
     },
     
@@ -516,31 +523,43 @@ const Device = new Lang.Class({
             } else if (name === "pluginsChanged") {
                 this._reloadPlugins();
             } else if (name === "reachableStatusChanged") {
-                // Make sure the cached isReachable is updated
+                // Make sure the cached isReachable is updated before notifying
                 this.set_cached_property(
                     "isReachable",
                     new GLib.Variant("b", !this.reachable)
                 );
                 this.notify("reachable");
             } else if (name === "trustedChanged") {
-                log("Device.trustable = " + this.trustable);
                 this.notify("trusted");
             }
-            
-            //this._reloadPlugins();
         });
         
         this._reloadPlugins();
+        
+        Object.defineProperty(this, "mounts", {
+            get: () => {
+                let dirsObj = this.sftp._call("getDirectories");
+                
+                for (let dir in dirsObj) {
+                    dirsObj[dir] = dirsObj[dir].deep_unpack();
+                }
+                
+                return dirsObj;
+            }
+        });
     },
     
     // Properties
     get id () { return this.gObjectPath.split("/").pop(); },
+    get mounted () { return (this.sftp._call("isMounted") === true); },
+    get mounts () { return this.sftp._call("getDirectories"); },
     get name () { return this._get("name"); },
     get reachable () { return (this._get("isReachable") === true); },
     get trusted () { return (this._get("isTrusted") === true); },
     get type () { return this._get("type"); },
     
     // Methods
+    mount: function () { return this.sftp._call("mountAndWait"); },
     ping: function () { throw Error("Not Implemented"); },
     ring: function () { this.findmyphone._call("ring", true); },
     sms: function (number, message) {
@@ -584,7 +603,7 @@ const Device = new Lang.Class({
             delete this.battery;
         }
         
-        if (supported.indexOf("kdeconnect.ping") > -1 ) {
+        if (supported.indexOf("kdeconnect_ping") > -1 ) {
             this.ping = new ProxyBase(
                 PingNode.interfaces[0],
                 this.gObjectPath
@@ -601,6 +620,16 @@ const Device = new Lang.Class({
         } else {
             //this.findmyphone.destroy();
             delete this.findmyphone;
+        }
+        
+        if (supported.indexOf("kdeconnect_sftp") > -1 ) {
+            this.sftp = new ProxyBase(
+                SFTPNode.interfaces[0],
+                this.gObjectPath + "/sftp"
+            );
+        } else {
+            //this.share.destroy();
+            delete this.sftp;
         }
         
         if (supported.indexOf("kdeconnect_share") > -1 ) {
@@ -631,6 +660,7 @@ const Device = new Lang.Class({
         ["battery",
         "findmyphone",
         "ping",
+        "sftp",
         "share",
         "telephony"].forEach((plugin) => {
             if (this.hasOwnProperty(plugin)) {

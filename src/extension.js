@@ -36,10 +36,10 @@ const DeviceVisibility = {
     RESERVED: 4
 };
 
-/** Composite Widgets */
-
-// A PopupMenu used as an information and control center for a device,
-// accessible either as a User Menu submenu or Indicator popup-menu.
+/**
+ * A PopupMenu used as an information and control center for a device,
+ * accessible either as a User Menu submenu or Indicator popup-menu.
+ */
 const DeviceMenu = new Lang.Class({
     Name: "DeviceMenu",
     Extends: PopupMenu.PopupMenuSection,
@@ -65,6 +65,47 @@ const DeviceMenu = new Lang.Class({
             style_class: "popup-menu-icon"
         });
         this.infoBar.actor.add(this.batteryIcon);
+
+        // Action Bar
+        this.actionBar = new PopupMenu.PopupBaseMenuItem({
+            reactive: false,
+            can_focus: false
+        }); 
+        this.addMenuItem(this.actionBar);
+
+        // Action Bar -> Plugin Buttons
+        this.smsButton = this._addActionButton(
+            "user-available-symbolic",
+            Lang.bind(this, this._smsAction)
+        );
+        this.findButton = this._addActionButton(
+            "find-location-symbolic",
+            Lang.bind(this, this._findAction)
+        );
+        this.browseButton = this._addActionButton(
+            "folder-remote-symbolic",
+            Lang.bind(this, this._browseAction),
+            true
+        );
+        this.shareButton = this._addActionButton(
+            "send-to-symbolic",
+            Lang.bind(this, this._shareAction)
+        );
+        
+        // Browse Bar
+        this.browseBar = new PopupMenu.PopupMenuSection({
+            reactive: false,
+            can_focus: false
+        });
+        this.browseBar.actor.style_class = "popup-sub-menu";
+        this.browseBar.actor.visible = false;
+        this.browseButton.bind_property(
+            "checked",
+            this.browseBar.actor,
+            "visible",
+            GObject.BindingFlags.DEFAULT
+        );
+        this.addMenuItem(this.browseBar);
         
         // Status Bar
         this.statusBar = new PopupMenu.PopupMenuSection({
@@ -88,6 +129,7 @@ const DeviceMenu = new Lang.Class({
                 icon_size: 24
             })
         );
+        
         // Status Content -> Label
         this.statusBar.label = new St.Label({
             text: "",
@@ -104,31 +146,6 @@ const DeviceMenu = new Lang.Class({
             (device.trusted) ? device.unpair() : device.pair();
         });
         this.statusBar.addMenuItem(this.statusBar.button);
-
-        // Action Bar
-        this.actionBar = new PopupMenu.PopupBaseMenuItem({
-            reactive: false,
-            can_focus: false
-        }); 
-        this.addMenuItem(this.actionBar);
-
-        // Action Bar -> Plugin Buttons
-        this.smsButton = this._addActionButton(
-            "user-available-symbolic",
-            Lang.bind(this, this._smsAction)
-        );
-        this.findButton = this._addActionButton(
-            "find-location-symbolic",
-            Lang.bind(this, this._findAction)
-        );
-        this.browseButton = this._addActionButton(
-            "folder-remote-symbolic",
-            Lang.bind(this, this._browseAction)
-        );
-        this.shareButton = this._addActionButton(
-            "send-to-symbolic",
-            Lang.bind(this, this._shareAction)
-        );
 
         // Property signals
         device.connect(
@@ -155,19 +172,20 @@ const DeviceMenu = new Lang.Class({
         this._stateChanged(device);
         
         // Device Visibility Settings
-        ["device-visibility"].forEach((setting) => {
-            Settings.connect(
-                "changed::device-visibility",
-                Lang.bind(this, this._settingsChanged)
-            );
-        });
+        Settings.connect(
+            "changed::device-visibility",
+            Lang.bind(this, this._settingsChanged)
+        );
         this._settingsChanged();
     },
 
-    _addActionButton: function (name, callback) {
-        let button = new St.Button({ style_class: "system-menu-action" });
-        button.child = new St.Icon({ icon_name: name });
-        button.style = "padding: 8px;";
+    _addActionButton: function (name, callback, toggle = false) {
+        let button = new St.Button({
+            style_class: "system-menu-action",
+            style: "padding: 8px;",
+            child: new St.Icon({ icon_name: name }),
+            toggle_mode: toggle
+        });
         button.connect("clicked", callback);
 
         this.actionBar.actor.add(button, { expand: true, x_fill: false });
@@ -183,17 +201,18 @@ const DeviceMenu = new Lang.Class({
         let icon = "battery";
 
         if (level < 3) {
-            icon += charging ? "-empty-charging" : "-empty";
+            icon += "-empty";
         } else if (level < 10) {
-            icon += charging ? "-caution-charging" : "-caution";
+            icon += "-caution";
         } else if (level < 30) {
-            icon += charging ? "-low-charging" : "-low";
+            icon += "-low";
         } else if (level < 60) {
-            icon += charging ? "-good-charging" : "-good";
+            icon += "-good";
         } else if (level >= 60) {
-            icon += charging ? "-full-charging" : "-full";
+            icon += "-full";
         }
 
+        icon = (charging) ? icon + "-charging" : icon;
         this.batteryIcon.icon_name = icon + "-symbolic";
         this.batteryLabel.text = level + "%";
     },
@@ -210,8 +229,8 @@ const DeviceMenu = new Lang.Class({
 
         // Device Menu Buttons
         let buttons = {
-            browse: this.browseButton,
             findmyphone: this.findButton,
+            sftp: this.browseButton,
             share: this.shareButton,
             telephony: this.smsButton
         };
@@ -278,9 +297,39 @@ const DeviceMenu = new Lang.Class({
 
     // Plugin Callbacks
     _browseAction: function (button) {
-        debug("extension.DeviceMenu._browseAction(): Not Implemented");
+        debug("extension.DeviceMenu._browseAction()");
         
-        this._getTopMenu().close(true);
+        if (button.checked) {
+            button.add_style_pseudo_class("active");
+        } else {
+            button.remove_style_pseudo_class("active");
+            return;
+        }
+        
+        if (this.device.mount()) {
+            this.browseBar.actor.destroy_all_children();
+            
+            for (let path in this.device.mounts) {
+                let mountItem = new PopupMenu.PopupMenuItem(
+                    this.device.mounts[path]
+                );
+                mountItem.path = path;
+                
+                mountItem.connect("activate", (item) => {
+                    GLib.spawn_command_line_async("xdg-open " + item.path);
+                    button.checked = false;
+                    button.remove_style_pseudo_class("active")
+                    item._getTopMenu().close(true);
+                });
+                
+                this.browseBar.addMenuItem(mountItem);
+            }
+        } else {
+            Main.notifyError(
+                this.device.name,
+                "Failed to mount device filesystem"
+            );
+        }
     },
 
     _findAction: function (button) {
@@ -625,3 +674,4 @@ function disable() {
     // Destroy the UI
     systemIndicator.destroy();
 }
+

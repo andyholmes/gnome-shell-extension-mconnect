@@ -1,9 +1,6 @@
 # KDE Connect/MConnect integration for Gnome Shell 3.24+
 This extension aims to provide integration for KDE Connect/MConnect in Gnome
-Shell, in the most native way possible. 
-
-[MConnect](https://github.com/bboozzoo/mconnect) is a KDE Connect protocol
-implementation in Vala/C.
+Shell, in the most native way possible.
 
 [KDE Connect](https://community.kde.org/KDEConnect) uses an
 [Android app](https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp)
@@ -11,7 +8,9 @@ and a desktop server to securely exchange data, allowing plugins to offer
 file sharing, notification sharing, sending of text messages and many other
 features.
 
-**NOTE:** This extension is still in an early stage of development.
+[MConnect](https://github.com/bboozzoo/mconnect) is a KDE Connect protocol
+implementation in Vala/C.
+
 
 ## Installation
 
@@ -102,7 +101,6 @@ Functionality with KDE Connect is far more complete but still lacks features,
 contains bugs and has usability issues. Missing functionality includes, but is
 not limited to:
 
-* mounting and browsing remote devices
 * file manager integration (Nautilus, Nemo, Thunar, Caja, etc)
 * wayland support is unknown
 * encryption information is not viewable in the extension
