@@ -2,6 +2,9 @@
 This extension aims to provide integration for KDE Connect/MConnect in Gnome
 Shell, in the most native way possible.
 
+![Panel Menu](https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/device-screenshot.png)
+![SMS Window with auto-complete](https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/sms-screenshot.png)
+
 [KDE Connect](https://community.kde.org/KDEConnect) uses an
 [Android app](https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp)
 and a desktop server to securely exchange data, allowing plugins to offer
