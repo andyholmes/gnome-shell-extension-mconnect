@@ -316,10 +316,10 @@ const DeviceMenu = new Lang.Class({
                 mountItem.path = path;
                 
                 mountItem.connect("activate", (item) => {
-                    GLib.spawn_command_line_async("xdg-open " + item.path);
                     button.checked = false;
-                    button.remove_style_pseudo_class("active")
+                    button.remove_style_pseudo_class("active");
                     item._getTopMenu().close(true);
+                    GLib.spawn_command_line_async("xdg-open " + item.path);
                 });
                 
                 this.browseBar.addMenuItem(mountItem);

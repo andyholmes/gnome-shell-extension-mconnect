@@ -514,7 +514,7 @@ const Device = new Lang.Class({
         
         this.connect("g-signal", (proxy, sender, name, parameters) => {
             parameters = parameters.deep_unpack();
-        
+            
             log("caught signal '" + name + "'");
             log("parameters '" + parameters + "'");
             
@@ -523,13 +523,18 @@ const Device = new Lang.Class({
             } else if (name === "pluginsChanged") {
                 this._reloadPlugins();
             } else if (name === "reachableStatusChanged") {
-                // Make sure the cached isReachable is updated before notifying
+                // Make sure the cached property is updated before notifying
                 this.set_cached_property(
                     "isReachable",
                     new GLib.Variant("b", !this.reachable)
                 );
                 this.notify("reachable");
             } else if (name === "trustedChanged") {
+                // Make sure the cached property is updated before notifying
+                this.set_cached_property(
+                    "isTrusted",
+                    new GLib.Variant("b", !this.trusted)
+                );
                 this.notify("trusted");
             }
         });
@@ -552,7 +557,6 @@ const Device = new Lang.Class({
     // Properties
     get id () { return this.gObjectPath.split("/").pop(); },
     get mounted () { return (this.sftp._call("isMounted") === true); },
-    get mounts () { return this.sftp._call("getDirectories"); },
     get name () { return this._get("name"); },
     get reachable () { return (this._get("isReachable") === true); },
     get trusted () { return (this._get("isTrusted") === true); },
@@ -560,6 +564,7 @@ const Device = new Lang.Class({
     
     // Methods
     mount: function () { return this.sftp._call("mountAndWait"); },
+    pair: function () { this._call("requestPair", null, true); },
     ping: function () { throw Error("Not Implemented"); },
     ring: function () { this.findmyphone._call("ring", true); },
     sms: function (number, message) {
@@ -572,8 +577,6 @@ const Device = new Lang.Class({
             GLib.filename_to_uri(filePath, null)
         );
     },
-    
-    pair: function () { this._call("requestPair", null, true); },
     unpair: function () { this._call("unpair", null, true); },
     
     //
