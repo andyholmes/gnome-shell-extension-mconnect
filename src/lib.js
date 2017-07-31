@@ -53,7 +53,7 @@ String.prototype.levenshtein = function(b){
 		}
 	}
 	return res;
-}
+};
 
 /******************************************************************************
  * Settings
