@@ -1,4 +1,5 @@
-# KDE Connect/MConnect integration for Gnome Shell 3.24+
+# KDE Connect/MConnect integration for Gnome Shell
+
 This extension aims to provide integration for KDE Connect/MConnect in Gnome
 Shell, in the most native way possible.
 
@@ -7,9 +8,8 @@ Shell, in the most native way possible.
 
 [KDE Connect](https://community.kde.org/KDEConnect) uses an
 [Android app](https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp)
-and a desktop server to securely exchange data, allowing plugins to offer
-file sharing, notification sharing, sending of text messages and many other
-features.
+and a desktop server to securely exchange data, allowing file sharing,
+notification sharing, sending of text messages and many other features.
 
 [MConnect](https://github.com/bboozzoo/mconnect) is a KDE Connect protocol
 implementation in Vala/C.
@@ -17,23 +17,29 @@ implementation in Vala/C.
 
 ## Installation
 
-### Extension
-
 The extension will appear on the extension website when reasonably useful and
 stable. Pre-release builds are available in the [Releases page](https://github.com/andyholmes/gnome-shell-extension-mconnect/releases),
 or you may build and install from git with [Meson](http://mesonbuild.com):
 
     git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
-    meson gnome-shell-extension-mconnect/ builddir
+    meson gnome-shell-extension-mconnect/ build
     cd build
     ninja install-zip
-    
+
 
 ### MConnect
 
 As of July 2017, MConnect support is limited and currently relies on the
 [dbus-support](https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support)
-branch of MConnect. First build mconnect (see repository for dependencies):
+branch of MConnect. In the future this will be the preferred backend as it does
+not depend on KDE libraries. If you have experience with Vala, consider
+contributing to the project. Currently you may:
+
+* initiate pairing with devices (but not unpairing)
+* receive and forward notifications (automatically handled by MConnect)
+* monitor battery level and charging state
+
+First build mconnect (see repository for dependencies):
 
     git clone -b bboozzoo/dbus-support https://github.com/bboozzoo/mconnect.git
     cd mconnect
@@ -53,6 +59,13 @@ you may install it as a package if `checkinstall` is available:
     
 
 ### KDE Connect
+
+Functionality with KDE Connect is far more complete but still lacks features,
+contains bugs and has usability issues. Missing functionality includes, but is
+not limited to:
+
+* file manager integration only supports Nautilus
+* encryption information is not viewable in the extension
 
 KDE Connect should be installed through normal, stable distribution channels.
     
@@ -80,28 +93,4 @@ The following options are available in the extension preferences:
     
     If true the extension will print verbosely to the log. See 'journalctl
     /usr/bin/gnome-shell -f -o cat' for output.
-    
-
-## Usage
-
-Controls for each device are in a menu, available either as a submenu in the
-User Menu or via a status indicator, depending on the value of
-**device-indicators**.
-
-Functionality with MConnect is still limited by the underlying service, however
-moving forward this will be the preferred backend service as it does not depend
-on KDE libraries. If you have experience with Vala, consider contributing to
-the project. Currently you may:
-
-* initiate pairing with devices (but not unpair)
-* receive and forward notifications (automatically handled by MConnect)
-* monitor battery level and charging state
-
-Functionality with KDE Connect is far more complete but still lacks features,
-contains bugs and has usability issues. Missing functionality includes, but is
-not limited to:
-
-* file manager integration (Nautilus, Nemo, Thunar, Caja, etc)
-* wayland support is unknown
-* encryption information is not viewable in the extension
 
