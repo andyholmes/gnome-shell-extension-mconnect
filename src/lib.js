@@ -517,7 +517,6 @@ const SettingsWidget = new Lang.Class({
         this.parent(Object.assign(defaults, params));
         
         // FIXME: check this
-        
         this.box = new Gtk.Box({
             visible: true,
             can_focus: false,

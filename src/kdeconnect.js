@@ -734,15 +734,11 @@ const DeviceManager = new Lang.Class({
     
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
-        log("device added: " + dbusPath);
-        
         this.devices[dbusPath] = new Device(dbusPath);
         this.emit("device::added", dbusPath);
     },
     
     _deviceRemoved: function (manager, dbusPath) {
-        log("device removed: " + dbusPath);
-        
         this.devices[dbusPath].destroy();
         delete this.devices[dbusPath];
         this.emit("device::removed", dbusPath);

@@ -536,8 +536,8 @@ const ApplicationWindow = new Lang.Class({
     }
 });
 
-const SMSApplication = new Lang.Class({
-    Name: "SMSApplication",
+const Application = new Lang.Class({
+    Name: "Application",
     Extends: Gtk.Application,
 
     _init: function() {
@@ -554,21 +554,18 @@ const SMSApplication = new Lang.Class({
     },
 
     vfunc_startup: function() {
-        log("GtkApplication::startup");
         this.parent();
         this._window = new ApplicationWindow({ application: this });
     },
 
     vfunc_activate: function() {
-        log("GtkApplication::activated");
         this._window.present();
     },
 
     vfunc_shutdown: function() {
-        log("GtkApplication::shutdown");
         this.parent();
     }
 });
 
-(new SMSApplication()).run(ARGV);
+(new Application()).run(ARGV);
 
