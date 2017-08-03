@@ -320,25 +320,9 @@ const DeviceMenu = new Lang.Class({
         
         this._getTopMenu().close(true);
         
-        let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
-            GLib.getenv('HOME'),            // working dir
-            ["gjs", Me.path + "/share.js"], // argv
-            null,                           // envp
-            GLib.SpawnFlags.SEARCH_PATH,    // enables PATH
-            null                            // child_setup (func)
+        GLib.spawn_command_line_async(
+            "gjs " + Me.path + "/share.js --device=" + this.device.id
         );
-
-        let stdout = new Gio.DataInputStream({
-            base_stream: new Gio.UnixInputStream({ fd: out_fd })
-        });
-
-        stdout.read_line_async(GLib.PRIORITY_DEFAULT, null, (stream, res) => {
-            let [filePath, length] = stdout.read_line_finish(res);
-    
-            if (filePath && filePath.toString() !== null) {
-                this.device.shareURI(filePath.toString());
-            }
-        });
     },
 
     _smsAction: function (button) {
