@@ -7,7 +7,6 @@
   <flags id="org.gnome.shell.extensions.mconnect.DeviceVisibility">
     <value nick="OFFLINE" value="1"/>
     <value nick="UNPAIRED" value="2"/>
-    <value nick="RESERVED" value="4"/>
   </flags>
   <schema path="/org/gnome/shell/extensions/mconnect/" id="org.gnome.shell.extensions.mconnect">
     <key type="b" name="debug">
@@ -17,13 +16,13 @@
     </key>
     <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
       <default>["OFFLINE", "UNPAIRED"]</default>
-      <summary>Display visibility</summary>
+      <summary>Device visibility</summary>
       <description>In what states a device will be made visible to the user. Possible options are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.</description>
     </key>
     <key type="b" name="nautilus-integration">
       <default>false</default>
       <summary>Nautilus integration</summary>
-      <description>If true the extension will install a script for integration into Nautilus</description>
+      <description>If true, a submenu will be added to the Nautilus context menu to allow sending files to devices directly from the file browser.</description>
     </key>
     <key name="service-autostart" type="b">
       <default>false</default>

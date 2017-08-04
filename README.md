@@ -78,6 +78,11 @@ The following options are available in the extension preferences:
 
     In what states a device will be made visible to the user. Possible options
     are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.
+    
+* **nautilus-integration** - Nautilus integration
+
+    If true, a submenu will be added to the Nautilus context menu to allow
+    sending files to devices directly from the file browser.
 
 * **service-autostart** - Start the service automatically
 
