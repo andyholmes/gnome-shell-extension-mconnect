@@ -6,7 +6,6 @@
  * developers for the sister Python script 'Sms.py':
  * 
  * https://github.com/Bajoja/indicator-kdeconnect/blob/master/src/sms/Sms.py
- *
  */
 
 const Lang = imports.lang;
