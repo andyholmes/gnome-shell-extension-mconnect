@@ -401,6 +401,10 @@ const ProxyBase = new Lang.Class({
                 }
             }
         );
+    },
+    
+    destroy: function () {
+        GObject.signal_handlers_destroy(this);
     }
 });
 
@@ -602,7 +606,8 @@ const Device = new Lang.Class({
                     [this.battery.charging, this.battery.level]
                 )
             );
-        } else {
+        } else if (this.hasOwnProperty("battery")) {
+            this.battery.destroy();
             delete this.battery;
         }
         
@@ -611,7 +616,8 @@ const Device = new Lang.Class({
                 PingNode.interfaces[0],
                 this.gObjectPath
             );
-        } else {
+        } else if (this.hasOwnProperty("ping")) {
+            this.ping.destroy();
             delete this.ping;
         }
         
@@ -620,8 +626,8 @@ const Device = new Lang.Class({
                 FindMyPhoneNode.interfaces[0],
                 this.gObjectPath + "/findmyphone"
             );
-        } else {
-            //this.findmyphone.destroy();
+        } else if (this.hasOwnProperty("findmyphone")) {
+            this.findmyphone.destroy();
             delete this.findmyphone;
         }
         
@@ -630,8 +636,8 @@ const Device = new Lang.Class({
                 SFTPNode.interfaces[0],
                 this.gObjectPath + "/sftp"
             );
-        } else {
-            //this.share.destroy();
+        } else if (this.hasOwnProperty("sftp")) {
+            this.sftp.destroy();
             delete this.sftp;
         }
         
@@ -640,8 +646,8 @@ const Device = new Lang.Class({
                 ShareNode.interfaces[0],
                 this.gObjectPath + "/share"
             );
-        } else {
-            //this.share.destroy();
+        } else if (this.hasOwnProperty("share")) {
+            this.share.destroy();
             delete this.share;
         }
         
@@ -650,8 +656,8 @@ const Device = new Lang.Class({
                 TelephonyNode.interfaces[0],
                 this.gObjectPath + "/telephony"
             );
-        } else {
-            //this.sms.destroy();
+        } else if (this.hasOwnProperty("telephony")) {
+            this.telephony.destroy();
             delete this.telephony;
         }
         
@@ -660,6 +666,8 @@ const Device = new Lang.Class({
     
     // Override Methods
     destroy: function () {
+        ProxyBase.prototype.destroy.call(this);
+    
         ["battery",
         "findmyphone",
         "ping",
@@ -667,6 +675,7 @@ const Device = new Lang.Class({
         "share",
         "telephony"].forEach((plugin) => {
             if (this.hasOwnProperty(plugin)) {
+                this[plugin].destroy();
                 delete this[plugin];
             }
         });
@@ -756,6 +765,8 @@ const DeviceManager = new Lang.Class({
     
     // Override Methods
     destroy: function () {
+        ProxyBase.prototype.destroy.call(this);
+        
         for (let dbusPath in this.devices) {
             this._deviceRemoved(this, dbusPath);
         }
