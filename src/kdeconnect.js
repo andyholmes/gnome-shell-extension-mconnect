@@ -260,7 +260,6 @@ function startService() {
             "locate -br '^kdeconnectd$'"
         );
         
-        // TODO: check "-platform offscreen"
         GLib.spawn_command_line_async(out.toString() + " -platform offscreen");
     } catch (e) {
         log("Error spawning KDEConnect daemon: " + e);
@@ -364,10 +363,6 @@ const ProxyBase = new Lang.Class({
             (proxy, result) => {
                 try {
                     ret = this.call_finish(result).deep_unpack();
-                    log("DBus.Property '" + name + "':");
-                    log("    value: " + ret[0].deep_unpack());
-                    log("    type: " + typeof ret[0].deep_unpack());
-        
                     return (ret.length === 1) ? ret[0].deep_unpack() : ret;
                 } catch (e) {
                     log("Error getting " + name + " on " + this.gObjectPath +
@@ -518,9 +513,6 @@ const Device = new Lang.Class({
         
         this.connect("g-signal", (proxy, sender, name, parameters) => {
             parameters = parameters.deep_unpack();
-            
-            log("caught signal '" + name + "'");
-            log("parameters '" + parameters + "'");
             
             if (name === "nameChanged") {
                 this.notify("name");
@@ -712,9 +704,6 @@ const DeviceManager = new Lang.Class({
         // Signals
         this.connect("g-signal", (proxy, sender, name, parameters) => {
             parameters = parameters.deep_unpack();
-            
-            log("caught signal '" + name + "'");
-            log("parameters '" + parameters + "'");
             
             if (name === "announcedNameChanged") {
                 let newName = parameters[0];

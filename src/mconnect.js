@@ -191,10 +191,6 @@ const ProxyBase = new Lang.Class({
             (proxy, result) => {
                 try {
                     ret = this.call_finish(result).deep_unpack();
-                    log("DBus.Property '" + name + "':");
-                    log("    value: " + ret[0].deep_unpack());
-                    log("    type: " + typeof ret[0].deep_unpack());
-        
                     return (ret.length === 1) ? ret[0].deep_unpack() : ret;
                 } catch (e) {
                     log("Error getting " + name + " on " + this.gObjectPath +
@@ -487,8 +483,6 @@ const DeviceManager = new Lang.Class({
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
-        log("device added: " + dbusPath);
-        
         this.devices[dbusPath] = new Device(dbusPath);
         this.devices[dbusPath]._manager = this;
         this.emit("device::added", dbusPath);
@@ -496,8 +490,6 @@ const DeviceManager = new Lang.Class({
     
     _deviceRemoved: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
-        log("device removed: " + dbusPath);
-        
         this.devices[dbusPath].destroy();
         delete this.devices[dbusPath];
         this.emit("device::removed", dbusPath);
