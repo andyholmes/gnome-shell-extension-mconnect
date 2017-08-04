@@ -19,13 +19,12 @@ function init() {
 function buildPrefsWidget() {
     let widget = new SettingsWidget();
     
-    let ifaceSection = widget.add_section(_("Interface"));
-    widget.add_setting(ifaceSection, "device-visibility");
-    
-    let desktopSection = widget.add_section(_("Service"));
-    ["service-autostart",
-    "service-backend"].forEach((option) => {
-        widget.add_setting(desktopSection, option);
+    let generalSection = widget.add_section(_("General"));
+    ["device-visibility",
+    "service-backend",
+    "service-autostart",
+    "nautilus-integration"].forEach((option) => {
+        widget.add_setting(generalSection, option);
     });
     
     let develSection = widget.add_section(_("Development"));

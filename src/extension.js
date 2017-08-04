@@ -557,6 +557,32 @@ const SystemIndicator = new Lang.Class({
     }
 });
 
+function nautilusIntegration() {
+    let nautilusPath = GLib.get_user_data_dir() + "/nautilus-python/extensions";
+    let nautilusDir = Gio.File.new_for_path(nautilusPath);
+    let nautilusScript = nautilusDir.get_child("nautilus-send-mconnect.py");
+    
+    if (Settings.get_boolean("nautilus-integration")) {
+        if (!nautilusDir.query_exists(null)) {
+            GLib.mkdir_with_parents(nautilusPath, 0o755);
+        }
+        
+        if (!nautilusScript.query_exists(null)) {
+            nautilusScript.make_symbolic_link(
+                Me.path + "/nautilus-send-mconnect.py",
+                null,
+                null
+            );
+        }
+    } else {
+        if (!nautilusDir.query_exists(null)) { return; }
+        
+        if (nautilusScript.query_exists(null)) {
+            nautilusScript.delete(null);
+        }
+    }
+}
+
 var systemIndicator;
 
 function init() {
@@ -575,6 +601,9 @@ function enable() {
         systemIndicator.destroy();
         systemIndicator = new SystemIndicator();
     });
+    
+    nautilusIntegration();
+    Settings.connect("changed::nautilus-integration", nautilusIntegration);
 }
 
 function disable() {

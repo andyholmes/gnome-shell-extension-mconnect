@@ -20,6 +20,11 @@
       <summary>Display visibility</summary>
       <description>In what states a device will be made visible to the user. Possible options are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.</description>
     </key>
+    <key type="b" name="nautilus-integration">
+      <default>false</default>
+      <summary>Nautilus integration</summary>
+      <description>If true the extension will install a script for integration into Nautilus</description>
+    </key>
     <key name="service-autostart" type="b">
       <default>false</default>
       <summary>Start the service automatically</summary>

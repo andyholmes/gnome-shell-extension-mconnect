@@ -4,7 +4,7 @@ nautilus-send-mconnect.py - A Nautilus extension for sending files via
 
 A great deal of credit and appreciation is owed to the indicator-kdeconnect
 developers for the sister Python script 'kdeconnect-send-nautilus.py':
- 
+
 https://github.com/Bajoja/indicator-kdeconnect/blob/master/data/extensions/kdeconnect-send-nautilus.py
 """
 
