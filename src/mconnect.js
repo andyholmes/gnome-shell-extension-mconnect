@@ -228,6 +228,10 @@ const ProxyBase = new Lang.Class({
                 }
             }
         );
+    },
+    
+    destroy: function () {
+        GObject.signal_handlers_destroy(this);
     }
 });
 
@@ -296,7 +300,7 @@ const Device = new Lang.Class({
         "reachable": GObject.ParamSpec.boolean(
             "reachable",
             "DeviceState",
-            "The device status",
+            "Whether the device is reachable/online",
             GObject.ParamFlags.READABLE,
             false
         ),
@@ -313,6 +317,13 @@ const Device = new Lang.Class({
             "The device type",
             GObject.ParamFlags.READABLE,
             "unknown"
+        ),
+        "mounted": GObject.ParamSpec.boolean(
+            "mounted",
+            "DeviceMounted",
+            "Whether the device is mounted or not",
+            GObject.ParamFlags.READABLE,
+            false
         )
     },
     
@@ -345,32 +356,28 @@ const Device = new Lang.Class({
     
     // Properties
     get id () { return this._get("Id"); },
+    get mounted () { return false; }, // Unsupported
     get name () { return this._get("Name"); },
     get reachable () {
-        return (this._get("IsActive") || this._get("IsConnected"));
+        return (this._get("IsActive") || this._get("IsConnected")) === true;
     },
-    get trusted () { return this._get("Allowed"); },
+    get trusted () { return this._get("Allowed") === true; },
     get type () { return this._get("DeviceType"); },
     
     // Methods
-    ping: function () { throw Error("Not Implemented"); },
-    ring: function () { throw Error("Not Implemented"); },
-    sms: function (number, message) { throw Error("Not Implemented"); },
-    shareURI: function (filePath) { throw Error("Not Implemented"); },
-    
+    mount: function () { throw Error("Not Implemented"); },
     pair: function () {
-        log("pairing with device: " + this.gObjectPath);
-        
         this._manager._call(
             "AllowDevice",
             new GLib.Variant("(s)", [this.gObjectPath]),
             true
         );
     },
-    
+    ping: function () { throw Error("Not Implemented"); },
+    ring: function () { throw Error("Not Implemented"); },
+    sms: function (number, message) { throw Error("Not Implemented"); },
+    shareURI: function (filePath) { throw Error("Not Implemented"); },
     unpair: function () {
-        log("unpairing with device: " + this.gObjectPath);
-        
         this._manager._call(
             "DisallowDevice",
             new GLib.Variant("(s)", [this.gObjectPath]),
@@ -403,25 +410,28 @@ const Device = new Lang.Class({
                     [this.battery.charging, this.battery.level]
                 )
             );
-        } else {
+        } else if (this.hasOwnProperty("battery")) {
+            this.battery.destroy();
             delete this.battery;
         }
         
-//        if (outgoing.indexOf("kdeconnect.ping") > -1 ) {
-//            this.ping = new ProxyBase(
-//                DeviceNode.interfaces[3],
-//                this.gObjectPath
-//            );
-//            this.ping._wrapSignals(this);
-//        } else {
-//            delete this.ping;
-//        }
+        if (outgoing.indexOf("kdeconnect.ping") > -1 ) {
+            this.ping = new ProxyBase(
+                DeviceNode.interfaces[3],
+                this.gObjectPath
+            );
+        } else if (this.hasOwnProperty("ping")) {
+            this.ping.destroy();
+            delete this.ping;
+        }
         
         this.emit("changed::plugins", new GLib.Variant("()", ""));
     },
     
     // Override Methods
     destroy: function () {
+        ProxyBase.prototype.destroy.call(this);
+        
         ["battery",
         "findmyphone",
         "ping",
@@ -499,6 +509,8 @@ const DeviceManager = new Lang.Class({
     
     // Override Methods
     destroy: function () {
+        ProxyBase.prototype.destroy.call(this);
+        
         for (let dbusPath in this.devices) {
             this._deviceRemoved(this, dbusPath);
         }
