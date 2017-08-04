@@ -1,6 +1,4 @@
-#!/usr/bin/env gjs
-
-// share.js - A simple FileChooserDialog for sending files
+/** share.js - A simple FileChooserDialog for sending files */
 
 const Lang = imports.lang;
 const System = imports.system;
@@ -37,12 +35,6 @@ const Application = new Lang.Class({
 
     _init: function(params={}) {
         this.parent(params);
-        
-//        this.parent({
-//            application_id: "org.gnome.shell.extensions.mconnect.ID" + "foobie",
-//            flags: Gio.ApplicationFlags.FLAGS_NONE,
-//            register_session: true
-//        });
         
         let application_name = _("MConnect");
 
