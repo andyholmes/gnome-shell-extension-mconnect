@@ -14,7 +14,7 @@ const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
 const Main = imports.ui.main;
-const ModalDialog = imports.ui.modalDialog;
+const MessageTray = imports.ui.messageTray;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 
@@ -24,22 +24,18 @@ const { log, debug, assert, initTranslations, Settings } = Me.imports.lib;
 const MConnect = Me.imports.mconnect;
 const KDEConnect = Me.imports.kdeconnect;
 
-// Module Constants
-const ServiceBackend = {
+// Externally Available Constants
+var ServiceBackend = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
 
-const DeviceVisibility = {
+var DeviceVisibility = {
     OFFLINE: 1,
-    UNPAIRED: 2,
-    RESERVED: 4
+    UNPAIRED: 2
 };
 
-/**
- * A PopupMenu used as an information and control center for a device,
- * accessible either as a User Menu submenu or Indicator popup-menu.
- */
+/** A PopupMenu used as an information and control center for a device */
 const DeviceMenu = new Lang.Class({
     Name: "DeviceMenu",
     Extends: PopupMenu.PopupMenuSection,
@@ -338,10 +334,7 @@ const DeviceMenu = new Lang.Class({
 
 Signals.addSignalMethods(DeviceMenu.prototype);
 
-/**
- * An indicator representing a device in Menu.panel.statusArea, used as an
- * optional location for a DeviceMenu.
- */
+/** An indicator representing a Device in the Status Area */
 const DeviceIndicator = new Lang.Class({
     Name: "DeviceIndicator",
     Extends: PanelMenu.Button,
@@ -408,7 +401,10 @@ const DeviceIndicator = new Lang.Class({
     }
 });
 
-// The main extension hub.
+/**
+ * A System Indicator used as the hub for spawning device indicators and
+ * indicating that the extension is active when there are none.
+ */
 const SystemIndicator = new Lang.Class({
     Name: "SystemIndicator",
     Extends: PanelMenu.SystemIndicator,
@@ -430,7 +426,7 @@ const SystemIndicator = new Lang.Class({
         this.extensionIndicator = this._addIndicator();
         this.extensionIndicator.icon_name = "smartphone-symbolic";
         let userMenuTray = Main.panel.statusArea.aggregateMenu._indicators;
-        userMenuTray.insert_child_at_index(this.indicators, 0); // TODO ?
+        userMenuTray.insert_child_at_index(this.indicators, 0);
 
         // Extension Menu
         this.extensionMenu = new PopupMenu.PopupSubMenuMenuItem(
@@ -526,7 +522,7 @@ const SystemIndicator = new Lang.Class({
     },
 
     _deviceRemoved: function (manager, dbusPath) {
-        // FIXME: no detail on device::removed?
+        // TODO: no detail on device::removed?
         debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
         
         Main.panel.statusArea[dbusPath].destroy();
@@ -548,38 +544,49 @@ const SystemIndicator = new Lang.Class({
         this.extensionIndicator.destroy();
         this.menu.destroy();
 
-        // Stop watching "service-autostart" & DBus
-        // TODO: instance '0x55ff988e3920' has no handler with id '9223372036854775808'
-        //Settings.disconnect("changed::service-autostart");
-
         // Stop watching for DBus Service
         Gio.bus_unwatch_name(this._watchdog);
     }
 });
 
-function nautilusIntegration() {
-    let nautilusPath = GLib.get_user_data_dir() + "/nautilus-python/extensions";
-    let nautilusDir = Gio.File.new_for_path(nautilusPath);
-    let nautilusScript = nautilusDir.get_child("nautilus-send-mconnect.py");
+function notifyNautilus() {
+    let source = new MessageTray.SystemNotificationSource();
+    Main.messageTray.add(source);
     
-    if (Settings.get_boolean("nautilus-integration")) {
-        if (!nautilusDir.query_exists(null)) {
-            GLib.mkdir_with_parents(nautilusPath, 0o755);
-        }
-        
-        if (!nautilusScript.query_exists(null)) {
-            nautilusScript.make_symbolic_link(
-                Me.path + "/nautilus-send-mconnect.py",
-                null,
-                null
-            );
-        }
-    } else {
-        if (!nautilusDir.query_exists(null)) { return; }
-        
-        if (nautilusScript.query_exists(null)) {
-            nautilusScript.delete(null);
-        }
+    let notification = new MessageTray.Notification(
+        source,
+        _("Nautilus extensions changed"),
+        _("Restart Nautilus to apply changes"),
+        { gicon: new Gio.ThemedIcon({ name: "system-file-manager-symbolic" }) }
+    );
+    
+    notification.setTransient(true);
+    notification.addAction(_("Restart"), () => {
+        GLib.spawn_command_line_async("nautilus -q");
+    });
+    
+    source.notify(notification);
+}
+
+function integrateNautilus() {
+    let path = GLib.get_user_data_dir() + "/nautilus-python/extensions";
+    let dir = Gio.File.new_for_path(path);
+    let script = dir.get_child("nautilus-send-mconnect.py");
+    
+    if (!dir.query_exists(null)) {
+        GLib.mkdir_with_parents(path, 0o755);
+    }
+    
+    if (Settings.get_boolean("nautilus-integration") && !script.query_exists(null)) {
+        script.make_symbolic_link(
+            Me.path + "/nautilus-send-mconnect.py",
+            null,
+            null
+        );
+        notifyNautilus();
+    } else if (!Settings.get_boolean("nautilus-integration") && script.query_exists(null)) {
+        script.delete(null);
+        notifyNautilus();
     }
 }
 
@@ -602,14 +609,15 @@ function enable() {
         systemIndicator = new SystemIndicator();
     });
     
-    nautilusIntegration();
-    Settings.connect("changed::nautilus-integration", nautilusIntegration);
+    integrateNautilus();
+    Settings.connect("changed::nautilus-integration", integrateNautilus);
 }
 
 function disable() {
     debug("disabling extension");
 
     // Destroy the UI
+    GObject.signal_handlers_destroy(Settings);
     systemIndicator.destroy();
 }
 
