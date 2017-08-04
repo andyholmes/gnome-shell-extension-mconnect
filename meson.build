@@ -94,7 +94,8 @@ Files = files(
   'src/kdeconnect.js',
   'src/mconnect.js',
   'src/share.js',
-  'src/sms.js'
+  'src/sms.js',
+  'src/nautilus-send-mconnect.py'
 )
 
 
