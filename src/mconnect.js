@@ -9,7 +9,7 @@ const GObject = imports.gi.GObject;
 
 
 // DBus Constants
-const BUS_NAME = "org.mconnect";
+var BUS_NAME = "org.mconnect";
 
 const DeviceNode = new Gio.DBusNodeInfo.new_for_xml('\
 <node> \
@@ -82,8 +82,6 @@ ManagerNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
 
 // Start the service backend
 function startService() {
-    log("Spawning MConnect daemon");
-    
     try {
         GLib.spawn_command_line_async("mconnect -d");
     } catch (e) {
@@ -93,12 +91,10 @@ function startService() {
 
 
 // Open the extension preferences window
-function startPreferences() {
-    log("Spawning MConnect settings");
-    
+function startSettings() {
     try {
         GLib.spawn_command_line_async(
-            "gnome-shell-extension-prefs mconnect@andyholmes.github.io"
+            "xdg-open " + GLib.get_user_config_dir() + "/mconnect/mconnect.conf"
         );
     } catch (e) {
         log("Error spawning MConnect settings: " + e);
