@@ -2,7 +2,6 @@
 
 // Imports
 const Lang = imports.lang;
-const Signals = imports.signals;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;

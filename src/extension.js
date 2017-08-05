@@ -4,7 +4,6 @@
 const Gettext = imports.gettext.domain('gnome-shell-extension-mconnect');
 const _ = Gettext.gettext;
 const Lang = imports.lang;
-const Signals = imports.signals;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -20,12 +19,12 @@ const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, assert, initTranslations, Settings } = Me.imports.lib;
+const { log, debug, initTranslations, Settings } = Me.imports.lib;
 const MConnect = Me.imports.mconnect;
 const KDEConnect = Me.imports.kdeconnect;
 
 // Externally Available Constants
-var ServiceBackend = {
+var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
@@ -325,8 +324,6 @@ const DeviceMenu = new Lang.Class({
     }
 });
 
-Signals.addSignalMethods(DeviceMenu.prototype);
-
 /** An indicator representing a Device in the Status Area */
 const DeviceIndicator = new Lang.Class({
     Name: "DeviceIndicator",
@@ -409,7 +406,7 @@ const SystemIndicator = new Lang.Class({
         this._indicators = {};
         
         // Select the backend service
-        if (Settings.get_enum("service-backend") === ServiceBackend.MCONNECT) {
+        if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
             this._backend = MConnect;
         } else {
             this._backend = KDEConnect;
@@ -491,7 +488,6 @@ const SystemIndicator = new Lang.Class({
     _serviceVanished: function (conn, name, name_owner, cb_data) {
         debug("extension.SystemIndicator._serviceVanished()");
 
-        // If a manager is initialized, destroy it
         if (this.manager) {
             this.manager.destroy();
             this.manager = false;
@@ -597,10 +593,9 @@ function init() {
 function enable() {
     debug("enabling extension");
 
-    // Create the UI
     systemIndicator = new SystemIndicator();
     
-    Settings.connect("changed::service-backend", () => {
+    Settings.connect("changed::service-provider", () => {
         systemIndicator.destroy();
         systemIndicator = new SystemIndicator();
     });
@@ -612,7 +607,6 @@ function enable() {
 function disable() {
     debug("disabling extension");
 
-    // Destroy the UI
     GObject.signal_handlers_destroy(Settings);
     systemIndicator.destroy();
 }
