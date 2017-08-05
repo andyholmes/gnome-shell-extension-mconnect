@@ -50,12 +50,10 @@ const DeviceMenu = new Lang.Class({
         this.infoBar.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
         this.addMenuItem(this.infoBar);
         
-        // InfoBar -> Battery label (eg. "85%")
         this.batteryLabel = new St.Label();
         this.batteryLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
         this.infoBar.actor.add(this.batteryLabel);
         
-        // Info Bar -> Battery Icon (eg. battery-good-symbolic)
         this.batteryIcon = new St.Icon({
             icon_name: "battery-missing-symbolic",
             style_class: "popup-menu-icon"
@@ -69,7 +67,6 @@ const DeviceMenu = new Lang.Class({
         }); 
         this.addMenuItem(this.actionBar);
 
-        // Action Bar -> Plugin Buttons
         this.smsButton = this._addActionButton(
             "user-available-symbolic",
             Lang.bind(this, this._smsAction)
@@ -111,14 +108,12 @@ const DeviceMenu = new Lang.Class({
         });
         this.addMenuItem(this.statusBar);
         
-        // Status Content
         this.statusBar.statusContent = new St.BoxLayout({
             vertical: false,
             style: "margin: 0.5em 1em;"
         });
         this.statusBar.actor.add(this.statusBar.statusContent);
         
-        // Status Content -> Icon
         this.statusBar.statusContent.add(
             new St.Icon({
                 icon_name: "channel-insecure-symbolic",
@@ -126,7 +121,6 @@ const DeviceMenu = new Lang.Class({
             })
         );
         
-        // Status Content -> Label
         this.statusBar.label = new St.Label({
             text: "",
             style: "margin: 1em;"
@@ -300,8 +294,11 @@ const DeviceMenu = new Lang.Class({
         } else {
             Main.notifyError(
                 this.device.name,
-                "Failed to mount device filesystem"
+                _("Failed to mount device filesystem")
             );
+            
+            this.browseButton.checked = false;
+            this.browseButton.remove_style_pseudo_class("active");
         }
     },
 
@@ -313,9 +310,7 @@ const DeviceMenu = new Lang.Class({
 
     _shareAction: function (button) {
         debug("extension.DeviceMenu._shareAction()");
-        
         this._getTopMenu().close(true);
-        
         GLib.spawn_command_line_async(
             "gjs " + Me.path + "/share.js --device=" + this.device.id
         );
@@ -323,9 +318,7 @@ const DeviceMenu = new Lang.Class({
 
     _smsAction: function (button) {
         debug("extension.DeviceMenu._smsAction()");
-        
         this._getTopMenu().close(true);
-        
         GLib.spawn_command_line_async(
             "gjs " + Me.path + "/sms.js \"" + this.device.gObjectPath + "\""
         );
@@ -444,8 +437,11 @@ const SystemIndicator = new Lang.Class({
 
         // Extension Menu -> Mobile Settings Item
         this.extensionMenu.menu.addAction(
-            _("Mobile Settings"),
-            this._backend.startPreferences
+            _("Mobile Settings"), () => {
+                GLib.spawn_command_line_async(
+                    "gnome-shell-extension-prefs mconnect@andyholmes.github.io"
+                );
+            }
         );
 
         //
