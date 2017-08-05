@@ -9,7 +9,7 @@ const GObject = imports.gi.GObject;
 
 
 // DBus Constants
-const BUS_NAME = "org.kde.kdeconnect";
+var BUS_NAME = "org.kde.kdeconnect";
 
 const ManagerNode = new Gio.DBusNodeInfo.new_for_xml('\
 <node> \
@@ -252,8 +252,6 @@ TelephonyNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
 
 // Start the service backend
 function startService() {
-    log("Spawning KDEConnect daemon");
-    
     try {
         // kdeconnectd isn't in PATH (at least on Ubuntu)
         let [res, out] = GLib.spawn_command_line_sync(
@@ -267,9 +265,7 @@ function startService() {
 }
 
 // Start the backend settings
-function startPreferences() {
-    log("Spawning KDEConnect settings");
-    
+function startSettings() {
     try {
         GLib.spawn_command_line_async("kcmshell5 kcm_kdeconnect");
     } catch (e) {
@@ -436,7 +432,7 @@ const Battery = new Lang.Class({
         });
     },
     
-    get charging () { return (this._call("isCharging") === true); }, // TODO ?
+    get charging () { return (this._call("isCharging") === true); },
     get level () { return this._call("charge"); }
 });
 
