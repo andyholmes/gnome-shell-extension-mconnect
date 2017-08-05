@@ -27,7 +27,7 @@ function getPath() {
 }
 
 imports.searchPath.push(getPath());
-const Convenience = imports.lib;
+imports.lib.initTranslations();
 
 // https://gist.github.com/andrei-m/982927#gistcomment-2059365
 String.prototype.levenshtein = function(b){
@@ -340,7 +340,7 @@ const ContactEntry = new Lang.Class({
         
         // Try to retrieve Gtk.EntryCompletion for Google Contacts
         if (this.completion.model.iter_n_children(null)) {
-            this.placeholder_text = _("Search contacts");
+            this.placeholder_text = _("Search contacts...");
             this.primary_icon_name = "goa-account-google";
             this.input_purpose = Gtk.InputPurpose.FREE_FORM;
         }
@@ -383,28 +383,6 @@ const ContactEntry = new Lang.Class({
     }
 });
 
-const MessageEntry = new Lang.Class({
-    Name: "MessageEntry",
-    Extends: Gtk.Entry,
-    
-    _init: function (params) {
-        let defaults = {
-            hexpand: true,
-            placeholder_text: _("Type message here..."),
-            //secondary_icon_name: "mail-reply-sender-symbolic",
-            secondary_icon_pixbuf: SVG_ACTION_SEND,
-            secondary_icon_activatable: true,
-            secondary_icon_sensitive: false
-        };
-        
-        this.parent(Object.assign(defaults, params));
-        
-        this.connect("changed", (entry) => {
-            this.secondary_icon_sensitive = (this.text.length) ? true : false;
-        });
-    }
-});
-
 /** SMS Window */
 const ApplicationWindow = new Lang.Class({
     Name: "ApplicationWindow",
@@ -420,17 +398,16 @@ const ApplicationWindow = new Lang.Class({
         
         this.parent(Object.assign(defaults, params));
         
-        // HeaderBar
-        this.headerBar = new Gtk.HeaderBar({
-            title: _("New Message") + " - " + DEVICE.name,
-            subtitle: "no Contact",
-            show_close_button: true
-        });
-        this.set_titlebar(this.headerBar);
-        
-        // HeaderBar -> Contact Entry
+        // Contact Entry
         this.contactEntry = new ContactEntry();
-        this.headerBar.custom_title = this.contactEntry;
+        
+        // HeaderBar
+        this.set_titlebar(
+            new Gtk.HeaderBar({
+                custom_title: this.contactEntry,
+                show_close_button: true
+            })
+        );
         
         // Content
         let box = new Gtk.Box({
@@ -464,7 +441,18 @@ const ApplicationWindow = new Lang.Class({
         conversationFrame.add(conversationView);
         
         // Content -> Message Entry
-        this.messageEntry = new MessageEntry();
+        this.messageEntry = new Gtk.Entry({
+            hexpand: true,
+            placeholder_text: _("Type message here..."),
+            //secondary_icon_name: "mail-reply-sender-symbolic",
+            secondary_icon_pixbuf: SVG_ACTION_SEND,
+            secondary_icon_activatable: true,
+            secondary_icon_sensitive: false
+        });
+        
+        this.messageEntry.connect("changed", (entry, signal_id, data) => {
+            entry.secondary_icon_sensitive = (entry.text.length) ? true : false;
+        });
         
         this.messageEntry.connect("activate", (entry, signal_id, data) => {
             this.send(entry, signal_id, data);
@@ -541,7 +529,6 @@ const ApplicationWindow = new Lang.Class({
         
         // Send to each contactNumber
         for (let number of contactNumbers) {
-            log("Sending message to '" + number + "': " + entry.text);
             DEVICE.sms(number, entry.text);
         }
         

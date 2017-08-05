@@ -23,8 +23,7 @@ function getCurrentExtension() {
     return {
         metadata: JSON.parse(meta),
         uuid: this.uuid,
-        // FIXME
-        type: ((dir.get_path().startsWith(GLib.get_home_dir())) ? 2 : 1),
+        type: 2,
         dir: dir,
         path: dir.get_path(),
         error: "",
@@ -34,44 +33,24 @@ function getCurrentExtension() {
 
 const Me = getCurrentExtension();
 
-
 /** Init GSettings for Me.metadata['gschema-id'] */
-let schemaDir = Me.dir.get_child('schemas');
-let schemaSrc;
-
-if (schemaDir.query_exists(null)) {
-    schemaSrc = Gio.SettingsSchemaSource.new_from_directory(
-        schemaDir.get_path(),
-        Gio.SettingsSchemaSource.get_default(),
-        false
-    );
-} else {
-    schemaSrc = Gio.SettingsSchemaSource.get_default();
-}
+let schemaSrc = Gio.SettingsSchemaSource.new_from_directory(
+    Me.dir.get_child('schemas').get_path(),
+    Gio.SettingsSchemaSource.get_default(),
+    false
+);
 
 const Settings = new Gio.Settings({
     settings_schema: schemaSrc.lookup(Me.metadata['gschema-id'], true)
 });
 const Schema = Settings.settings_schema;
 
-/**
- * Initialize Gettext to load translations for metadata['gettext-domain']. If
- * there is no locale subfolder, assume it's in the same prefix as gnome-shell
- */
+/** Initialize Gettext for metadata['gettext-domain'] */
 function initTranslations() {
-    let localeDir = Me.dir.get_child('locale');
-    
-    if (localeDir.query_exists(null)) {
-        Gettext.bindtextdomain(
-            Me.metadata['gettext-domain'],
-            localeDir.get_path()
-        );
-    } else {
-        Gettext.bindtextdomain(
-            Me.metadata['gettext-domain'],
-            "@LOCALE_DIR@" //FIXME
-        );
-    }
+    Gettext.bindtextdomain(
+        Me.metadata['gettext-domain'],
+        Me.dir.get_child('locale').get_path()
+    );
 }
  
 /** A Gtk.AboutDialog subclass for Extensions populated from metadata.json */

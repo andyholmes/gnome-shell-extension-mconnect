@@ -21,6 +21,7 @@ import urllib
 
 _ = gettext.gettext
 
+LOCALE_DIR = os.path.expanduser("~/.local/share/gnome-shell/extensions/mconnect@andyholmes.github.io/locale")
 CLI_PATH = os.path.expanduser("~/.local/share/gnome-shell/extensions/mconnect@andyholmes.github.io/share.js")
 
 
@@ -37,7 +38,7 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
             locale.setlocale(locale.LC_ALL, '')
             gettext.bindtextdomain(
                 'gnome-shell-extension-mconnect',
-                '/usr/share/locale' #FIXME
+                LOCALE_DIR
             )
             gettext.textdomain('gnome-shell-extension-mconnect')
         except:
@@ -72,7 +73,7 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
 
         self.init_gettext()
         
-        Notify.init('send-mconnect')
+        Notify.init('gnome-shell-extension-mconnect')
         Notify.Notification.new(
             device_name,
             _('Sending {num_files} file(s)').format(num_files=len(files)),

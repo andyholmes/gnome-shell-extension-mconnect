@@ -78,7 +78,6 @@ const Application = new Lang.Class({
     vfunc_startup: function() {
         this.parent();
         
-        // Select the backend service
         if (Settings.get_enum("service-backend") === ServiceBackend.MCONNECT) {
             this.manager = new MConnect.DeviceManager();
         } else {
@@ -150,12 +149,10 @@ const Application = new Lang.Class({
     },
     
     vfunc_handle_local_options: function(options) {
-        // Targeting options
         if (options.contains("device")) {
             this._id = options.lookup_value("device", null).deep_unpack();
         }
         
-        // List options
         if (options.contains("list-devices")) {
             this._cmd = "list-devices";
         } else if (options.contains("share")) {
