@@ -29,6 +29,27 @@ function getPath() {
 imports.searchPath.push(getPath());
 const Convenience = imports.lib;
 
+// https://gist.github.com/andrei-m/982927#gistcomment-2059365
+String.prototype.levenshtein = function(b){
+	var a = this, tmp;
+	if (a.length === 0) { return b.length; }
+	if (b.length === 0) { return a.length; }
+	if (a.length > b.length) { tmp = a; a = b; b = tmp; }
+
+	var i, j, res, alen = a.length, blen = b.length, row = Array(alen);
+	for (i = 0; i <= alen; i++) { row[i] = i; }
+
+	for (i = 1; i <= blen; i++) {
+		res = i;
+		for (j = 1; j <= alen; j++) {
+			tmp = row[j - 1];
+			row[j - 1] = res;
+			res = b[i - 1] === a[j - 1] ? tmp : Math.min(tmp + 1, Math.min(res + 1, row[j] + 1));
+		}
+	}
+	return res;
+};
+
 // infer backend and init Device()
 if (ARGV[0].split("/")[2] === "mconnect") {
     var DEVICE = new imports.mconnect.Device(ARGV[0]);
@@ -554,6 +575,7 @@ const Application = new Lang.Class({
 
     vfunc_startup: function() {
         this.parent();
+        
         this._window = new ApplicationWindow({ application: this });
     },
 
