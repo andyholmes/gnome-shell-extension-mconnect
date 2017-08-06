@@ -111,7 +111,7 @@ The following options are available in the extension preferences:
     If true, the extension will print verbosely to the log. See 'journalctl
     /usr/bin/gnome-shell -f -o cat' for output.
 
-[screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png)
+[screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
 [dbus-support]: https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support
 
