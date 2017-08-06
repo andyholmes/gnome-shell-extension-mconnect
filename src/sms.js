@@ -29,6 +29,11 @@ function getPath() {
 imports.searchPath.push(getPath());
 imports.lib.initTranslations();
 
+const ServiceProvider = {
+    MCONNECT: 0,
+    KDECONNECT: 1
+};
+
 // https://gist.github.com/andrei-m/982927#gistcomment-2059365
 String.prototype.levenshtein = function(b){
 	var a = this, tmp;

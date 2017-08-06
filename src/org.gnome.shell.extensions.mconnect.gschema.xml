@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="gnome-shell-extension-mconnect">
-  <enum id="org.gnome.shell.extensions.mconnect.ServiceBackend">
+  <enum id="org.gnome.shell.extensions.mconnect.ServiceProvider">
     <value nick="MCONNECT" value="0"/>
     <value nick="KDECONNECT" value="1"/>
   </enum>
@@ -11,13 +11,13 @@
   <schema path="/org/gnome/shell/extensions/mconnect/" id="org.gnome.shell.extensions.mconnect">
     <key type="b" name="debug">
       <default>false</default>
-      <summary>Print debug messages to log</summary>
-      <description>If true the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
+      <summary>Debug mode</summary>
+      <description>If true, the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
     </key>
     <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
       <default>["OFFLINE", "UNPAIRED"]</default>
       <summary>Device visibility</summary>
-      <description>In what states a device will be made visible to the user. Possible options are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.</description>
+      <description>In what states a device will be made visible to the user. Paired, online devices will always be shown.</description>
     </key>
     <key type="b" name="nautilus-integration">
       <default>false</default>
@@ -26,13 +26,13 @@
     </key>
     <key name="service-autostart" type="b">
       <default>false</default>
-      <summary>Start the service automatically</summary>
-      <description>If true, the service will be automatically started and restarted if it stops. If false the extension will wait for the service to be started.</description>
+      <summary>Service autostart</summary>
+      <description>If true, the service will be automatically started and restarted if it stops. If false, the extension will wait for the service to be started.</description>
     </key>
-    <key name="service-backend" enum="org.gnome.shell.extensions.mconnect.ServiceBackend">
+    <key name="service-provider" enum="org.gnome.shell.extensions.mconnect.ServiceProvider">
       <default>'KDECONNECT'</default>
-      <summary>Backend service</summary>
-      <description>The backend to use as the service. Possible options are 'MCONNECT' and 'KDECONNECT'.</description>
+      <summary>Service provider</summary>
+      <description>Whether to use KDE Connect or MConnect to provide access to devices.</description>
     </key>
   </schema>
 </schemalist>

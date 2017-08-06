@@ -9,7 +9,14 @@ const Gtk = imports.gi.Gtk;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const MConnect = Me.imports.mconnect;
+const KDEConnect = Me.imports.kdeconnect;
 const { initTranslations, Settings, Schema } = Me.imports.lib;
+
+const ServiceProvider = {
+    MCONNECT: 0,
+    KDECONNECT: 1
+};
 
 
 /** A Gtk.Switch subclass for boolean GSettings. */
@@ -507,7 +514,13 @@ function init() {
 function buildPrefsWidget() {
     let widget = new SettingsWidget();
     
-    let topSection = widget.add_section();
+    let preferencesSection = widget.add_section(_("Preferences"));
+    widget.add_setting(preferencesSection, "device-visibility");
+    widget.add_setting(preferencesSection, "nautilus-integration");
+    
+    let serviceSection = widget.add_section(_("Service"));
+    widget.add_setting(serviceSection, "service-provider");
+    widget.add_setting(serviceSection, "service-autostart");
     let button = new Gtk.Button({
         image: Gtk.Image.new_from_icon_name(
             "preferences-system-symbolic",
@@ -521,21 +534,13 @@ function buildPrefsWidget() {
     });
     button.get_style_context().add_class("circular");
     button.connect("clicked", (button) => {
-        if (Settings.get_enum("service-backend") === 0) {
+        if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
             Me.imports.mconnect.startSettings();
         } else {
             Me.imports.kdeconnect.startSettings();
         }
     });
-    widget.add_item(topSection, "Service Settings", button);
-    
-    let preferencesSection = widget.add_section(_("Preferences"));
-    ["device-visibility",
-    "service-backend",
-    "service-autostart",
-    "nautilus-integration"].forEach((option) => {
-        widget.add_setting(preferencesSection, option);
-    });
+    widget.add_item(serviceSection, "Service Settings", button);
     
     let develSection = widget.add_section(_("Development"));
     widget.add_setting(develSection, "debug");

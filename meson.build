@@ -19,10 +19,10 @@ Shell = [ '3.24', '3.24.1', '3.24.2' ]
 Files = files(
   # standard files
   'src/extension.js',
-  'src/lib.js',
   'src/prefs.js',
   'src/stylesheet.css',
   # non-standard files
+  'src/lib.js',
   'src/kdeconnect.js',
   'src/mconnect.js',
   'src/share.js',

@@ -20,14 +20,14 @@ imports.searchPath.push(getPath());
 
 const MConnect = imports.mconnect;
 const KDEConnect = imports.kdeconnect;
-const { Settings } = imports.lib;
-const Me = imports.lib.getCurrentExtension();
+const { initTranslations, Settings } = imports.lib;
 
-const ServiceBackend = {
+const ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
 
+initTranslations();
 
 const Application = new Lang.Class({
     Name: "Application",
@@ -78,7 +78,7 @@ const Application = new Lang.Class({
     vfunc_startup: function() {
         this.parent();
         
-        if (Settings.get_enum("service-backend") === ServiceBackend.MCONNECT) {
+        if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
             this.manager = new MConnect.DeviceManager();
         } else {
             this.manager = new KDEConnect.DeviceManager();

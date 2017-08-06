@@ -1,10 +1,9 @@
 # KDE Connect/MConnect integration for Gnome Shell
 
+![SMS window, Nautilus integration, Device Indicator & Menu][screenshot]
+
 This extension aims to provide integration for KDE Connect/MConnect in Gnome
 Shell, in the most native way possible.
-
-![Panel Menu](https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/device-screenshot.png)
-![SMS Window with auto-complete](https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/sms-screenshot.png)
 
 [KDE Connect](https://community.kde.org/KDEConnect) uses an
 [Android app](https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp)
@@ -14,12 +13,27 @@ notification sharing, sending of text messages and many other features.
 [MConnect](https://github.com/bboozzoo/mconnect) is a KDE Connect protocol
 implementation in Vala/C.
 
+## Features
+
+* Send SMS messages with optional Google Contacts auto-completion via Gnome
+  Online Accounts
+  
+* Find your devices by causing them to ring until found
+
+* Mount and browse folders on your devices
+
+* Send files to your devices with optional Nautilus integration
+
+* Monitor battery charging state and level
+
+* Supports KDE Connect and MConnect as service providers
+
 
 ## Installation
 
-The extension will appear on the extension website when reasonably useful and
-stable. Pre-release builds are available in the [Releases page](https://github.com/andyholmes/gnome-shell-extension-mconnect/releases),
-or you may build and install from git with [Meson](http://mesonbuild.com):
+The extension will appear on the extension website once it has been accepted.
+Early release builds are available in the [Releases page][releases], or you may
+build and install from git with [Meson](http://mesonbuild.com):
 
     git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
     meson gnome-shell-extension-mconnect/ build
@@ -29,11 +43,10 @@ or you may build and install from git with [Meson](http://mesonbuild.com):
 
 ### MConnect
 
-As of July 2017, MConnect support is limited and currently relies on the
-[dbus-support](https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support)
-branch of MConnect. In the future this will be the preferred backend as it does
-not depend on KDE libraries. If you have experience with Vala, consider
-contributing to the project. Currently you may:
+As of August 2017, MConnect support is limited and currently relies on the
+[dbus-support branch][dbus-support] of MConnect. In the future this will be the
+preferred backend as it doesn't depend on KDE libraries. If you have experience
+with Vala, consider contributing to the project. Currently you may:
 
 * initiate pairing with devices (but not unpairing)
 * receive and forward notifications (automatically handled by MConnect)
@@ -60,10 +73,10 @@ you may install it as a package if `checkinstall` is available:
 
 ### KDE Connect
 
-Functionality with KDE Connect is far more complete but still lacks features,
-contains bugs and has usability issues. Missing functionality includes, but is
-not limited to:
+Functionality with KDE Connect is far more complete but still lacks a few
+features:
 
+* pinging devices
 * file manager integration only supports Nautilus
 * encryption information is not viewable in the extension
 
@@ -74,28 +87,31 @@ KDE Connect should be installed through normal, stable distribution channels.
 
 The following options are available in the extension preferences:
 
-* **device-visibility** - Device visibility
+* **Device Visibility**
 
-    In what states a device will be made visible to the user. Possible options
-    are 'OFFLINE' and 'UNPAIRED'. Paired, online devices will always be shown.
+    In what states a device will be made visible to the user. Paired, online
+    devices will always be shown.
     
-* **nautilus-integration** - Nautilus integration
+* **Nautilus Integration**
 
     If true, a submenu will be added to the Nautilus context menu to allow
     sending files to devices directly from the file browser.
 
-* **service-autostart** - Start the service automatically
+* **Service Autostart**
 
     If true, the service will be automatically started and restarted if it
-    stops. If false the extension will wait for the service to be started.
+    stops. If false, the extension will wait for the service to be started.
 
-* **service-backend** - Backend service
+* **Service Provider**
 
-    The backend to use as the service. Possible options are 'MCONNECT' and
-    'KDECONNECT'.
+    Whether to use KDE Connect or MConnect to provide access to devices.
     
-* **debug** - Print debug messages to the log
+* **Debug Mode**
     
-    If true the extension will print verbosely to the log. See 'journalctl
+    If true, the extension will print verbosely to the log. See 'journalctl
     /usr/bin/gnome-shell -f -o cat' for output.
+
+[screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png)
+[releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
+[dbus-support]: (https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support)
 
