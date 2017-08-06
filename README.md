@@ -113,5 +113,5 @@ The following options are available in the extension preferences:
 
 [screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png)
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
-[dbus-support]: (https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support)
+[dbus-support]: https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support
 
