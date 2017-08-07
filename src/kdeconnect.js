@@ -556,7 +556,11 @@ const Device = new Lang.Class({
     // Methods
     mount: function () { return this.sftp._call("mountAndWait"); },
     pair: function () { this._call("requestPair", null, true); },
-    ping: function () { throw Error("Not Implemented"); },
+    ping: function () {
+        if (this.hasOwnProperty("ping")) {
+            this.ping._call("sendPing", true);
+        }
+    },
     ring: function () { this.findmyphone._call("ring", true); },
     sms: function (number, message) {
         this.telephony._call("sendSms", true, number, message);
