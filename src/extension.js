@@ -24,15 +24,31 @@ const MConnect = Me.imports.mconnect;
 const KDEConnect = Me.imports.kdeconnect;
 
 // Externally Available Constants
+var DeviceVisibility = {
+    OFFLINE: 1,
+    UNPAIRED: 2
+};
+
 var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
 
-var DeviceVisibility = {
-    OFFLINE: 1,
-    UNPAIRED: 2
-};
+/** An St.Button subclass for buttons with an image and an action */
+const ActionButton = new Lang.Class({
+    Name: "ActionButton",
+    Extends: St.Button,
+    
+    _init: function (name, callback, toggle=false) {
+        this.parent({
+            style_class: "system-menu-action",
+            style: "padding: 8px;",
+            child: new St.Icon({ icon_name: name }),
+            toggle_mode: toggle
+        });
+        this.connect("clicked", callback);
+    }
+});
 
 /** A PopupMenu used as an information and control center for a device */
 const DeviceMenu = new Lang.Class({
@@ -43,7 +59,7 @@ const DeviceMenu = new Lang.Class({
         this.parent();
 
         this.device = device;
-
+        
         // Info Bar
         this.infoBar = new PopupMenu.PopupSeparatorMenuItem(device.name);
         this.infoBar.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
@@ -66,23 +82,30 @@ const DeviceMenu = new Lang.Class({
         }); 
         this.addMenuItem(this.actionBar);
 
-        this.smsButton = this._addActionButton(
+        this.smsButton = new ActionButton(
             "user-available-symbolic",
             Lang.bind(this, this._smsAction)
         );
-        this.findButton = this._addActionButton(
+        this.actionBar.actor.add(this.smsButton, { expand: true, x_fill: false });
+        
+        this.findButton = new ActionButton(
             "find-location-symbolic",
             Lang.bind(this, this._findAction)
         );
-        this.browseButton = this._addActionButton(
+        this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
+        
+        this.browseButton = new ActionButton(
             "folder-remote-symbolic",
             Lang.bind(this, this._browseAction),
             true
         );
-        this.shareButton = this._addActionButton(
+        this.actionBar.actor.add(this.browseButton, { expand: true, x_fill: false });
+        
+        this.shareButton = new ActionButton(
             "send-to-symbolic",
             Lang.bind(this, this._shareAction)
         );
+        this.actionBar.actor.add(this.shareButton, { expand: true, x_fill: false });
         
         // Browse Bar
         this.browseBar = new PopupMenu.PopupMenuSection({
@@ -100,41 +123,23 @@ const DeviceMenu = new Lang.Class({
         this.addMenuItem(this.browseBar);
         
         // Status Bar
-        this.statusBar = new PopupMenu.PopupMenuSection({
+        this.statusBar = new PopupMenu.PopupBaseMenuItem({
             reactive: false,
-            can_focus: false,
-            vertical: false
+            can_focus: false
         });
         this.addMenuItem(this.statusBar);
-        
-        this.statusBar.statusContent = new St.BoxLayout({
-            vertical: false,
-            style: "margin: 0.5em 1em;"
-        });
-        this.statusBar.actor.add(this.statusBar.statusContent);
-        
-        this.statusBar.statusContent.add(
-            new St.Icon({
-                icon_name: "channel-insecure-symbolic",
-                icon_size: 24
-            })
+
+        this.statusButton = new ActionButton(
+            "channel-insecure-symbolic",
+            () => { (device.trusted) ? device.ping() : device.pair(); }
         );
+        this.statusBar.actor.add(this.statusButton, { x_fill: false });
         
-        this.statusBar.label = new St.Label({
+        this.statusLabel = new St.Label({
             text: "",
-            style: "margin: 1em;"
+            y_align: Clutter.ActorAlign.CENTER
         });
-        this.statusBar.label.clutter_text.line_wrap = true;
-        this.statusBar.statusContent.add(this.statusBar.label);
-        
-        // Status Bar -> Pair Button
-        this.statusBar.button = new PopupMenu.PopupMenuItem(_("Send pair request"));
-        this.statusBar.button.label.x_expand = true;
-        this.statusBar.button.label.x_align = Clutter.ActorAlign.CENTER;
-        this.statusBar.button.connect("activate", (item) => {
-            (device.trusted) ? device.unpair() : device.pair();
-        });
-        this.statusBar.addMenuItem(this.statusBar.button);
+        this.statusBar.actor.add(this.statusLabel, { x_expand: true });
 
         // Property signals
         device.connect(
@@ -159,20 +164,6 @@ const DeviceMenu = new Lang.Class({
         });
         // TODO: MConnect doesn't call PropertiesChanged on cached devices?
         this._stateChanged(device);
-    },
-
-    _addActionButton: function (name, callback, toggle = false) {
-        let button = new St.Button({
-            style_class: "system-menu-action",
-            style: "padding: 8px;",
-            child: new St.Icon({ icon_name: name }),
-            toggle_mode: toggle
-        });
-        button.connect("clicked", callback);
-
-        this.actionBar.actor.add(button, { expand: true, x_fill: false });
-        
-        return button;
     },
 
     // Callbacks
@@ -209,7 +200,7 @@ const DeviceMenu = new Lang.Class({
     _pluginsChanged: function (device, plugins) {
         debug("extension.DeviceMenu._pluginsChanged()");
 
-        // Device Menu Buttons
+        // Plugin Buttons
         let buttons = {
             findmyphone: this.findButton,
             sftp: this.browseButton,
@@ -226,7 +217,7 @@ const DeviceMenu = new Lang.Class({
             buttons[name].opacity = sensitive ? 255 : 128;
         }
         
-        // Battery plugin disabled/unallowed
+        // Battery Plugin
         if (device.trusted && device.hasOwnProperty("battery")) {
             this.batteryIcon.visible = true;
             
@@ -250,12 +241,13 @@ const DeviceMenu = new Lang.Class({
         
         this.actionBar.actor.visible = (reachable && trusted);
         this.statusBar.actor.visible = (!reachable || !trusted);
-        this.statusBar.button.actor.visible = (reachable && !trusted);
         
         if (!trusted) {
-            this.statusBar.label.text = _("This device is unpaired");
+            this.statusButton.child.icon_name = "channel-insecure-symbolic";
+            this.statusLabel.text = _("Device is unpaired");
         } else if (!reachable) {
-            this.statusBar.label.text = _("Device is offline");
+            this.statusButton.child.icon_name = "gtk-disconnect";
+            this.statusLabel.text = _("Device is offline");
         }
         
         this._pluginsChanged(this.device);
@@ -405,6 +397,13 @@ const SystemIndicator = new Lang.Class({
         this.manager = false;
         this._indicators = {};
         
+        // Notifications
+        this._integrateNautilus();
+        Settings.connect(
+            "changed::nautilus-integration",
+            Lang.bind(this, this._integrateNautilus)
+        );
+        
         // Select the backend service
         if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
             this._backend = MConnect;
@@ -504,8 +503,10 @@ const SystemIndicator = new Lang.Class({
     },
 
     _deviceAdded: function (manager, detail, dbusPath) {
+        // TODO: figure out wtf if going on here
+        dbusPath = (dbusPath === undefined) ? detail : dbusPath;
         debug("extension.SystemIndicator._deviceAdded(" + dbusPath + ")");
-
+        
         let device = this.manager.devices[dbusPath];
         let indicator = new DeviceIndicator(device);
         
@@ -513,12 +514,56 @@ const SystemIndicator = new Lang.Class({
         Main.panel.addToStatusArea(dbusPath, indicator);
     },
 
-    _deviceRemoved: function (manager, dbusPath) {
-        // TODO: no detail on device::removed?
+    _deviceRemoved: function (manager, detail, dbusPath) {
+        // TODO: figure out wtf if going on here
+        dbusPath = (dbusPath === undefined) ? detail : dbusPath;
         debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
         
         Main.panel.statusArea[dbusPath].destroy();
         delete this._indicators[dbusPath];
+    },
+    
+    _notifyNautilus: function () {
+        let source = new MessageTray.SystemNotificationSource();
+        Main.messageTray.add(source);
+    
+        let notification = new MessageTray.Notification(
+            source,
+            _("Nautilus extensions changed"),
+            _("Restart Nautilus to apply changes"),
+            { gicon: new Gio.ThemedIcon({ name: "system-file-manager-symbolic" }) }
+        );
+        
+        notification.setTransient(true);
+        notification.addAction(_("Restart"), () => {
+            GLib.spawn_command_line_async("nautilus -q");
+        });
+        
+        source.notify(notification);
+    },
+
+    _integrateNautilus: function () {
+        let path = GLib.get_user_data_dir() + "/nautilus-python/extensions";
+        let dir = Gio.File.new_for_path(path);
+        let script = dir.get_child("nautilus-send-mconnect.py");
+        let scriptExists = script.query_exists(null);
+        let integrate = Settings.get_boolean("nautilus-integration");
+        
+        if (integrate && !scriptExists) {
+            if (!dir.query_exists(null)) {
+                GLib.mkdir_with_parents(path, 0o755);
+            }
+            
+            script.make_symbolic_link(
+                Me.path + "/nautilus-send-mconnect.py",
+                null,
+                null
+            );
+            this._notifyNautilus();
+        } else if (!integrate && scriptExists) {
+            script.delete(null);
+            this._notifyNautilus();
+        }
     },
 
     // Public Methods
@@ -541,47 +586,6 @@ const SystemIndicator = new Lang.Class({
     }
 });
 
-function notifyNautilus() {
-    let source = new MessageTray.SystemNotificationSource();
-    Main.messageTray.add(source);
-    
-    let notification = new MessageTray.Notification(
-        source,
-        _("Nautilus extensions changed"),
-        _("Restart Nautilus to apply changes"),
-        { gicon: new Gio.ThemedIcon({ name: "system-file-manager-symbolic" }) }
-    );
-    
-    notification.setTransient(true);
-    notification.addAction(_("Restart"), () => {
-        GLib.spawn_command_line_async("nautilus -q");
-    });
-    
-    source.notify(notification);
-}
-
-function integrateNautilus() {
-    let path = GLib.get_user_data_dir() + "/nautilus-python/extensions";
-    let dir = Gio.File.new_for_path(path);
-    let script = dir.get_child("nautilus-send-mconnect.py");
-    
-    if (!dir.query_exists(null)) {
-        GLib.mkdir_with_parents(path, 0o755);
-    }
-    
-    if (Settings.get_boolean("nautilus-integration") && !script.query_exists(null)) {
-        script.make_symbolic_link(
-            Me.path + "/nautilus-send-mconnect.py",
-            null,
-            null
-        );
-        notifyNautilus();
-    } else if (!Settings.get_boolean("nautilus-integration") && script.query_exists(null)) {
-        script.delete(null);
-        notifyNautilus();
-    }
-}
-
 var systemIndicator;
 
 function init() {
@@ -599,9 +603,6 @@ function enable() {
         systemIndicator.destroy();
         systemIndicator = new SystemIndicator();
     });
-    
-    integrateNautilus();
-    Settings.connect("changed::nautilus-integration", integrateNautilus);
 }
 
 function disable() {
