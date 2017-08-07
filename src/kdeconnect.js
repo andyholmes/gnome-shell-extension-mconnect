@@ -509,21 +509,21 @@ const Device = new Lang.Class({
         this.connect("g-signal", (proxy, sender, name, parameters) => {
             parameters = parameters.deep_unpack();
             
+            // Cached properties are updated before notifying
             if (name === "nameChanged") {
+                this.set_cached_property("name",
+                    new GLib.Variant("b", parameters[0])
+                );
                 this.notify("name");
             } else if (name === "pluginsChanged") {
                 this._reloadPlugins();
             } else if (name === "reachableStatusChanged") {
-                // Make sure the cached property is updated before notifying
-                this.set_cached_property(
-                    "isReachable",
+                this.set_cached_property("isReachable",
                     new GLib.Variant("b", !this.reachable)
                 );
                 this.notify("reachable");
             } else if (name === "trustedChanged") {
-                // Make sure the cached property is updated before notifying
-                this.set_cached_property(
-                    "isTrusted",
+                this.set_cached_property("isTrusted",
                     new GLib.Variant("b", !this.trusted)
                 );
                 this.notify("trusted");
@@ -574,10 +574,10 @@ const Device = new Lang.Class({
     _reloadPlugins: function () {
         let supported = this._call("loadedPlugins", false);
         
-        if (supported.indexOf("kdeconnect_battery") > -1 ) {
+        if (supported.indexOf("kdeconnect_battery") > -1) {
             this.battery = new Battery(this.gObjectPath);
             
-            this.battery.connect("notify", (battery) => {
+            this.battery.connect("notify::level", (battery) => {
                 this.emit("changed::battery",
                     new GLib.Variant(
                         "(bi)",
@@ -598,7 +598,7 @@ const Device = new Lang.Class({
             delete this.battery;
         }
         
-        if (supported.indexOf("kdeconnect_ping") > -1 ) {
+        if (supported.indexOf("kdeconnect_ping") > -1) {
             this.ping = new ProxyBase(
                 PingNode.interfaces[0],
                 this.gObjectPath
@@ -608,7 +608,7 @@ const Device = new Lang.Class({
             delete this.ping;
         }
         
-        if (supported.indexOf("kdeconnect_findmyphone") > -1 ) {
+        if (supported.indexOf("kdeconnect_findmyphone") > -1) {
             this.findmyphone = new ProxyBase(
                 FindMyPhoneNode.interfaces[0],
                 this.gObjectPath + "/findmyphone"
@@ -618,7 +618,7 @@ const Device = new Lang.Class({
             delete this.findmyphone;
         }
         
-        if (supported.indexOf("kdeconnect_sftp") > -1 ) {
+        if (supported.indexOf("kdeconnect_sftp") > -1) {
             this.sftp = new ProxyBase(
                 SFTPNode.interfaces[0],
                 this.gObjectPath + "/sftp"
@@ -628,7 +628,7 @@ const Device = new Lang.Class({
             delete this.sftp;
         }
         
-        if (supported.indexOf("kdeconnect_share") > -1 ) {
+        if (supported.indexOf("kdeconnect_share") > -1) {
             this.share = new ProxyBase(
                 ShareNode.interfaces[0],
                 this.gObjectPath + "/share"
@@ -638,7 +638,7 @@ const Device = new Lang.Class({
             delete this.share;
         }
         
-        if (supported.indexOf("kdeconnect_telephony") > -1 ) {
+        if (supported.indexOf("kdeconnect_telephony") > -1) {
             this.telephony = new ProxyBase(
                 TelephonyNode.interfaces[0],
                 this.gObjectPath + "/telephony"
@@ -705,10 +705,10 @@ const DeviceManager = new Lang.Class({
                 this.notify("name");
             } else if (name === "deviceAdded") {
                 let dbusPath = "/modules/kdeconnect/devices/" + parameters[0];
-                this._deviceAdded(this, parameters[0]);
+                this._deviceAdded(this, dbusPath);
             } else if (name === "deviceRemoved") {
                 let dbusPath = "/modules/kdeconnect/devices/" + parameters[0];
-                this._deviceRemoved(this, parameters[0]);
+                this._deviceRemoved(this, dbusPath);
             } else if (name === "deviceVisibilityChanged") {
                 let [id, reachable] = parameters;
                 let dbusPath = "/modules/kdeconnect/devices/" + id;
