@@ -1,19 +1,17 @@
 project(
   'gnome-shell-extension-mconnect',
   'c',
-  version: '1',
+  version: '2',
   meson_version: '>= 0.40.1',
 )
 
 # User Definable Variables
 Name = 'MConnect'
 Description = 'KDE Connect/MConnect integration for Gnome Shell'
-Version = meson.project_version()
 ExtensionId = meson.project_name().split('gnome-shell-extension-')[1]
 UUID = ExtensionId + '@' + 'andyholmes.github.io'
 URL = 'https://github.com/andyholmes/gnome-shell-extension-mconnect'
 Shell = [ '3.24', '3.24.1', '3.24.2' ]
-#Shell = [ run_command('gnome-shell', '--version').split(' ')[2] ]
 
 # A list of files to be copied to the extension directory without modification.
 Files = files(
@@ -54,7 +52,7 @@ ext_metadata.set('NAME', Name)
 ext_metadata.set('DESCRIPTION', Description)
 ext_metadata.set('EXTENSION_ID', ExtensionId)
 ext_metadata.set('UUID', UUID)
-ext_metadata.set('VERSION', Version)
+ext_metadata.set('VERSION', meson.project_version())
 ext_metadata.set('URL', URL)
 ext_metadata.set('SHELL_VERSION', '[ "' + '", "'.join(Shell) + '" ]')
 ext_metadata.set('GSCHEMA_ID', 'org.gnome.shell.extensions.' + ExtensionId)
