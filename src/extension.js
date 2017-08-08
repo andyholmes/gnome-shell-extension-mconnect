@@ -468,7 +468,7 @@ const SystemIndicator = new Lang.Class({
         this.enableItem.actor.visible = (this.manager) ? false : true;
 
         for (let dbusPath in this.manager.devices) {
-            this._deviceAdded(this.manager, null, dbusPath);
+            this._deviceAdded(this.manager, dbusPath);
         }
 
         // Watch for new and removed devices
@@ -502,11 +502,9 @@ const SystemIndicator = new Lang.Class({
         }
     },
 
-    _deviceAdded: function (manager, detail, dbusPath) {
-        // TODO: figure out wtf if going on here
-        dbusPath = (dbusPath === undefined) ? detail : dbusPath;
+    _deviceAdded: function (manager, dbusPath) {
         debug("extension.SystemIndicator._deviceAdded(" + dbusPath + ")");
-        
+
         let device = this.manager.devices[dbusPath];
         let indicator = new DeviceIndicator(device);
         
@@ -514,11 +512,9 @@ const SystemIndicator = new Lang.Class({
         Main.panel.addToStatusArea(dbusPath, indicator);
     },
 
-    _deviceRemoved: function (manager, detail, dbusPath) {
-        // TODO: figure out wtf if going on here
-        dbusPath = (dbusPath === undefined) ? detail : dbusPath;
+    _deviceRemoved: function (manager, dbusPath) {
         debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
-        
+
         Main.panel.statusArea[dbusPath].destroy();
         delete this._indicators[dbusPath];
     },
@@ -566,7 +562,6 @@ const SystemIndicator = new Lang.Class({
         }
     },
 
-    // Public Methods
     destroy: function () {
         this.manager.destroy();
         delete this.manager;
