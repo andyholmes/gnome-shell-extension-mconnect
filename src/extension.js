@@ -311,7 +311,7 @@ const DeviceMenu = new Lang.Class({
         debug("extension.DeviceMenu._smsAction()");
         this._getTopMenu().close(true);
         GLib.spawn_command_line_async(
-            "gjs " + Me.path + "/sms.js \"" + this.device.gObjectPath + "\""
+            "gjs " + Me.path + "/sms.js --device=" + this.device.id
         );
     }
 });

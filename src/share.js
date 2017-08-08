@@ -29,12 +29,35 @@ const ServiceProvider = {
 
 initTranslations();
 
+const ShareDialog = new Lang.Class({
+    Name: "ShareDialog",
+    Extends: Gtk.FileChooserDialog,
+    
+    _init: function (application) {
+        this.parent({
+            title: _("Send file..."),
+            action: Gtk.FileChooserAction.OPEN,
+            icon_name: "send-to",
+            modal: true
+        });
+    
+        this.add_button(_("Cancel"), Gtk.ResponseType.CANCEL);
+        this.add_button(_("Send"), Gtk.ResponseType.OK);
+        this.set_default_response(Gtk.ResponseType.OK);
+        this.connect("delete-event", application.vfunc_shutdown);
+    }
+});
+
+
 const Application = new Lang.Class({
     Name: "Application",
     Extends: Gio.Application,
 
-    _init: function(params={}) {
-        this.parent(params);
+    _init: function() {
+        this.parent({
+            application_id: 'org.gnome.shell.extensions.mconnect.share',
+            flags: Gio.ApplicationFlags.FLAGS_NONE
+        });
         
         let application_name = _("MConnect");
 
@@ -73,6 +96,8 @@ const Application = new Lang.Class({
             "List all devices that are reachable and trusted",
             null
         );
+        
+        this.register(null, null);
     },
 
     vfunc_startup: function() {
@@ -98,7 +123,7 @@ const Application = new Lang.Class({
                     print(device.name + ": " + device.id);
                 }
             }
-        } else if (this._cmd === "share") {
+        } else if (this._cmd === "share" && this._id) {
             for (let device of devices) {
                 if (device.id === this._id && device.hasOwnProperty("share")) {
                     device.shareURI(this._path.toString());
@@ -109,17 +134,7 @@ const Application = new Lang.Class({
         } else if (this._id) {
             Gtk.init(null);
             
-            let dialog = new Gtk.FileChooserDialog({
-                title: _("Send file..."),
-                action: Gtk.FileChooserAction.OPEN,
-                icon_name: "send-to",
-                modal: true
-            });
-        
-            dialog.add_button(_("Cancel"), Gtk.ResponseType.CANCEL);
-            dialog.add_button(_("Send"), Gtk.ResponseType.OK);
-            dialog.set_default_response(Gtk.ResponseType.OK);
-            dialog.connect("delete-event", this.vfunc_shutdown);
+            let dialog = new ShareDialog(this);
             
             if (dialog.run() === Gtk.ResponseType.OK) {
                 this._path = dialog.get_filename();
@@ -129,13 +144,16 @@ const Application = new Lang.Class({
             
             if (!this._path) { return; }
             
+            let found = false;
+            
             for (let device of devices) {
                 if (device.id === this._id && device.hasOwnProperty("share")) {
                     device.shareURI(this._path.toString());
-                } else {
-                    throw Error("no device or share not supported");
+                    found = true;
                 }
-            } 
+            }
+            
+            if (!found) { throw Error("no device or share not supported"); }
         } else {
             throw Error("no command given");
         }
@@ -164,10 +182,5 @@ const Application = new Lang.Class({
     }
 });
 
-let prog = new Application({
-    application_id: 'org.gnome.shell.extensions.mconnect',
-    flags: Gio.ApplicationFlags.FLAGS_NONE
-});
-
-prog.run([System.programInvocationName].concat(ARGV));
+(new Application()).run([System.programInvocationName].concat(ARGV));
 

@@ -9,6 +9,7 @@
  */
 
 const Lang = imports.lang;
+const System = imports.system;
 const Gettext = imports.gettext.domain("gnome-shell-extension-mconnect");
 const _ = Gettext.gettext;
 const GData = imports.gi.GData;
@@ -27,7 +28,10 @@ function getPath() {
 }
 
 imports.searchPath.push(getPath());
-imports.lib.initTranslations();
+
+const KDEConnect = imports.kdeconnect;
+const MConnect = imports.mconnect;
+const { initTranslations, Settings } = imports.lib;
 
 const ServiceProvider = {
     MCONNECT: 0,
@@ -54,13 +58,6 @@ String.prototype.levenshtein = function(b){
 	}
 	return res;
 };
-
-// infer backend and init Device()
-if (ARGV[0].split("/")[2] === "mconnect") {
-    var DEVICE = new imports.mconnect.Device(ARGV[0]);
-} else {
-    var DEVICE = new imports.kdeconnect.Device(ARGV[0]);
-}
 
 
 /** Phone Number Type Icons (https://material.io/icons/) */                
@@ -146,7 +143,6 @@ const SUPPORTED_TYPES = [
     GData.GD_PHONE_NUMBER_PAGER
 ];
 
-
 /** A Gtk.EntryCompletion subclass for Google Contacts */
 const ContactCompletion = new Lang.Class({
     Name: "ContactCompletion",
@@ -159,51 +155,6 @@ const ContactCompletion = new Lang.Class({
         this._matched = [];
         this._last = null;
         
-        // Look for a Google account with Contacts
-        let goaClient = Goa.Client.new_sync(null, null);
-        let goaAccounts = goaClient.get_accounts();
-        
-        for (let goaAccount in goaAccounts) {
-            let acct = goaAccounts[goaAccount].get_account();
-            
-            if (acct.provider_type === "google" && !acct.contacts_disabled) {
-                this.service = new GData.ContactsService({
-                    authorizer: new GData.GoaAuthorizer({
-                        goa_object: goaClient.lookup_by_id(acct.id)
-                    })
-                });
-                
-                break;
-            }
-        }
-        
-        // Retrieve the contacts if a Contacts account was found
-        // TODO: multi-page/truncated feeds?
-        this.contacts = [];
-        
-        if (this.service) {
-            let query = new GData.Query({ q: "" });
-            let count = 0;
-            
-            while (true) {
-                let feed = this.service.query_contacts(
-                    query, // query,
-                    null, // cancellable
-                    (contact) => {
-                        if (contact.get_phone_numbers().length > 0) {
-                            this.contacts.push(contact);
-                        }
-                    },
-                    null
-                );
-                
-                count += feed.items_per_page;
-                query.start_index = count;
-                
-                if (count > feed.total_results) { break; }
-            }
-        }
-        
         // Define a completion model
         let listStore = new Gtk.ListStore();
         listStore.set_column_types([
@@ -213,14 +164,83 @@ const ContactCompletion = new Lang.Class({
             GdkPixbuf.Pixbuf,       // Contact Phone Type
             GObject.TYPE_OBJECT     // GDataContactsContact Object
         ]);
+        this.set_model(listStore);
         
+        // Avatar
+        let avatarCell = new Gtk.CellRendererPixbuf();
+        this.pack_start(avatarCell, false);
+        this.add_attribute(avatarCell, "pixbuf", 0);
+        // Title
+        this.set_text_column(1);
+        // Type Icon
+        let typeCell = new Gtk.CellRendererPixbuf();
+        this.pack_start(typeCell, false);
+        this.add_attribute(typeCell, "pixbuf", 3);
+        
+        this.set_match_func(Lang.bind(this, this._match), null, null);
+        this.connect("match-selected", Lang.bind(this, this._select));
+        
+        for (let account of this._accounts()) {
+            this._populate(this._contacts(account));
+        }
+    },
+    
+    _accounts: function () {
+        let goaClient = Goa.Client.new_sync(null, null);
+        let goaAccounts = goaClient.get_accounts();
+        let googleAccounts = [];
+        
+        for (let goaAccount in goaAccounts) {
+            let acct = goaAccounts[goaAccount].get_account();
+            
+            if (acct.provider_type === "google" && !acct.contacts_disabled) {
+                googleAccounts.push(
+                    new GData.ContactsService({
+                        authorizer: new GData.GoaAuthorizer({
+                            goa_object: goaClient.lookup_by_id(acct.id)
+                        })
+                    })
+                );
+            }
+        }
+        
+        return googleAccounts;
+    },
+
+    _contacts: function (account) {
+        let query = new GData.Query({ q: "" });
+        let count = 0;
+        let contacts = [];
+        
+        while (true) {
+            let feed = account.query_contacts(
+                query, // query,
+                null, // cancellable
+                (contact) => {
+                    if (contact.get_phone_numbers().length > 0) {
+                        contacts.push(contact);
+                    }
+                },
+                null
+            );
+            
+            count += feed.items_per_page;
+            query.start_index = count;
+            
+            if (count > feed.total_results) { break; }
+        }
+        
+        return contacts;
+    },
+    
+    _populate: function (contacts) {
         // Load a default avatar
         let photo = Gtk.IconTheme.get_default().load_icon(
                 "avatar-default-symbolic", 0, 0
         );
         
         // Populate the completion model
-        for (let contact of this.contacts) {
+        for (let contact of contacts) {
             // TODO: BUG: https://bugzilla.gnome.org/show_bug.cgi?id=785207
             // Each phone number gets its own completion entry
             for (let phoneNumber of contact.get_phone_numbers()) {
@@ -251,8 +271,8 @@ const ContactCompletion = new Lang.Class({
                             type = SVG_TYPE_DEFAULT;
                     }
                 
-                    listStore.set(
-                        listStore.append(),
+                    this.model.set(
+                        this.model.append(),
                         [0, 1, 2, 3, 4],
                         [photo,
                         title,
@@ -263,22 +283,6 @@ const ContactCompletion = new Lang.Class({
                 }
             }
         }
-        
-        this.set_model(listStore);
-        
-        // Avatar
-        let avatarCell = new Gtk.CellRendererPixbuf();
-        this.pack_start(avatarCell, false);
-        this.add_attribute(avatarCell, "pixbuf", 0);
-        // Title
-        this.set_text_column(1);
-        // Type Icon
-        let typeCell = new Gtk.CellRendererPixbuf();
-        this.pack_start(typeCell, false);
-        this.add_attribute(typeCell, "pixbuf", 3);
-        
-        this.set_match_func(Lang.bind(this, this._match), null, null);
-        this.connect("match-selected", Lang.bind(this, this._select));
     },
     
     _match: function (completion, key, tree_iter) {
@@ -343,7 +347,7 @@ const ContactEntry = new Lang.Class({
         
         this.parent(Object.assign(defaults, params));
         
-        // Try to retrieve Gtk.EntryCompletion for Google Contacts
+        // Set the entry properties if there are contacts
         if (this.completion.model.iter_n_children(null)) {
             this.placeholder_text = _("Search contacts...");
             this.primary_icon_name = "goa-account-google";
@@ -393,15 +397,16 @@ const ApplicationWindow = new Lang.Class({
     Name: "ApplicationWindow",
     Extends: Gtk.ApplicationWindow,
     
-    _init: function(params) {
-        let defaults = {
+    _init: function(application, device) {
+        this.parent({
+            application: application,
             title: "MConnect",
             default_width: 300,
             default_height: 300,
             icon_name: "user-available-symbolic"
-        };
+        });
         
-        this.parent(Object.assign(defaults, params));
+        this.device = device;
         
         // Contact Entry
         this.contactEntry = new ContactEntry();
@@ -534,7 +539,7 @@ const ApplicationWindow = new Lang.Class({
         
         // Send to each contactNumber
         for (let number of contactNumbers) {
-            DEVICE.sms(number, entry.text);
+            this.device.sms(number, entry.text);
         }
         
         // Log the sent message in the Conversation View and clear the entry
@@ -554,7 +559,7 @@ const Application = new Lang.Class({
 
     _init: function() {
         this.parent({
-            application_id: "org.gnome.shell.extensions.mconnect.ID" + DEVICE.id,
+            application_id: "org.gnome.shell.extensions.mconnect.sms",
             flags: Gio.ApplicationFlags.FLAGS_NONE,
             register_session: true
         });
@@ -563,22 +568,80 @@ const Application = new Lang.Class({
 
         GLib.set_prgname(application_name);
         GLib.set_application_name(application_name);
+        
+        this._id = null;
+        
+        // Options
+        this.add_main_option(
+            "device",
+            "d".charCodeAt(0),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.STRING,
+            "Device ID",
+            "<device-id>"
+        );
     },
 
     vfunc_startup: function() {
         this.parent();
         
-        this._window = new ApplicationWindow({ application: this });
+        if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
+            this.manager = new MConnect.DeviceManager();
+        } else {
+            this.manager = new KDEConnect.DeviceManager();
+        }
     },
 
     vfunc_activate: function() {
-        this._window.present();
+        let devices = [];
+        
+        for (let dbusPath in this.manager.devices) {
+            devices.push(this.manager.devices[dbusPath]);
+        }
+        
+        let device = null;
+        
+        for (let dev of devices) {
+            if (dev.id === this._id && dev.hasOwnProperty("telephony")) {
+                device = dev;
+            }
+        }
+        
+        if (device === null) {
+            throw Error("Device doesn't support sending SMS");
+        }
+        
+        let windows = this.get_windows();
+        let window = false;
+        
+        for (let index_ in windows) {
+            if (device.id === windows[index_].device.id) {
+                window = windows[index_];
+            }
+        }
+        
+        if (!window) { window = new ApplicationWindow(this, device); }
+        
+        window.present();
+    },
+    
+    vfunc_handle_local_options: function(options) {
+        if (options.contains("device")) {
+            this._id = options.lookup_value("device", null).deep_unpack();
+            return -1;
+        }
+        
+        throw Error("Device ID not specified");
+        return 1;
     },
 
     vfunc_shutdown: function() {
         this.parent();
+        
+        this.manager.destroy();
+        delete this.manager;
     }
 });
 
-(new Application()).run(ARGV);
+(new Application()).run([System.programInvocationName].concat(ARGV));
 
