@@ -161,8 +161,7 @@ const ContactCompletion = new Lang.Class({
             GdkPixbuf.Pixbuf,       // Contact Avatar
             GObject.TYPE_STRING,    // Contact Name
             GObject.TYPE_STRING,    // Contact Phone URI
-            GdkPixbuf.Pixbuf,       // Contact Phone Type
-            GObject.TYPE_OBJECT     // GDataContactsContact Object
+            GdkPixbuf.Pixbuf        // Contact Phone Type
         ]);
         this.set_model(listStore);
         
@@ -181,30 +180,25 @@ const ContactCompletion = new Lang.Class({
         this.connect("match-selected", Lang.bind(this, this._select));
         
         for (let account of this._accounts()) {
-            this._populate(this._contacts(account));
+            this._populate(account);
         }
     },
     
     _accounts: function () {
         let goaClient = Goa.Client.new_sync(null, null);
         let goaAccounts = goaClient.get_accounts();
-        let googleAccounts = [];
         
         for (let goaAccount in goaAccounts) {
             let acct = goaAccounts[goaAccount].get_account();
             
             if (acct.provider_type === "google" && !acct.contacts_disabled) {
-                googleAccounts.push(
-                    new GData.ContactsService({
-                        authorizer: new GData.GoaAuthorizer({
-                            goa_object: goaClient.lookup_by_id(acct.id)
-                        })
+                yield new GData.ContactsService({
+                    authorizer: new GData.GoaAuthorizer({
+                        goa_object: goaClient.lookup_by_id(acct.id)
                     })
-                );
+                })
             }
         }
-        
-        return googleAccounts;
     },
 
     _contacts: function (account) {
@@ -233,54 +227,52 @@ const ContactCompletion = new Lang.Class({
         return contacts;
     },
     
-    _populate: function (contacts) {
+    _populate: function (account) {
         // Load a default avatar
+        // TODO: BUG: https://bugzilla.gnome.org/show_bug.cgi?id=785207
         let photo = Gtk.IconTheme.get_default().load_icon(
                 "avatar-default-symbolic", 0, 0
         );
         
-        // Populate the completion model
-        for (let contact of contacts) {
-            // TODO: BUG: https://bugzilla.gnome.org/show_bug.cgi?id=785207
+        for (let contact of this._contacts(account)) {
             // Each phone number gets its own completion entry
             for (let phoneNumber of contact.get_phone_numbers()) {
-                // Exclude number types that are unable to receive texts and
-                // append the number type to the  the text column
-                if (SUPPORTED_TYPES.indexOf(phoneNumber.relation_type) > -1) {
-                    let title = [
-                        contact.title, " <", phoneNumber.uri.slice(4), ">"
-                    ].join("");
-                    
-                    // Phone Type Icon
-                    let type;
-                    
-                    switch (phoneNumber.relation_type) {
-                        case GData.GD_PHONE_NUMBER_HOME:
-                            type = SVG_TYPE_HOME;
-                            break;
-                        case GData.GD_PHONE_NUMBER_MOBILE:
-                            type = SVG_TYPE_MOBILE;
-                            break;
-                        case GData.GD_PHONE_NUMBER_WORK:
-                            type = SVG_TYPE_WORK;
-                            break;
-                        case GData.GD_PHONE_NUMBER_OTHER:
-                            type = SVG_TYPE_OTHER;
-                            break;
-                        default:
-                            type = SVG_TYPE_DEFAULT;
-                    }
-                
-                    this.model.set(
-                        this.model.append(),
-                        [0, 1, 2, 3, 4],
-                        [photo,
-                        title,
-                        phoneNumber.uri.slice(4),
-                        type,
-                        contact]
-                    );
+                // Exclude number types that are unable to receive texts
+                if (SUPPORTED_TYPES.indexOf(phoneNumber.relation_type) < 0) {
+                    continue;
                 }
+                
+                // Use the URI form of the number
+                let number = phoneNumber.uri.slice(4);
+                
+                // Append the number to the title column
+                let title = [contact.title, " <", number, ">"].join("");
+                
+                // Phone Type Icon
+                let type;
+                
+                switch (phoneNumber.relation_type) {
+                    case GData.GD_PHONE_NUMBER_HOME:
+                        type = SVG_TYPE_HOME;
+                        break;
+                    case GData.GD_PHONE_NUMBER_MOBILE:
+                        type = SVG_TYPE_MOBILE;
+                        break;
+                    case GData.GD_PHONE_NUMBER_WORK:
+                        type = SVG_TYPE_WORK;
+                        break;
+                    case GData.GD_PHONE_NUMBER_OTHER:
+                        type = SVG_TYPE_OTHER;
+                        break;
+                    default:
+                        type = SVG_TYPE_DEFAULT;
+                }
+            
+                this.model.set(
+                    this.model.append(),
+                    [0, 1, 2, 3, 4],
+                    [photo, title, number, type]
+                );
             }
         }
     },
@@ -445,7 +437,7 @@ const ApplicationWindow = new Lang.Class({
             new Gtk.Image({ icon_name: "dialog-warning-symbolic" })
         );
         this.infoBar.get_content_area().add(
-            new Gtk.Label({ label: _("Device is unreachable") })
+            new Gtk.Label({ label: _("Device is offline") })
         );
         
         // Content -> Conversation View
