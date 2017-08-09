@@ -334,8 +334,8 @@ const ContactEntry = new Lang.Class({
     Name: "ContactEntry",
     Extends: Gtk.SearchEntry,
     
-    _init: function (params) {
-        let defaults = {
+    _init: function () {
+        this.parent({
             hexpand: true,
             placeholder_text: _("Phone number..."),
             primary_icon_name: "call-start-symbolic",
@@ -343,9 +343,7 @@ const ContactEntry = new Lang.Class({
             primary_icon_sensitive: true,
             input_purpose: Gtk.InputPurpose.PHONE,
             completion: new ContactCompletion()
-        };
-        
-        this.parent(Object.assign(defaults, params));
+        });
         
         // Set the entry properties if there are contacts
         if (this.completion.model.iter_n_children(null)) {
@@ -408,8 +406,20 @@ const ApplicationWindow = new Lang.Class({
         
         this.device = device;
         
+        // User name
+        this.user_name = GLib.get_real_name();
+        if (this.user_name === "Unknown") {
+            this.user_name = GLib.get_user_name();
+        }
+        
         // Contact Entry
         this.contactEntry = new ContactEntry();
+        this.device.bind_property(
+            "reachable",
+            this.contactEntry,
+            "sensitive",
+            GObject.BindingFlags.DEFAULT
+        );
         
         // HeaderBar
         this.set_titlebar(
@@ -420,20 +430,32 @@ const ApplicationWindow = new Lang.Class({
         );
         
         // Content
-        let box = new Gtk.Box({
+        this.layout = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             margin: 6,
             spacing: 6
         });
-        this.add(box);
+        this.add(this.layout);
+        
+        // InfoBar
+        this.infoBar = new Gtk.InfoBar({
+            message_type: Gtk.MessageType.WARNING
+        });
+        this.infoBar.get_content_area().add(
+            new Gtk.Image({ icon_name: "dialog-warning-symbolic" })
+        );
+        this.infoBar.get_content_area().add(
+            new Gtk.Label({ label: _("Device is unreachable") })
+        );
         
         // Content -> Conversation View
+        // TODO: intercept notifications to fake a two-way conversation
         let scrolledWindow = new Gtk.ScrolledWindow({
             can_focus: false,
             hexpand: true,
             vexpand: true
         });
-        box.add(scrolledWindow);
+        this.layout.add(scrolledWindow);
         
         let conversationFrame = new Gtk.Frame();
         scrolledWindow.add(conversationFrame);
@@ -448,6 +470,13 @@ const ApplicationWindow = new Lang.Class({
             wrap_mode: Gtk.WrapMode.WORD,
             buffer: this.conversationBuffer
         });
+        
+        this.device.bind_property(
+            "reachable",
+            conversationView,
+            "sensitive",
+            GObject.BindingFlags.DEFAULT
+        );
         conversationFrame.add(conversationView);
         
         // Content -> Message Entry
@@ -472,10 +501,29 @@ const ApplicationWindow = new Lang.Class({
             this.send(entry, signal_id, data);
         });
         
-        box.add(this.messageEntry);
+        this.device.bind_property(
+            "reachable",
+            this.messageEntry,
+            "sensitive",
+            GObject.BindingFlags.DEFAULT
+        );
         
-        // Signals
-        this.connect("destroy", Gtk.main_quit);
+        this.layout.add(this.messageEntry);
+        
+        // Device Status Signals
+        // See: https://bugzilla.gnome.org/show_bug.cgi?id=710888
+        this.device.connect("notify::reachable", () => {
+            if (!this.device.reachable) {
+                this.layout.add(this.infoBar);
+                this.layout.reorder_child(this.infoBar, 0);
+                this.infoBar.show_all();
+            } else if (this.device.reachable) {
+                this.infoBar.hide();
+                this.layout.remove(this.infoBar);
+            }
+        });
+        
+        // Finish initing
         this.show_all();
         this.has_focus = true;
     },
@@ -543,7 +591,7 @@ const ApplicationWindow = new Lang.Class({
         }
         
         // Log the sent message in the Conversation View and clear the entry
-        let message = "<b>Me:</b> " + entry.text + "\n";
+        let message = "<b>" + this.user_name + ":</b> " + entry.text + "\n";
         this.conversationBuffer.insert_markup(
             this.conversationBuffer.get_end_iter(),
             message,
@@ -593,22 +641,18 @@ const Application = new Lang.Class({
     },
 
     vfunc_activate: function() {
-        let devices = [];
+        let device;
         
         for (let dbusPath in this.manager.devices) {
-            devices.push(this.manager.devices[dbusPath]);
-        }
-        
-        let device = null;
-        
-        for (let dev of devices) {
+            let dev = this.manager.devices[dbusPath];
+            
             if (dev.id === this._id && dev.hasOwnProperty("telephony")) {
                 device = dev;
             }
         }
         
-        if (device === null) {
-            throw Error("Device doesn't support sending SMS");
+        if (device === undefined) {
+            throw Error("Device is unreachable or doesn't support sending SMS");
         }
         
         let windows = this.get_windows();
