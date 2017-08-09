@@ -1,6 +1,6 @@
 /**
- * sms.js - A simple dialog for sending SMS messages via MConnect/KDE Connect
- * with (optional) Google Contacts auto-completion via GOA.
+ * sms.js - A simple dialog for sending SMS messages with MConnect/KDE Connect
+ * with (optional) Google Contacts auto-completion via Gnome Online Accounts.
  *
  * A great deal of credit and appreciation is owed to the indicator-kdeconnect
  * developers for the sister Python script 'Sms.py':
@@ -179,8 +179,10 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        for (let account of this._accounts()) {
-            this._populate(account);
+        if (Goa !== undefined) {
+            for (let account of this._accounts()) {
+                this._populate(account);
+            }
         }
     },
     
@@ -191,7 +193,7 @@ const ContactCompletion = new Lang.Class({
         for (let goaAccount in goaAccounts) {
             let acct = goaAccounts[goaAccount].get_account();
             
-            if (acct.provider_type === "google" && !acct.contacts_disabled) {
+            if (acct.provider_type === "google") {
                 yield new GData.ContactsService({
                     authorizer: new GData.GoaAuthorizer({
                         goa_object: goaClient.lookup_by_id(acct.id)
