@@ -37,7 +37,7 @@ const ShareDialog = new Lang.Class({
         this.parent({
             title: _("Send file..."),
             action: Gtk.FileChooserAction.OPEN,
-            icon_name: "send-to",
+            icon_name: "document-send",
             modal: true
         });
     
@@ -59,7 +59,7 @@ const Application = new Lang.Class({
             flags: Gio.ApplicationFlags.FLAGS_NONE
         });
         
-        let application_name = _("MConnect");
+        let application_name = _("MConnect File Share");
 
         GLib.set_prgname(application_name);
         GLib.set_application_name(application_name);
@@ -84,7 +84,7 @@ const Application = new Lang.Class({
             "s".charCodeAt(0),
             GLib.OptionFlags.NONE,
             GLib.OptionArg.FILENAME,
-            "Share a file to <device-id>",
+            "Send a file to <device-id>",
             "<path>"
         );
         

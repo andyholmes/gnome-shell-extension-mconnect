@@ -38,6 +38,8 @@ const ServiceProvider = {
     KDECONNECT: 1
 };
 
+initTranslations();
+
 // https://gist.github.com/andrei-m/982927#gistcomment-2059365
 String.prototype.levenshtein = function(b){
 	var a = this, tmp;
@@ -142,7 +144,8 @@ const SUPPORTED_TYPES = [
     GData.GD_PHONE_NUMBER_MAIN,
     GData.GD_PHONE_NUMBER_PAGER
 ];
-    
+
+/** Return a list of Google accounts */
 function getAccounts() {
     let goaClient = Goa.Client.new_sync(null, null);
     let goaAccounts = goaClient.get_accounts();
@@ -160,6 +163,7 @@ function getAccounts() {
     }
 }
 
+/** Return a list of Google contacts for account */
 function getContacts (account) {
     let query = new GData.Query({ q: "" });
     let count = 0;
@@ -222,7 +226,7 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        if (Goa !== undefined) {
+        if (Goa !== undefined && GData !== undefined) {
             for (let account of getAccounts()) {
                 this._populate(account);
             }
@@ -395,7 +399,7 @@ const ApplicationWindow = new Lang.Class({
             title: "MConnect",
             default_width: 300,
             default_height: 300,
-            icon_name: "user-available-symbolic"
+            icon_name: "phone"
         });
         
         this.device = device;
@@ -606,7 +610,7 @@ const Application = new Lang.Class({
             register_session: true
         });
         
-        let application_name = _("MConnect");
+        let application_name = _("MConnect SMS");
 
         GLib.set_prgname(application_name);
         GLib.set_application_name(application_name);
