@@ -8,7 +8,7 @@ const GObject = imports.gi.GObject;
 
 
 // DBus Constants
-var BUS_NAME = "org.kde.kdeconnect";
+var BUS_NAME = "org.kde.kdeconnectd";
 
 const ManagerNode = new Gio.DBusNodeInfo.new_for_xml('\
 <node> \
@@ -685,6 +685,13 @@ const DeviceManager = new Lang.Class({
             "The host's device name",
             GObject.ParamFlags.READWRITE,
             ""
+        ),
+        "scanning": GObject.ParamSpec.boolean(
+            "scanning",
+            "ScanningDevices",
+            "Whether scanning for devices is in progress",
+            GObject.ParamFlags.READABLE,
+            false
         )
     },
     Signals: {
@@ -721,13 +728,14 @@ const DeviceManager = new Lang.Class({
         });
         
         // Add currently managed devices
-        this.listDevices().forEach((dbusPath) => {
-            this._deviceAdded(this, dbusPath);
+        this._call("devices", false).forEach((id) => {
+            this._deviceAdded(this, "/modules/kdeconnect/devices/" + id);
         });
     },
     
     get name () { return this._call("announcedName", false); },
     set name (name) { this._call("setAnnouncedName", true, name); },
+    get scanning () { return (this._get("isDiscoveringDevices") === true); },
     
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
@@ -741,17 +749,19 @@ const DeviceManager = new Lang.Class({
         this.emit("device::removed", dbusPath);
     },
     
-    listDevices: function () {
-        let devices = this._call("devices", false);
+    // Public Methods
+    scan: function () {
+        log("scanning: " + this.scanning);
+        if (this.scanning) {
+            this._call("releaseDiscoveryMode", false, "manager-scan");
+        } else {
+            this._call("acquireDiscoveryMode", false, "manager-scan");
+            this._call("forceOnNetworkChange", false);
+        }
         
-        devices.forEach((id, index_, array_) => {
-            array_[index_] = "/modules/kdeconnect/devices/" + id;
-        });
-        
-        return devices;
+        this.notify("scanning");
     },
     
-    // Override Methods
     destroy: function () {
         ProxyBase.prototype.destroy.call(this);
         

@@ -447,6 +447,13 @@ const DeviceManager = new Lang.Class({
             "The host's device name",
             GObject.ParamFlags.READABLE,
             ""
+        ),
+        "scanning": GObject.ParamSpec.boolean(
+            "scanning",
+            "ScanningDevices",
+            "Whether scanning for devices is in progress",
+            GObject.ParamFlags.READABLE,
+            false
         )
     },
     Signals: {
@@ -463,17 +470,15 @@ const DeviceManager = new Lang.Class({
         this.devices = {};
         
         // Add currently managed devices
-        this.listDevices().forEach((dbusPath) => {
+        this._call("ListDevices", false).forEach((dbusPath) => {
             this._deviceAdded(this, dbusPath);
         });
     },
     
-    //
-    get name () {
-        // This is actually a read/write property for KDE Connect but MConnect
-        // always reports username@hostname
-        return GLib.get_user_name() + "@" + GLib.get_host_name();
-    },
+    // MConnect always reports username@hostname
+    get name () { return GLib.get_user_name() + "@" + GLib.get_host_name(); },
+    set name (name) { log("Not implemented"); },
+    get scanning () { return false; }, // TODO
     
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
@@ -490,11 +495,11 @@ const DeviceManager = new Lang.Class({
         this.emit("device::removed", dbusPath);
     },
     
-    listDevices: function () {
-        return this._call("ListDevices", false);
+    // Public Methods
+    scan: function () {
+        log("Not implemented");
     },
     
-    // Override Methods
     destroy: function () {
         ProxyBase.prototype.destroy.call(this);
         
