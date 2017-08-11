@@ -413,7 +413,7 @@ const SystemIndicator = new Lang.Class({
 
         // System Indicator
         this.extensionIndicator = this._addIndicator();
-        this.extensionIndicator.icon_name = "smartphone-symbolic";
+        this.extensionIndicator.icon_name = "phone-apple-iphone-symbolic";
         let userMenuTray = Main.panel.statusArea.aggregateMenu._indicators;
         userMenuTray.insert_child_at_index(this.indicators, 0);
 
@@ -422,7 +422,7 @@ const SystemIndicator = new Lang.Class({
             _("Mobile Devices"),
             true
         );
-        this.extensionMenu.icon.icon_name = "smartphone-symbolic";
+        this.extensionMenu.icon.icon_name = this.extensionIndicator.icon_name;
         this.menu.addMenuItem(this.extensionMenu);
 
         // Extension Menu -> [ Enable Item ]
