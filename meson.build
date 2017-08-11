@@ -11,7 +11,7 @@ Description = 'KDE Connect/MConnect integration for Gnome Shell'
 ExtensionId = meson.project_name().split('gnome-shell-extension-')[1]
 UUID = ExtensionId + '@' + 'andyholmes.github.io'
 URL = 'https://github.com/andyholmes/gnome-shell-extension-mconnect'
-Shell = [ '3.24', '3.24.1', '3.24.2' ]
+Shell = [ '3.24', '3.24.1', '3.24.2', '3.24.3' ]
 
 # A list of files to be copied to the extension directory without modification.
 Files = files(

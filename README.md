@@ -48,12 +48,12 @@ installed. Optional features and their requirements include:
 
 **Google Contacts Auto-complete in SMS Application**
 * Gnome Online Accounts with at least one Google account
-* Gnome Online Accounts GIR (gir1.2-goa-1.0)
-* GData GIR (gir-gdata-0.0)
+* Gnome Online Accounts GIR (eg. gir1.2-goa-1.0)
+* GData GIR (eg. gir1.2-gdata-0.0)
 
 **Nautilus Integration**
-* Nautilus Python Bindings (python-nautilus)
-* Nautilus GIR (gir1.2-nautilus-3.0)
+* Nautilus Python Bindings (eg. python-nautilus)
+* Nautilus GIR (eg. gir1.2-nautilus-3.0)
 
 
 ### MConnect
@@ -62,7 +62,7 @@ As of August 2017, MConnect is in an early stage of development. If you have
 experience with Vala, consider contributing to the project. Currently MConnect
 supports:
 
-* Pairing with devices (but not unpairing)
+* Pairing and unpairing with devices
 * Sending and receiving notifications (automatically handled by MConnect)
 * Monitoring battery level and charging state
 
@@ -136,11 +136,14 @@ The following options are available in the extension preferences:
 [@bboozzoo][bboozzoo] for developing MConnect based on their protocol.
 
 [@Bajoja][Bajoja] and the indicator-kdeconnect developers, for advice and code
-I frequently referenced.
+I frequently reference.
 
 A special mention goes to [@ptomato][ptomato] for the large amount of work and
 the [bright future][bright-future] he has contributed to GJS, as well as help
 on StackOverflow.
+
+The screenshot of the extension features the [Vimix Dark Laptop][vimix] Gtk &
+Gnome Shell theme with the [Numix Circle][numix] icon theme.
 
 [screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
@@ -150,4 +153,6 @@ on StackOverflow.
 [Bajoja]: https://github.com/Bajoja
 [ptomato]: https://github.com/ptomato
 [bright-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
+[vimix]: https://github.com/vinceliuice/vimix-gtk-themes
+[numix]: https://numixproject.org/
 

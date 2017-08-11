@@ -465,7 +465,8 @@ const SystemIndicator = new Lang.Class({
         debug("extension.SystemIndicator._serviceAppeared()");
         
         this.manager = new this._backend.DeviceManager();
-        this.enableItem.actor.visible = (this.manager) ? false : true;
+        this.enableItem.actor.visible = !(this.manager);
+        this.extensionIndicator.visible = (this.manager);
 
         for (let dbusPath in this.manager.devices) {
             this._deviceAdded(this.manager, dbusPath);
@@ -492,7 +493,8 @@ const SystemIndicator = new Lang.Class({
             this.manager = false;
         }
 
-        this.enableItem.actor.visible = (this.manager) ? false : true;
+        this.enableItem.actor.visible = !(this.manager);
+        this.extensionIndicator.visible = (this.manager);
 
         // Start the service or wait for it to start
         if (Settings.get_boolean("service-autostart")) {
@@ -563,8 +565,10 @@ const SystemIndicator = new Lang.Class({
     },
 
     destroy: function () {
-        this.manager.destroy();
-        delete this.manager;
+        if (this.manager) {
+            this.manager.destroy();
+            delete this.manager;
+        }
         
         for (let dbusPath in this._indicators) {
             Main.panel.statusArea[dbusPath].destroy();
@@ -573,7 +577,7 @@ const SystemIndicator = new Lang.Class({
 
         // Destroy the UI
         this.extensionMenu.destroy();
-        this.extensionIndicator.destroy();
+        this.indicators.destroy();
         this.menu.destroy();
 
         // Stop watching for DBus Service

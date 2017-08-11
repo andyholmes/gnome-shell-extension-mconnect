@@ -40,28 +40,6 @@ const ServiceProvider = {
 
 initTranslations();
 
-// https://gist.github.com/andrei-m/982927#gistcomment-2059365
-String.prototype.levenshtein = function(b){
-	var a = this, tmp;
-	if (a.length === 0) { return b.length; }
-	if (b.length === 0) { return a.length; }
-	if (a.length > b.length) { tmp = a; a = b; b = tmp; }
-
-	var i, j, res, alen = a.length, blen = b.length, row = Array(alen);
-	for (i = 0; i <= alen; i++) { row[i] = i; }
-
-	for (i = 1; i <= blen; i++) {
-		res = i;
-		for (j = 1; j <= alen; j++) {
-			tmp = row[j - 1];
-			row[j - 1] = res;
-			res = b[i - 1] === a[j - 1] ? tmp : Math.min(tmp + 1, Math.min(res + 1, row[j] + 1));
-		}
-	}
-	return res;
-};
-
-
 /** Phone Number Type Icons (https://material.io/icons/) */                
 const SVG_TYPE_HOME = GdkPixbuf.Pixbuf.new_from_stream(
     Gio.MemoryInputStream.new_from_bytes(
@@ -210,6 +188,8 @@ const ContactCompletion = new Lang.Class({
             GObject.TYPE_STRING,    // Contact Phone URI
             GdkPixbuf.Pixbuf        // Contact Phone Type
         ]);
+        listStore.set_sort_column_id(1, Gtk.SortType.ASCENDING);
+        //listStore.set_sort_func(1, this._sort, null, null);
         this.set_model(listStore);
         
         // Avatar
@@ -297,18 +277,20 @@ const ContactCompletion = new Lang.Class({
         
         // Set key to the last or only search item, trimmed of whitespace
         if (key.indexOf(",") > -1) { key = key.split(",").pop().trim(); }
-        // Return if key is empty
-        if (!key.length) { return; }
-        // Return if this contact has already been added
-        if (oldContacts.indexOf(title) > -1) { return; }
+        // Return if key is empty or this contact has already been added
+        if (!key.length || oldContacts.indexOf(title) > -1) { return false; }
         // Clear current matches if the key has changed and reset last key
-        if (key !== this._last) { this._matched = []; }
-        this._last = key;
+        if (key !== this._last) {
+            this._matched = [];
+            this._last = key;
+        }
+        
+        if (this._matched.length >= 20) { return false; }
         
         // Match title (eg. "Name (type)") and number
         if (title.indexOf(key) > -1 || number.indexOf(key) > -1) {
             this._matched.push(model.get_string_from_iter(tree_iter));
-            return tree_iter;
+            return true;
         }
     },
     
@@ -330,6 +312,28 @@ const ContactCompletion = new Lang.Class({
         this._matched = [];
         
         return true;
+    },
+    
+    // https://gist.github.com/andrei-m/982927#gistcomment-2059365
+    _sort: function (model, a, b, user_data) {
+	    var tmp;
+	    if (a.length === 0) { return b.length; }
+	    if (b.length === 0) { return a.length; }
+	    if (a.length > b.length) { tmp = a; a = b; b = tmp; }
+
+	    var i, j, res, alen = a.length, blen = b.length, row = Array(alen);
+	    for (i = 0; i <= alen; i++) { row[i] = i; }
+
+	    for (i = 1; i <= blen; i++) {
+		    res = i;
+		    for (j = 1; j <= alen; j++) {
+			    tmp = row[j - 1];
+			    row[j - 1] = res;
+			    res = b[i - 1] === a[j - 1] ? tmp : Math.min(tmp + 1, Math.min(res + 1, row[j] + 1));
+		    }
+	    }
+	    return res;
+        
     }
 });
 
