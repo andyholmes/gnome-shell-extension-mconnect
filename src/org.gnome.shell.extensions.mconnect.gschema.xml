@@ -27,7 +27,7 @@
     <key name="service-autostart" type="b">
       <default>false</default>
       <summary>Service autostart</summary>
-      <description>If true, the service will be automatically started and restarted if it stops. If false, the extension will wait for the service to be started.</description>
+      <description>If true, the service will be automatically started and restarted if it stops. Otherwise the extension will wait for the service to be started.</description>
     </key>
     <key name="service-provider" enum="org.gnome.shell.extensions.mconnect.ServiceProvider">
       <default>'KDECONNECT'</default>

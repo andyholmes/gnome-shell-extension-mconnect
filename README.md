@@ -2,8 +2,8 @@
 
 ![SMS window, Nautilus integration, Device Indicator & Menu][screenshot]
 
-This extension aims to provide integration for KDE Connect/MConnect in Gnome
-Shell, in the most native way possible.
+This extension provides integration for KDE Connect/MConnect in Gnome Shell,
+in the most native way possible.
 
 [KDE Connect](https://community.kde.org/KDEConnect) uses an
 [Android app](https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp)
@@ -15,44 +15,59 @@ implementation in Vala/C.
 
 ## Features
 
-* Send SMS messages with optional Google Contacts auto-completion via Gnome
-  Online Accounts
+* Send SMS messages with optional Google Contacts auto-completion
   
-* Find your devices by causing them to ring until found
+* Find devices by causing them to ring until found
 
 * Mount and browse folders on your devices
 
-* Send files to your devices with optional Nautilus integration
+* Send files to devices with optional Nautilus integration
 
-* Monitor battery charging state and level
+* Monitor battery level and charging state
 
-* Supports KDE Connect and MConnect as service providers
+* Supports KDE Connect and MConnect (WIP) as service providers
 
 
 ## Installation
 
-The extension will appear on the extension website once it has been accepted.
-Early release builds are available in the [Releases page][releases], or you may
-build and install from git with [Meson](http://mesonbuild.com):
+The extension will appear on the official website once it has been reviewed.
+Stable builds are available for download in the [Releases page][releases], or
+you may build and install from git with [Meson](http://mesonbuild.com):
 
     git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
     meson gnome-shell-extension-mconnect/ build
     cd build
     ninja install-zip
+    
+    
+### Dependencies
+
+The extension is known to work with Gnome Shell 3.24.x, but other recent
+versions may also work. Additionally, either KDE Connect or MConnect must be
+installed. Optional features and their requirements include:
+
+**Google Contacts Auto-complete in SMS Application**
+* Gnome Online Accounts with at least one Google account
+* Gnome Online Accounts GIR (gir1.2-goa-1.0)
+* GData GIR (gir-gdata-0.0)
+
+**Nautilus Integration**
+* Nautilus Python Bindings (python-nautilus)
+* Nautilus GIR (gir1.2-nautilus-3.0)
 
 
 ### MConnect
 
-As of August 2017, MConnect support is limited and currently relies on the
-[dbus-support branch][dbus-support] of MConnect. In the future this will be the
-preferred backend as it doesn't depend on KDE libraries. If you have experience
-with Vala, consider contributing to the project. Currently you may:
+As of August 2017, MConnect is in an early stage of development. If you have
+experience with Vala, consider contributing to the project. Currently MConnect
+supports:
 
-* initiate pairing with devices (but not unpairing)
-* receive and forward notifications (automatically handled by MConnect)
-* monitor battery level and charging state
+* Pairing with devices (but not unpairing)
+* Sending and receiving notifications (automatically handled by MConnect)
+* Monitoring battery level and charging state
 
-First build mconnect (see repository for dependencies):
+MConnect support relies on the [dbus-support branch][dbus-support] and must be
+built from git. See the [repository][dbus-support] for dependencies.
 
     git clone -b bboozzoo/dbus-support https://github.com/bboozzoo/mconnect.git
     cd mconnect
@@ -60,25 +75,28 @@ First build mconnect (see repository for dependencies):
     ./configure --prefix=/usr
     make
     
-Then simply run:
-
-    ./mconnect -d
-    
-If MConnect is in your `PATH`, it can be started from the User Menu or the
-extension can be configured to start it automatically. Once you have run `make`
-you may install it as a package if `checkinstall` is available:
+If MConnect is in your `PATH`, it can either be started from the User Menu or
+the extension can be configured to start it automatically. Once you have run
+`make` you may install it cleanly as a package if `checkinstall` is available:
 
     sudo checkinstall --type=<slackware|rpm|debian>
+    
+Otherwise you may run MConnect from the build directory:
+
+    ./mconnect -d
     
 
 ### KDE Connect
 
-Functionality with KDE Connect is far more complete but still lacks a few
+KDE Connect support is far more complete but still has a few issues and missing
 features:
 
-* pinging devices
-* file manager integration only supports Nautilus
-* encryption information is not viewable in the extension
+* Mounting a Device can cause Gnome Shell to hang for a short period (~30s)
+* Encryption information is not available in the extension
+* Pinging devices is not possible in the extension
+* If device goes offline, there is no way to initiate discovery or reconnection
+* Some textual elements are retrieved from the service programmatically that
+  may not be translatable
 
 KDE Connect should be installed through normal, stable distribution channels.
     
@@ -100,7 +118,7 @@ The following options are available in the extension preferences:
 * **Service Autostart**
 
     If true, the service will be automatically started and restarted if it
-    stops. If false, the extension will wait for the service to be started.
+    stops. Otherwise the extension will wait for the service to be started.
 
 * **Service Provider**
 
@@ -110,8 +128,26 @@ The following options are available in the extension preferences:
     
     If true, the extension will print verbosely to the log. See 'journalctl
     /usr/bin/gnome-shell -f -o cat' for output.
+    
+    
+## Credits and Acknowledgements
+
+[@albertvaka][albertvaka] and friends for creating KDE Connect, and
+[@bboozzoo][bboozzoo] for developing MConnect based on their protocol.
+
+[@Bajoja][Bajoja] and the indicator-kdeconnect developers, for advice and code
+I frequently referenced.
+
+A special mention goes to [@ptomato][ptomato] for the large amount of work and
+the [bright future][bright-future] he has contributed to GJS, as well as help
+on StackOverflow.
 
 [screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
 [dbus-support]: https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support
+[albertvaka]: https://github.com/albertvaka
+[bboozzoo]: https://github.com/bboozzoo
+[Bajoja]: https://github.com/Bajoja
+[ptomato]: https://github.com/ptomato
+[bright-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
 
