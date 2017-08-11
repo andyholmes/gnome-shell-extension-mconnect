@@ -547,7 +547,7 @@ const SystemIndicator = new Lang.Class({
         
         if (integrate && !scriptExists) {
             if (!dir.query_exists(null)) {
-                GLib.mkdir_with_parents(path, 0o755);
+                GLib.mkdir_with_parents(path, 493); // 0755 in octal
             }
             
             script.make_symbolic_link(
