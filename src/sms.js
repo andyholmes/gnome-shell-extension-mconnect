@@ -142,6 +142,49 @@ const SUPPORTED_TYPES = [
     GData.GD_PHONE_NUMBER_MAIN,
     GData.GD_PHONE_NUMBER_PAGER
 ];
+    
+function getAccounts() {
+    let goaClient = Goa.Client.new_sync(null, null);
+    let goaAccounts = goaClient.get_accounts();
+    
+    for (let goaAccount in goaAccounts) {
+        let acct = goaAccounts[goaAccount].get_account();
+        
+        if (acct.provider_type === "google") {
+            yield new GData.ContactsService({
+                authorizer: new GData.GoaAuthorizer({
+                    goa_object: goaClient.lookup_by_id(acct.id)
+                })
+            })
+        }
+    }
+}
+
+function getContacts (account) {
+    let query = new GData.Query({ q: "" });
+    let count = 0;
+    let contacts = [];
+    
+    while (true) {
+        let feed = account.query_contacts(
+            query, // query,
+            null, // cancellable
+            (contact) => {
+                if (contact.get_phone_numbers().length > 0) {
+                    contacts.push(contact);
+                }
+            },
+            null
+        );
+        
+        count += feed.items_per_page;
+        query.start_index = count;
+        
+        if (count > feed.total_results) { break; }
+    }
+    
+    return contacts;
+}
 
 /** A Gtk.EntryCompletion subclass for Google Contacts */
 const ContactCompletion = new Lang.Class({
@@ -180,53 +223,10 @@ const ContactCompletion = new Lang.Class({
         this.connect("match-selected", Lang.bind(this, this._select));
         
         if (Goa !== undefined) {
-            for (let account of this._accounts()) {
+            for (let account of getAccounts()) {
                 this._populate(account);
             }
         }
-    },
-    
-    _accounts: function () {
-        let goaClient = Goa.Client.new_sync(null, null);
-        let goaAccounts = goaClient.get_accounts();
-        
-        for (let goaAccount in goaAccounts) {
-            let acct = goaAccounts[goaAccount].get_account();
-            
-            if (acct.provider_type === "google") {
-                yield new GData.ContactsService({
-                    authorizer: new GData.GoaAuthorizer({
-                        goa_object: goaClient.lookup_by_id(acct.id)
-                    })
-                })
-            }
-        }
-    },
-
-    _contacts: function (account) {
-        let query = new GData.Query({ q: "" });
-        let count = 0;
-        let contacts = [];
-        
-        while (true) {
-            let feed = account.query_contacts(
-                query, // query,
-                null, // cancellable
-                (contact) => {
-                    if (contact.get_phone_numbers().length > 0) {
-                        contacts.push(contact);
-                    }
-                },
-                null
-            );
-            
-            count += feed.items_per_page;
-            query.start_index = count;
-            
-            if (count > feed.total_results) { break; }
-        }
-        
-        return contacts;
     },
     
     _populate: function (account) {
@@ -236,7 +236,7 @@ const ContactCompletion = new Lang.Class({
                 "avatar-default-symbolic", 0, 0
         );
         
-        for (let contact of this._contacts(account)) {
+        for (let contact of getContacts(account)) {
             // Each phone number gets its own completion entry
             for (let phoneNumber of contact.get_phone_numbers()) {
                 // Exclude number types that are unable to receive texts
@@ -504,7 +504,7 @@ const ApplicationWindow = new Lang.Class({
         
         this.layout.add(this.messageEntry);
         
-        // Device Status Signals
+        // Device Status
         // See: https://bugzilla.gnome.org/show_bug.cgi?id=710888
         this.device.connect("notify::reachable", () => {
             if (!this.device.reachable) {
