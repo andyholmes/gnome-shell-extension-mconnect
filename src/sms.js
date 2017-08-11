@@ -248,8 +248,14 @@ const ContactCompletion = new Lang.Class({
                     continue;
                 }
                 
-                // Use the URI form of the number
-                let number = phoneNumber.uri.slice(4);
+                // Use the URI form of the number, if possible
+                let number;
+                
+                if (phoneNumber.uri !== null) {
+                    number = phoneNumber.uri.slice(4);
+                } else {
+                    number = phoneNumber.number;
+                }
                 
                 // Append the number to the title column
                 let title = [contact.title, " <", number, ">"].join("");
