@@ -406,7 +406,7 @@ const SettingsWidget = new Lang.Class({
                 use_markup: true,
                 label: "<b>" + title + "</b>"
             });
-            this.box.add(label, { expand: false, fill: true });
+            this.box.pack_start(label, false, true, 0);
         }
         
         let section = new Gtk.Frame({
@@ -441,7 +441,7 @@ const SettingsWidget = new Lang.Class({
             activatable: false,
             selectable: false
         });
-        section.list.add(itemRow), { expand: true, fill: false };
+        section.list.add(itemRow);
         
         // Row Layout
         let itemBox = new Gtk.Box({
@@ -450,7 +450,7 @@ const SettingsWidget = new Lang.Class({
             valign: Gtk.Align.CENTER,
             spacing: 12
         });
-        itemRow.add(itemBox, { expand: true, fill: false });
+        itemRow.add(itemBox);
         
         // Setting Summary
         let itemLabel = new Gtk.Label({
@@ -464,7 +464,7 @@ const SettingsWidget = new Lang.Class({
             hexpand: true,
             label: label,
         });
-        itemBox.add(itemLabel, { expand: true, fill: false });
+        itemBox.pack_start(itemLabel, false, true, 0);
         
         itemBox.add(widget);
         
