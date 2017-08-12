@@ -41,6 +41,10 @@ const Settings = new Gio.Settings({
 });
 const Schema = Settings.settings_schema;
 
+/** Init GResource for fallback icons */
+const Resources = Gio.resource_load(Me.path + "/org.gnome.shell.extensions.mconnect.gresource");
+Resources._register();
+
 /** Initialize Gettext for metadata['gettext-domain'] */
 function initTranslations() {
     Gettext.bindtextdomain(

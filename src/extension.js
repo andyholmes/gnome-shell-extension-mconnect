@@ -19,7 +19,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const { log, debug, initTranslations, Settings } = Me.imports.lib;
+const { log, debug, initTranslations, Resources, Settings } = Me.imports.lib;
 const MConnect = Me.imports.mconnect;
 const KDEConnect = Me.imports.kdeconnect;
 
@@ -591,6 +591,7 @@ function init() {
     debug("initializing extension");
     
     initTranslations();
+    Gtk.IconTheme.get_default().add_resource_path("/icons");
 }
 
 function enable() {

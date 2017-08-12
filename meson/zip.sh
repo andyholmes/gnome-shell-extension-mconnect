@@ -15,10 +15,7 @@ DESTDIR=${ZIP_DIR} ninja install
 # COPY
 cp -pr ${ZIP_DIR}/usr/local/share/gnome-shell/extensions/${1}/* ${ZIP_DIR}
 
-if [ -d ${GSCHEMA_DIR} ]; then
-    cp -pr ${GSCHEMA_DIR} ${ZIP_DIR}
-    glib-compile-schemas ${ZIP_DIR}/schemas
-fi
+glib-compile-schemas ${ZIP_DIR}/schemas
 
 if [ -d ${ZIP_DIR}/usr/local/share/locale ]; then
     cp -pr ${LOCALE_DIR} ${ZIP_DIR}

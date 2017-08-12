@@ -18,7 +18,7 @@ Files = files(
   # standard files
   'src/extension.js',
   'src/prefs.js',
-  'src/stylesheet.css',
+  'data/stylesheet.css',
   # non-standard files
   'src/lib.js',
   'src/kdeconnect.js',
@@ -59,7 +59,7 @@ ext_metadata.set('GSCHEMA_ID', 'org.gnome.shell.extensions.' + ExtensionId)
 ext_metadata.set('GETTEXT_DOMAIN', meson.project_name())
 
 metadata_json = configure_file(
-  input: 'src/metadata.json.in',
+  input: 'data/metadata.json.in',
   output: 'metadata.json',
   configuration: ext_metadata
 )
@@ -71,10 +71,19 @@ install_data(
 
 # GSettings
 install_data(
-    join_paths('src', ext_metadata.get('GSCHEMA_ID') + '.gschema.xml'),
-    install_dir: join_paths(get_option('datadir'), 'glib-2.0', 'schemas')
+    join_paths('data', ext_metadata.get('GSCHEMA_ID') + '.gschema.xml'),
+    install_dir: join_paths(extdatadir, 'schemas')
 )
-meson.add_install_script('meson/meson_post_install.py')
+
+# GResource
+ext_resource = gnome.compile_resources(
+  ext_metadata.get('GSCHEMA_ID'),
+  join_paths('data', ext_metadata.get('GSCHEMA_ID') + '.gresource.xml'),
+  source_dir: 'data',
+  gresource_bundle: true,
+  install: true,
+  install_dir : extdatadir
+)
 
 # Gettext Translations
 if run_command('[', '-e', 'po/meson.build', ']').returncode() == 0

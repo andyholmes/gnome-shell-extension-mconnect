@@ -31,7 +31,7 @@ imports.searchPath.push(getPath());
 
 const KDEConnect = imports.kdeconnect;
 const MConnect = imports.mconnect;
-const { initTranslations, Settings } = imports.lib;
+const { initTranslations, Resources, Settings } = imports.lib;
 
 const ServiceProvider = {
     MCONNECT: 0,
@@ -39,79 +39,6 @@ const ServiceProvider = {
 };
 
 initTranslations();
-
-/** Phone Number Type Icons (https://material.io/icons/) */                
-const SVG_TYPE_HOME = GdkPixbuf.Pixbuf.new_from_stream(
-    Gio.MemoryInputStream.new_from_bytes(
-        GLib.Bytes.new('\
-            <svg fill="#888" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"> \
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/> \
-                <path d="M0 0h24v24H0z" fill="none"/> \
-            </svg>'
-        )
-    ),
-    null
-);
-
-const SVG_TYPE_MOBILE = GdkPixbuf.Pixbuf.new_from_stream(
-    Gio.MemoryInputStream.new_from_bytes(
-        GLib.Bytes.new('\
-            <svg fill="#888" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"> \
-                <path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-2 20h-4v-1h4v1zm3.25-3H6.75V4h10.5v14z"/> \
-                <path d="M0 0h24v24H0z" fill="none"/> \
-            </svg>'
-        )
-    ),
-    null
-);
-
-const SVG_TYPE_WORK = GdkPixbuf.Pixbuf.new_from_stream(
-    Gio.MemoryInputStream.new_from_bytes(
-        GLib.Bytes.new('\
-            <svg fill="#888" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"> \
-                <path d="M0 0h24v24H0z" fill="none"/> \
-                <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/> \
-            </svg>'
-        )
-    ),
-    null
-);
-
-const SVG_TYPE_OTHER = GdkPixbuf.Pixbuf.new_from_stream(
-    Gio.MemoryInputStream.new_from_bytes(
-        GLib.Bytes.new('\
-            <svg fill="#888" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"> \
-                <path d="M0 0h24v24H0z" fill="none"/> \
-                <path d="M3 6h18V4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v-2H3V6zm10 6H9v1.78c-.61.55-1 1.33-1 2.22s.39 1.67 1 2.22V20h4v-1.78c.61-.55 1-1.34 1-2.22s-.39-1.67-1-2.22V12zm-2 5.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM22 8h-6c-.5 0-1 .5-1 1v10c0 .5.5 1 1 1h6c.5 0 1-.5 1-1V9c0-.5-.5-1-1-1zm-1 10h-4v-8h4v8z"/> \
-            </svg>'
-        )
-    ),
-    null
-);
-
-const SVG_TYPE_DEFAULT = GdkPixbuf.Pixbuf.new_from_stream(
-    Gio.MemoryInputStream.new_from_bytes(
-        GLib.Bytes.new('\
-            <svg fill="#888" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"> \
-                <path d="M0 0h24v24H0z" fill="none"/> \
-                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/> \
-            </svg>'
-        )
-    ),
-    null
-);
-
-const SVG_ACTION_SEND = GdkPixbuf.Pixbuf.new_from_stream(
-    Gio.MemoryInputStream.new_from_bytes(
-        GLib.Bytes.new('\
-            <svg fill="#888" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"> \
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/> \
-                <path d="M0 0h24v24H0z" fill="none"/> \
-            </svg>'
-        )
-    ),
-    null
-);
 
 /** Phone Number types that support receiving texts */
 const SUPPORTED_TYPES = [
@@ -180,6 +107,14 @@ const ContactCompletion = new Lang.Class({
         this._matched = [];
         this._last = null;
         
+        // Phone number icons
+        let theme = Gtk.IconTheme.get_default()
+        this.phone_number_default = theme.load_icon("phone-number-default", 0, 0);
+        this.phone_number_home = theme.load_icon("phone-number-home", 0, 0);
+        this.phone_number_mobile = theme.load_icon("phone-number-mobile", 0, 0);
+        this.phone_number_other = theme.load_icon("phone-number-other", 0, 0);
+        this.phone_number_work = theme.load_icon("phone-number-work", 0, 0);
+        
         // Define a completion model
         let listStore = new Gtk.ListStore();
         listStore.set_column_types([
@@ -245,19 +180,19 @@ const ContactCompletion = new Lang.Class({
                 
                 switch (phoneNumber.relation_type) {
                     case GData.GD_PHONE_NUMBER_HOME:
-                        type = SVG_TYPE_HOME;
+                        type = this.phone_number_home;
                         break;
                     case GData.GD_PHONE_NUMBER_MOBILE:
-                        type = SVG_TYPE_MOBILE;
+                        type = this.phone_number_mobile;
                         break;
                     case GData.GD_PHONE_NUMBER_WORK:
-                        type = SVG_TYPE_WORK;
+                        type = this.phone_number_work;
                         break;
                     case GData.GD_PHONE_NUMBER_OTHER:
-                        type = SVG_TYPE_OTHER;
+                        type = this.phone_number_other;
                         break;
                     default:
-                        type = SVG_TYPE_DEFAULT;
+                        type = this.phone_number_default;
                 }
             
                 this.model.set(
@@ -492,7 +427,7 @@ const ApplicationWindow = new Lang.Class({
             hexpand: true,
             placeholder_text: _("Type message here..."),
             //secondary_icon_name: "mail-reply-sender-symbolic",
-            secondary_icon_pixbuf: SVG_ACTION_SEND,
+            secondary_icon_name: "send-sms",
             secondary_icon_activatable: true,
             secondary_icon_sensitive: false
         });
@@ -640,6 +575,8 @@ const Application = new Lang.Class({
 
     vfunc_startup: function() {
         this.parent();
+        
+        Gtk.IconTheme.get_default().add_resource_path("/icons");
         
         if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
             this.manager = new MConnect.DeviceManager();
