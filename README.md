@@ -138,6 +138,9 @@ The following options are available in the extension preferences:
 [@Bajoja][Bajoja] and the indicator-kdeconnect developers, for advice and code
 I frequently reference.
 
+This extension includes fallback icons from the [Numix][numix] project, and
+phone number icons from Google's [Material Design][material] project.
+
 A special mention goes to [@ptomato][ptomato] for the large amount of work and
 the [bright future][bright-future] he has contributed to GJS, as well as help
 on StackOverflow.
@@ -155,4 +158,5 @@ Gnome Shell theme with the [Numix Circle][numix] icon theme.
 [bright-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
 [vimix]: https://github.com/vinceliuice/vimix-gtk-themes
 [numix]: https://numixproject.org/
+[material]: https://material.io/
 

@@ -76,7 +76,7 @@ install_data(
 )
 
 # GResource
-ext_resource = gnome.compile_resources(
+gnome.compile_resources(
   ext_metadata.get('GSCHEMA_ID'),
   join_paths('data', ext_metadata.get('GSCHEMA_ID') + '.gresource.xml'),
   source_dir: 'data',
