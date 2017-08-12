@@ -75,37 +75,37 @@ const DeviceMenu = new Lang.Class({
         });
         this.infoBar.actor.add(this.batteryIcon);
 
-        // Action Bar
-        this.actionBar = new PopupMenu.PopupBaseMenuItem({
+        // Plugin Bar
+        this.pluginBar = new PopupMenu.PopupBaseMenuItem({
             reactive: false,
             can_focus: false
         }); 
-        this.addMenuItem(this.actionBar);
+        this.addMenuItem(this.pluginBar);
 
         this.smsButton = new ActionButton(
             "user-available-symbolic",
             Lang.bind(this, this._smsAction)
         );
-        this.actionBar.actor.add(this.smsButton, { expand: true, x_fill: false });
+        this.pluginBar.actor.add(this.smsButton, { expand: true, x_fill: false });
         
         this.findButton = new ActionButton(
             "find-location-symbolic",
             Lang.bind(this, this._findAction)
         );
-        this.actionBar.actor.add(this.findButton, { expand: true, x_fill: false });
+        this.pluginBar.actor.add(this.findButton, { expand: true, x_fill: false });
         
         this.browseButton = new ActionButton(
             "folder-remote-symbolic",
             Lang.bind(this, this._browseAction),
             true
         );
-        this.actionBar.actor.add(this.browseButton, { expand: true, x_fill: false });
+        this.pluginBar.actor.add(this.browseButton, { expand: true, x_fill: false });
         
         this.shareButton = new ActionButton(
             "send-to-symbolic",
             Lang.bind(this, this._shareAction)
         );
-        this.actionBar.actor.add(this.shareButton, { expand: true, x_fill: false });
+        this.pluginBar.actor.add(this.shareButton, { expand: true, x_fill: false });
         
         // Browse Bar
         this.browseBar = new PopupMenu.PopupMenuSection({
@@ -155,15 +155,18 @@ const DeviceMenu = new Lang.Class({
             Lang.bind(this, this._pluginsChanged)
         );
         
-        // Device Status Properties
-        ["reachable", "trusted"].forEach((property) => {
-            device.connect(
-                "notify::" + property,
-                Lang.bind(this, this._stateChanged)
-            );
-        });
+        // Status signals
+        device.connect(
+            "notify::reachable",
+            Lang.bind(this, this._statusChanged)
+        );
+        device.connect(
+            "notify::trusted",
+            Lang.bind(this, this._statusChanged)
+        );
+        
         // TODO: MConnect doesn't call PropertiesChanged on cached devices?
-        this._stateChanged(device);
+        this._statusChanged(device);
     },
 
     // Callbacks
@@ -234,12 +237,12 @@ const DeviceMenu = new Lang.Class({
         }
     },
 
-    _stateChanged: function (device, state) {
-        debug("extension.DeviceMenu._stateChanged(" + this.device.gObjectPath + ")");
+    _statusChanged: function (device, state) {
+        debug("extension.DeviceMenu._statusChanged(" + this.device.gObjectPath + ")");
         
         let { reachable, trusted } = this.device;
         
-        this.actionBar.actor.visible = (reachable && trusted);
+        this.pluginBar.actor.visible = (reachable && trusted);
         this.statusBar.actor.visible = (!reachable || !trusted);
         
         if (!trusted) {
@@ -517,7 +520,7 @@ const SystemIndicator = new Lang.Class({
                 menu.statusLabel.text = _("Scanning for device...");
                 menu.statusButton.child.icon_name = "process-stop-symbolic"
             } else {
-                menu._stateChanged(menu.device);
+                menu._statusChanged(menu.device);
             }
         });
         
