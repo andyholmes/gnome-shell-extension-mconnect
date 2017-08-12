@@ -479,7 +479,7 @@ const Device = new Lang.Class({
             "mounted",
             "DeviceMounted",
             "Whether the device is mounted or not",
-            GObject.ParamFlags.READABLE,
+            GObject.ParamFlags.READWRITE,
             false
         )
     },
@@ -548,6 +548,13 @@ const Device = new Lang.Class({
     // Properties
     get id () { return this.gObjectPath.split("/").pop(); },
     get mounted () { return (this.sftp._call("isMounted") === true); },
+    set mounted (bool) {
+        if (bool && !this.mounted) {
+            this.sftp._call("mount", true);
+        } else if (!bool && this.mounted) {
+            this.sftp._call("unmount", true);
+        }
+    },
     get name () { return this._get("name"); },
     get reachable () { return (this._get("isReachable") === true); },
     get trusted () { return (this._get("isTrusted") === true); },
@@ -627,6 +634,12 @@ const Device = new Lang.Class({
                 SFTPNode.interfaces[0],
                 this.gObjectPath + "/sftp"
             );
+            
+            this.sftp.connect("g-signal", (proxy, sender, name, parameters) => {
+                if (name === "mounted" || name === "unmounted") {
+                    this.notify("mounted")
+                }
+            });
         } else if (this.hasOwnProperty("sftp")) {
             this.sftp.destroy();
             delete this.sftp;
