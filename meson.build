@@ -1,7 +1,7 @@
 project(
   'gnome-shell-extension-mconnect',
   'c',
-  version: '5',
+  version: '6',
   meson_version: '>= 0.40.1',
 )
 
