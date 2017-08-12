@@ -131,7 +131,7 @@ const DeviceMenu = new Lang.Class({
 
         this.statusButton = new ActionButton(
             "channel-insecure-symbolic",
-            () => { (device.trusted) ? device.ping() : device.pair(); }
+            () => { (device.trusted) ? this.emit("scan") : device.pair(); }
         );
         this.statusBar.actor.add(this.statusButton, { x_fill: false });
         
@@ -246,7 +246,7 @@ const DeviceMenu = new Lang.Class({
             this.statusButton.child.icon_name = "channel-insecure-symbolic";
             this.statusLabel.text = _("Device is unpaired");
         } else if (!reachable) {
-            this.statusButton.child.icon_name = "gtk-disconnect";
+            this.statusButton.child.icon_name = "system-search-symbolic";
             this.statusLabel.text = _("Device is offline");
         }
         
@@ -509,6 +509,25 @@ const SystemIndicator = new Lang.Class({
 
         let device = this.manager.devices[dbusPath];
         let indicator = new DeviceIndicator(device);
+        
+        indicator.deviceMenu.connect("scan", (menu) => {
+            this.manager.scan(menu.device.id);
+        
+            if (this.manager._scans.indexOf(menu.device.id) > -1) {
+                menu.statusLabel.text = _("Scanning for device...");
+                menu.statusButton.child.icon_name = "process-stop-symbolic"
+            } else {
+                menu._stateChanged(menu.device);
+            }
+        });
+        
+        device.connect("notify::reachable", (device) => {
+            let { id, reachable } = device;
+            
+            if (reachable && this.manager._scans.indexOf(id) > -1) {
+                this.manager.scan(id);
+            }
+        });
         
         this._indicators[dbusPath] = indicator;
         Main.panel.addToStatusArea(dbusPath, indicator);

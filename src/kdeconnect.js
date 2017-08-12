@@ -707,6 +707,9 @@ const DeviceManager = new Lang.Class({
         // Track our device proxies, DBus path as key
         this.devices = {};
         
+        // Track scan request ID's
+        this._scans = [];
+        
         // Signals
         this.connect("g-signal", (proxy, sender, name, parameters) => {
             parameters = parameters.deep_unpack();
@@ -735,7 +738,7 @@ const DeviceManager = new Lang.Class({
     
     get name () { return this._call("announcedName", false); },
     set name (name) { this._call("setAnnouncedName", true, name); },
-    get scanning () { return (this._get("isDiscoveringDevices") === true); },
+    get scanning () { return (this._scans.length > 0); },
     
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
@@ -750,13 +753,16 @@ const DeviceManager = new Lang.Class({
     },
     
     // Public Methods
-    scan: function () {
-        log("scanning: " + this.scanning);
-        if (this.scanning) {
-            this._call("releaseDiscoveryMode", false, "manager-scan");
+    scan: function (requestId="manager") {
+        let index = this._scans.indexOf(requestId)
+        
+        if (index > -1) {
+            this._call("releaseDiscoveryMode", false, requestId);
+            this._scans.splice(index, 1);
         } else {
-            this._call("acquireDiscoveryMode", false, "manager-scan");
+            this._call("acquireDiscoveryMode", false, requestId);
             this._call("forceOnNetworkChange", false);
+            this._scans.push(requestId);
         }
         
         this.notify("scanning");
@@ -767,6 +773,11 @@ const DeviceManager = new Lang.Class({
         
         for (let dbusPath in this.devices) {
             this._deviceRemoved(this, dbusPath);
+        }
+        
+        for (let requestId of this._scans) {
+            this._call("releaseDiscoveryMode", false, requestId);
+            this._scans.splice(requestId, 1);
         }
     }
 });
