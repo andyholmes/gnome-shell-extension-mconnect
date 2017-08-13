@@ -345,28 +345,6 @@ const ProxyBase = new Lang.Class({
         let value = this.get_cached_property(name);
         return value ? value.deep_unpack() : null;
     },
-    
-    _geta: function (name) {
-        let ret;
-
-        this.call(
-            "org.freedesktop.DBus.Properties.Get",
-            new GLib.Variant("(ss)", [this.gInterfaceName, name]),
-            Gio.DBusCallFlags.NONE,
-            -1,
-            this.cancellable,
-            (proxy, result) => {
-                try {
-                    ret = this.call_finish(result).deep_unpack();
-                    return (ret.length === 1) ? ret[0].deep_unpack() : ret;
-                } catch (e) {
-                    log("Error getting " + name + " on " + this.gObjectPath +
-                        ": " + e.message
-                    );
-                }
-            }
-        );
-    },
 
     _set: function (name, value) {
         let propertyInfo = this.gInterfaceInfo.lookup_property(name);
@@ -456,7 +434,7 @@ const Device = new Lang.Class({
         ),
         "reachable": GObject.ParamSpec.boolean(
             "reachable",
-            "DeviceState",
+            "DeviceReachable",
             "Whether the device is reachable/online",
             GObject.ParamFlags.READABLE,
             false

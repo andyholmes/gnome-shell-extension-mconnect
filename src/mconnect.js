@@ -173,28 +173,6 @@ const ProxyBase = new Lang.Class({
         let value = this.get_cached_property(name);
         return value ? value.deep_unpack() : null;
     },
-    
-    _geta: function (name) {
-        let ret;
-
-        this.call(
-            "org.freedesktop.DBus.Properties.Get",
-            new GLib.Variant("(ss)", [this.gInterfaceName, name]),
-            Gio.DBusCallFlags.NONE,
-            -1,
-            this.cancellable,
-            (proxy, result) => {
-                try {
-                    ret = this.call_finish(result).deep_unpack();
-                    return (ret.length === 1) ? ret[0].deep_unpack() : ret;
-                } catch (e) {
-                    log("Error getting " + name + " on " + this.gObjectPath +
-                        ": " + e.message
-                    );
-                }
-            }
-        );
-    },
 
     _set: function (name, value) {
         let propertyInfo = this.gInterfaceInfo.lookup_property(name);
@@ -290,7 +268,7 @@ const Device = new Lang.Class({
         ),
         "reachable": GObject.ParamSpec.boolean(
             "reachable",
-            "DeviceState",
+            "DeviceReachable",
             "Whether the device is reachable/online",
             GObject.ParamFlags.READABLE,
             false
@@ -313,7 +291,7 @@ const Device = new Lang.Class({
             "mounted",
             "DeviceMounted",
             "Whether the device is mounted or not",
-            GObject.ParamFlags.READABLE,
+            GObject.ParamFlags.READWRITE,
             false
         )
     },
@@ -348,6 +326,7 @@ const Device = new Lang.Class({
     // Properties
     get id () { return this._get("Id"); },
     get mounted () { return false; }, // Unsupported
+    set mounted (bool) { return; }, // Unsupported
     get name () { return this._get("Name"); },
     get reachable () {
         return (this._get("IsActive") || this._get("IsConnected")) === true;
@@ -469,6 +448,9 @@ const DeviceManager = new Lang.Class({
         // Track our device proxies, DBus path as key
         this.devices = {};
         
+        // Track scan request ID's
+        this._scans = [];
+        
         // Add currently managed devices
         this._call("ListDevices", false).forEach((dbusPath) => {
             this._deviceAdded(this, dbusPath);
@@ -478,7 +460,7 @@ const DeviceManager = new Lang.Class({
     // MConnect always reports username@hostname
     get name () { return GLib.get_user_name() + "@" + GLib.get_host_name(); },
     set name (name) { log("Not implemented"); },
-    get scanning () { return false; }, // TODO
+    get scanning () { return (this._scans.length > 0); },
     
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
@@ -496,8 +478,18 @@ const DeviceManager = new Lang.Class({
     },
     
     // Public Methods
-    scan: function () {
-        log("Not implemented");
+    scan: function (requestId="manager") {
+        let index = this._scans.indexOf(requestId)
+        
+        if (index > -1) {
+            log("Not implemented");
+            this._scans.splice(index, 1);
+        } else {
+            log("Not implemented");
+            this._scans.push(requestId);
+        }
+        
+        this.notify("scanning");
     },
     
     destroy: function () {
