@@ -191,6 +191,12 @@ const DeviceMenu = new Lang.Class({
         icon = (charging) ? icon + "-charging" : icon;
         this.batteryIcon.icon_name = icon + "-symbolic";
         this.batteryLabel.text = level + "%";
+        
+        // KDE Connect: "false, -1" if remote plugin is disabled but not local
+        if (level === -1) {
+            this.batteryIcon.icon_name = "battery-missing-symbolic";
+            this.batteryLabel.text = "";
+        }
     },
 
     _nameChanged: function (device, name) {
@@ -222,8 +228,6 @@ const DeviceMenu = new Lang.Class({
         
         // Battery Plugin
         if (device.trusted && device.hasOwnProperty("battery")) {
-            this.batteryIcon.visible = true;
-            
             this._batteryChanged(
                 device,
                 new GLib.Variant(
@@ -232,7 +236,7 @@ const DeviceMenu = new Lang.Class({
                 )
             );
         } else {
-            this.batteryIcon.visible = false;
+            this.batteryIcon.icon_name = "battery-missing-symbolic";
             this.batteryLabel.text = "";
         }
     },
@@ -244,6 +248,7 @@ const DeviceMenu = new Lang.Class({
         
         this.pluginBar.actor.visible = (reachable && trusted);
         this.statusBar.actor.visible = (!reachable || !trusted);
+        this.batteryIcon.visible = (reachable && trusted);
         
         if (!trusted) {
             this.statusButton.child.icon_name = "channel-insecure-symbolic";
