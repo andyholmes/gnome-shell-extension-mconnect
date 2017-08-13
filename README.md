@@ -2,8 +2,7 @@
 
 ![SMS window, Nautilus integration, Device Indicator & Menu][screenshot]
 
-This extension provides integration for KDE Connect/MConnect in Gnome Shell,
-in the most native way possible.
+This extension provides integration for KDE Connect/MConnect in Gnome Shell.
 
 [KDE Connect](https://community.kde.org/KDEConnect) uses an
 [Android app](https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp)
@@ -11,7 +10,12 @@ and a desktop server to securely exchange data, allowing file sharing,
 notification sharing, sending of text messages and many other features.
 
 [MConnect](https://github.com/bboozzoo/mconnect) is a KDE Connect protocol
-implementation in Vala/C.
+implementation in Vala/C, with no KDE dependencies.
+
+For those not using Gnome Shell, consider [indicator-kdeconnect][kindicator]
+which is very stable, actively developed, supports all the same features, more
+file managers and should work on any desktop with Gtk.
+
 
 ## Features
 
@@ -31,8 +35,8 @@ implementation in Vala/C.
 ## Installation
 
 The extension will appear on the official website once it has been reviewed.
-Stable builds are available for download in the [Releases page][releases], or
-you may build and install from git with [Meson](http://mesonbuild.com):
+Stable builds available in the [Releases page][releases] are recommended,
+however, you may build and install from git with [Meson](http://mesonbuild.com):
 
     git clone https://github.com/andyholmes/gnome-shell-extension-mconnect.git
     meson gnome-shell-extension-mconnect/ build
@@ -43,8 +47,9 @@ you may build and install from git with [Meson](http://mesonbuild.com):
 ### Dependencies
 
 The extension is known to work with Gnome Shell 3.24.x, but other recent
-versions may also work. Additionally, either KDE Connect or MConnect must be
-installed. Optional features and their requirements include:
+versions may also work; please report your results. Additionally, either KDE
+Connect or MConnect must be installed. Optional features and their requirements
+include:
 
 **Google Contacts Auto-complete in SMS Application**
 * Gnome Online Accounts with at least one Google account
@@ -94,7 +99,6 @@ features:
 * Mounting a Device can cause Gnome Shell to hang for a short period (~30s)
 * Encryption information is not available in the extension
 * Pinging devices is not possible in the extension
-* If device goes offline, there is no way to initiate discovery or reconnection
 * Some textual elements are retrieved from the service programmatically that
   may not be translatable
 
@@ -135,8 +139,8 @@ The following options are available in the extension preferences:
 [@albertvaka][albertvaka] and friends for creating KDE Connect, and
 [@bboozzoo][bboozzoo] for developing MConnect based on their protocol.
 
-[@Bajoja][Bajoja] and the indicator-kdeconnect developers, for advice and code
-I frequently reference.
+[@Bajoja][Bajoja] and the [indicator-kdeconnect][kindicator] developers, for
+advice and code I frequently reference.
 
 This extension includes fallback icons from the [Numix][numix] project, and
 phone number icons from Google's [Material Design][material] project.
@@ -149,6 +153,7 @@ The screenshot of the extension features the [Vimix Dark Laptop][vimix] Gtk &
 Gnome Shell theme with the [Numix Circle][numix] icon theme.
 
 [screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png
+[kindicator]: https://github.com/Bajoja/indicator-kdeconnect
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
 [dbus-support]: https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support
 [albertvaka]: https://github.com/albertvaka
