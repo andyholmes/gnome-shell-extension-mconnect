@@ -735,6 +735,8 @@ const DeviceManager = new Lang.Class({
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
         this.devices[dbusPath] = new Device(dbusPath);
+        // Ensure an active scan for this device isn't in progress
+        this._call("releaseDiscoveryMode", true, this.devices[dbusPath].id);
         this.emit("device::added", dbusPath);
     },
     
