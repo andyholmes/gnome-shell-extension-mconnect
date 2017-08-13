@@ -470,6 +470,19 @@ const SystemIndicator = new Lang.Class({
         this.manager = new this._backend.DeviceManager();
         this.enableItem.actor.visible = !(this.manager);
         this.extensionIndicator.visible = (this.manager);
+        
+        this.scanItem = this.extensionMenu.menu.addAction(
+            "", () => { this.manager.scan(); }
+        );
+        this.extensionMenu.menu.box.set_child_at_index(this.scanItem.actor, 0);
+        this.manager.connect("notify::scanning", () => {
+            if (this.manager._scans.indexOf("manager") > -1) {
+                this.scanItem.label.text = _("Stop scanning for Devices");
+            } else {
+                this.scanItem.label.text = _("Scan for Devices");
+            }
+        });
+        this.manager.notify("scanning");
 
         for (let dbusPath in this.manager.devices) {
             this._deviceAdded(this.manager, dbusPath);
@@ -498,6 +511,7 @@ const SystemIndicator = new Lang.Class({
 
         this.enableItem.actor.visible = !(this.manager);
         this.extensionIndicator.visible = (this.manager);
+        this.scanItem.destroy();
 
         // Start the service or wait for it to start
         if (Settings.get_boolean("service-autostart")) {

@@ -698,7 +698,8 @@ const DeviceManager = new Lang.Class({
         // Track our device proxies, DBus path as key
         this.devices = {};
         
-        // Track scan request ID's
+        // Track scan request ID's, ensure we don't have an active manager scan
+        this._call("releaseDiscoveryMode", true, "manager");
         this._scans = [];
         
         // Signals
