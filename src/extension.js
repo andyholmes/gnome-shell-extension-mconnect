@@ -517,10 +517,11 @@ const SystemIndicator = new Lang.Class({
             this.manager.destroy();
             this.manager = false;
         }
+        
+        if (this.scanItem) { this.scanItem.destroy(); }
 
         this.enableItem.actor.visible = !(this.manager);
         this.extensionIndicator.visible = (this.manager);
-        this.scanItem.destroy();
 
         // Start the service or wait for it to start
         if (Settings.get_boolean("service-autostart")) {
