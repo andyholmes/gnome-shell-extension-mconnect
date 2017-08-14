@@ -224,6 +224,10 @@ const DeviceMenu = new Lang.Class({
             buttons[name].reactive = sensitive;
             buttons[name].track_hover = sensitive;
             buttons[name].opacity = sensitive ? 255 : 128;
+        
+            if (sensitive && name === "sftp") {
+                device.mounted = Settings.get_boolean("device-automount");
+            }
         }
         
         // Battery Plugin

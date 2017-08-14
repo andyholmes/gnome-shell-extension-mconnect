@@ -528,7 +528,7 @@ const Device = new Lang.Class({
     get mounted () { return (this.sftp._call("isMounted") === true); },
     set mounted (bool) {
         if (bool && !this.mounted) {
-            this.sftp._call("mount", true);
+            this.sftp._call("mountAndWait", true);
         } else if (!bool && this.mounted) {
             this.sftp._call("unmount", true);
         }

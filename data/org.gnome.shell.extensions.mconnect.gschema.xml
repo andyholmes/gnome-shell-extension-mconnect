@@ -9,30 +9,35 @@
     <value nick="UNPAIRED" value="2"/>
   </flags>
   <schema path="/org/gnome/shell/extensions/mconnect/" id="org.gnome.shell.extensions.mconnect">
-    <key type="b" name="debug">
+    <key name="debug" type="b">
       <default>false</default>
       <summary>Debug mode</summary>
-      <description>If true, the extension will print verbosely to the log. See 'journalctl /usr/bin/gnome-shell -f -o cat' for output.</description>
+      <description>Enable debug features and printing messages to the log.</description>
+    </key>
+    <key name="device-automount" type="b">
+      <default>false</default>
+      <summary>Device Auto-Mount</summary>
+      <description>Automatically mount devices with SFTP enabled.</description>
     </key>
     <key name="device-visibility" flags="org.gnome.shell.extensions.mconnect.DeviceVisibility">
       <default>["OFFLINE", "UNPAIRED"]</default>
-      <summary>Device visibility</summary>
-      <description>In what states a device will be made visible to the user. Paired, online devices will always be shown.</description>
+      <summary>Device Visibility</summary>
+      <description>Indicator visibility in offline and unpaired states.</description>
     </key>
-    <key type="b" name="nautilus-integration">
+    <key name="nautilus-integration" type="b">
       <default>false</default>
-      <summary>Nautilus integration</summary>
-      <description>If true, a submenu will be added to the Nautilus context menu to allow sending files to devices directly from the file browser.</description>
+      <summary>Nautilus Integration</summary>
+      <description>Send files from the file browser context menu.</description>
     </key>
     <key name="service-autostart" type="b">
       <default>false</default>
-      <summary>Service autostart</summary>
-      <description>If true, the service will be automatically started and restarted if it stops. Otherwise the extension will wait for the service to be started.</description>
+      <summary>Service Auto-Start</summary>
+      <description>Start the service automatically and restart if stopped.</description>
     </key>
     <key name="service-provider" enum="org.gnome.shell.extensions.mconnect.ServiceProvider">
       <default>'KDECONNECT'</default>
-      <summary>Service provider</summary>
-      <description>Whether to use KDE Connect or MConnect to provide access to devices.</description>
+      <summary>Service Provider</summary>
+      <description>The service providing devices.</description>
     </key>
   </schema>
 </schemalist>

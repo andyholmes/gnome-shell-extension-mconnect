@@ -30,8 +30,7 @@ const BoolSetting = new Lang.Class({
             visible: true,
             can_focus: true,
             halign: Gtk.Align.END,
-            valign: Gtk.Align.CENTER,
-            margin_right: 12
+            valign: Gtk.Align.CENTER
         });
     
         Settings.bind(setting, this, "active", Gio.SettingsBindFlags.DEFAULT);
@@ -50,7 +49,6 @@ const EnumSetting = new Lang.Class({
             width_request: 160,
             halign: Gtk.Align.END,
             valign: Gtk.Align.CENTER,
-            margin_right: 12,
             expand: true
         });
         
@@ -88,7 +86,6 @@ const FlagsSetting = new Lang.Class({
             can_focus: true,
             halign: Gtk.Align.END,
             valign: Gtk.Align.CENTER,
-            margin_right: 12,
             popover: new Gtk.Popover()
         });
         this.get_style_context().add_class("circular");
@@ -224,8 +221,7 @@ const NumberSetting = new Lang.Class({
             can_focus: true,
             width_request: 160,
             halign: Gtk.Align.END,
-            valign: Gtk.Align.CENTER,
-            margin_right: 12
+            valign: Gtk.Align.CENTER
         });
         
         let lower, upper;
@@ -243,7 +239,7 @@ const NumberSetting = new Lang.Class({
             [lower, upper] = [GLib.MININT64, GLib.MAXINT64];
         } else if (type === "t") {
             [lower, upper] = [0, GLib.MAXUINT64];
-        // FIXME: not sure this is working
+        // TODO: not sure this is working
         } else if (type === "d") {
             [lower, upper] = [2.3E-308, 1.7E+308];
         } else if (type === "n") {
@@ -279,8 +275,7 @@ const RangeSetting = new Lang.Class({
             width_request: 160,
             halign: Gtk.Align.END,
             valign: Gtk.Align.CENTER,
-            expand: true,
-            margin_right: 12
+            expand: true
         });
         
         let key = Schema.get_key(setting);
@@ -314,8 +309,7 @@ const StringSetting = new Lang.Class({
             width_request: 160,
             halign: Gtk.Align.END,
             valign: Gtk.Align.CENTER,
-            expand: true,
-            margin_right: 12
+            expand: true
         });
     
         Settings.bind(setting, this, "text", Gio.SettingsBindFlags.DEFAULT);
@@ -335,8 +329,7 @@ const OtherSetting = new Lang.Class({
             width_request: 160,
             halign: Gtk.Align.END,
             valign: Gtk.Align.CENTER,
-            expand: true,
-            margin_right: 12
+            expand: true
         });
         
         this._setting = setting;
@@ -433,7 +426,7 @@ const SettingsWidget = new Lang.Class({
     },
     
     /** Add @widget to @section with @label. */
-    add_item: function (section, label, widget) {
+    add_item: function (section, summary, description, widget) {
         // Row
         let itemRow = new Gtk.ListBoxRow({
             visible: true,
@@ -444,29 +437,44 @@ const SettingsWidget = new Lang.Class({
         section.list.add(itemRow);
         
         // Row Layout
-        let itemBox = new Gtk.Box({
+        let itemGrid = new Gtk.Grid({
             visible: true,
             can_focus: false,
-            valign: Gtk.Align.CENTER,
-            spacing: 12
+            column_spacing: 16,
+            row_spacing: 0,
+            margin_left: 12,
+            margin_top: 6,
+            margin_bottom: 6,
+            margin_right: 12
         });
-        itemRow.add(itemBox);
+        itemRow.add(itemGrid);
         
         // Setting Summary
-        let itemLabel = new Gtk.Label({
+        let itemSummary = new Gtk.Label({
             visible: true,
             can_focus: false,
-            height_request: 32,
-            halign: Gtk.Align.START,
-            margin_left: 12,
-            margin_top: 8,
-            margin_bottom: 8,
+            xalign: 0,
             hexpand: true,
-            label: label,
+            label: summary
         });
-        itemBox.pack_start(itemLabel, false, true, 0);
+        itemGrid.attach(itemSummary, 0, 0, 1, 1);
         
-        itemBox.add(widget);
+        // Setting Description
+        if (description !== undefined) {
+            let itemDescription = new Gtk.Label({
+                visible: true,
+                can_focus: false,
+                xalign: 0,
+                hexpand: true,
+                label: description,
+                wrap: true
+            });
+            itemDescription.get_style_context().add_class("dim-label");
+            itemGrid.attach(itemDescription, 0, 1, 1, 1);
+        }
+        
+        let widgetHeight = (description !== null) ? 2 : 1;
+        itemGrid.attach(widget, 1, 0, 1, widgetHeight);
         
         return itemRow;
     },
@@ -502,7 +510,12 @@ const SettingsWidget = new Lang.Class({
             widget = new OtherSetting(setting);
         }
         
-        return this.add_item(section, key.get_summary(), widget);
+        return this.add_item(
+            section,
+            key.get_summary(),
+            key.get_description(),
+            widget
+        );
     }
 });
 
@@ -516,6 +529,7 @@ function buildPrefsWidget() {
     let widget = new SettingsWidget();
     
     let preferencesSection = widget.add_section(_("Preferences"));
+    widget.add_setting(preferencesSection, "device-automount");
     widget.add_setting(preferencesSection, "device-visibility");
     widget.add_setting(preferencesSection, "nautilus-integration");
     
@@ -541,10 +555,16 @@ function buildPrefsWidget() {
             Me.imports.kdeconnect.startSettings();
         }
     });
-    widget.add_item(serviceSection, "Service Settings", button);
+    widget.add_item(
+        serviceSection,
+        _("Service Settings"),
+        _("Open the settings for the current service."),
+        button
+    );
     
     let develSection = widget.add_section(_("Development"));
     widget.add_setting(develSection, "debug");
+    //TODO: about pane
     
     widget.show_all();
     return widget;
