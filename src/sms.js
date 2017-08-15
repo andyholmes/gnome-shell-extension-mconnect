@@ -12,6 +12,7 @@ const Lang = imports.lang;
 const System = imports.system;
 const Gettext = imports.gettext.domain("gnome-shell-extension-mconnect");
 const _ = Gettext.gettext;
+const Folks = imports.gi.Folks;
 const GData = imports.gi.GData;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gio = imports.gi.Gio;
@@ -31,7 +32,7 @@ imports.searchPath.push(getPath());
 
 const KDEConnect = imports.kdeconnect;
 const MConnect = imports.mconnect;
-const { initTranslations, Resources, Settings } = imports.lib;
+const { initTranslations, Me, Resources, Settings } = imports.lib;
 
 const ServiceProvider = {
     MCONNECT: 0,
@@ -50,51 +51,6 @@ const SUPPORTED_TYPES = [
     GData.GD_PHONE_NUMBER_PAGER
 ];
 
-/** Return a list of Google accounts */
-function getAccounts() {
-    let goaClient = Goa.Client.new_sync(null, null);
-    let goaAccounts = goaClient.get_accounts();
-    
-    for (let goaAccount in goaAccounts) {
-        let acct = goaAccounts[goaAccount].get_account();
-        
-        if (acct.provider_type === "google") {
-            yield new GData.ContactsService({
-                authorizer: new GData.GoaAuthorizer({
-                    goa_object: goaClient.lookup_by_id(acct.id)
-                })
-            })
-        }
-    }
-}
-
-/** Return a list of Google contacts for account */
-function getContacts (account) {
-    let query = new GData.Query({ q: "" });
-    let count = 0;
-    let contacts = [];
-    
-    while (true) {
-        let feed = account.query_contacts(
-            query, // query,
-            null, // cancellable
-            (contact) => {
-                if (contact.get_phone_numbers().length > 0) {
-                    contacts.push(contact);
-                }
-            },
-            null
-        );
-        
-        count += feed.items_per_page;
-        query.start_index = count;
-        
-        if (count > feed.total_results) { break; }
-    }
-    
-    return contacts;
-}
-
 /** A Gtk.EntryCompletion subclass for Google Contacts */
 const ContactCompletion = new Lang.Class({
     Name: "ContactCompletion",
@@ -112,16 +68,18 @@ const ContactCompletion = new Lang.Class({
         this.phone_number_default = theme.load_icon("phone-number-default", 0, 0);
         this.phone_number_home = theme.load_icon("phone-number-home", 0, 0);
         this.phone_number_mobile = theme.load_icon("phone-number-mobile", 0, 0);
-        this.phone_number_other = theme.load_icon("phone-number-other", 0, 0);
         this.phone_number_work = theme.load_icon("phone-number-work", 0, 0);
+        this.default_avatar_pixbuf = Gtk.IconTheme.get_default().load_icon(
+                "avatar-default-symbolic", 0, 0
+        );
         
         // Define a completion model
         let listStore = new Gtk.ListStore();
         listStore.set_column_types([
-            GdkPixbuf.Pixbuf,       // Contact Avatar
-            GObject.TYPE_STRING,    // Contact Name
-            GObject.TYPE_STRING,    // Contact Phone URI
-            GdkPixbuf.Pixbuf        // Contact Phone Type
+            GdkPixbuf.Pixbuf,       // Avatar Icon
+            GObject.TYPE_STRING,    // Title
+            GObject.TYPE_STRING,    // Phone Number
+            GdkPixbuf.Pixbuf        // Type Icon
         ]);
         listStore.set_sort_column_id(1, Gtk.SortType.ASCENDING);
         //listStore.set_sort_func(1, this._sort, null, null);
@@ -133,6 +91,10 @@ const ContactCompletion = new Lang.Class({
         this.add_attribute(avatarCell, "pixbuf", 0);
         // Title
         this.set_text_column(1);
+        // Number
+        //let numberCell = new Gtk.CellRendererText();
+        //this.pack_start(numberCell, false);
+        //this.add_attribute(numberCell, "text", 2);
         // Type Icon
         let typeCell = new Gtk.CellRendererPixbuf();
         this.pack_start(typeCell, false);
@@ -141,21 +103,58 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        if (Goa !== undefined && GData !== undefined) {
-            for (let account of getAccounts()) {
-                this._populate(account);
+        if (Folks !== undefined) {
+            this._get_folks();
+            this._icon = "avatar-default-symbolic";
+        } else if (Goa !== undefined && GData !== undefined) {
+            for (let account of this._get_google_accounts()) {
+                this._get_google_contacts(account);
+            }
+            this._icon = "goa-account-google";
+        }
+    },
+    
+    _get_google_accounts: function () {
+        let goaClient = Goa.Client.new_sync(null, null);
+        let goaAccounts = goaClient.get_accounts();
+        
+        for (let goaAccount in goaAccounts) {
+            let acct = goaAccounts[goaAccount].get_account();
+            
+            if (acct.provider_type === "google") {
+                yield new GData.ContactsService({
+                    authorizer: new GData.GoaAuthorizer({
+                        goa_object: goaClient.lookup_by_id(acct.id)
+                    })
+                })
             }
         }
     },
     
-    _populate: function (account) {
-        // Load a default avatar
-        // TODO: BUG: https://bugzilla.gnome.org/show_bug.cgi?id=785207
-        let photo = Gtk.IconTheme.get_default().load_icon(
-                "avatar-default-symbolic", 0, 0
-        );
+    _get_google_contacts: function (account) {
+        let query = new GData.Query({ q: "" });
+        let count = 0;
+        let contacts = [];
         
-        for (let contact of getContacts(account)) {
+        while (true) {
+            let feed = account.query_contacts(
+                query, // query,
+                null, // cancellable
+                (contact) => {
+                    if (contact.get_phone_numbers().length > 0) {
+                        contacts.push(contact);
+                    }
+                },
+                null
+            );
+            
+            count += feed.items_per_page;
+            query.start_index = count;
+            
+            if (count > feed.total_results) { break; }
+        }
+        
+        for (let contact of contacts) {
             // Each phone number gets its own completion entry
             for (let phoneNumber of contact.get_phone_numbers()) {
                 // Exclude number types that are unable to receive texts
@@ -163,45 +162,67 @@ const ContactCompletion = new Lang.Class({
                     continue;
                 }
                 
-                // Use the URI form of the number, if possible
-                let number;
-                
-                if (phoneNumber.uri !== null) {
-                    number = phoneNumber.uri.slice(4);
-                } else {
-                    number = phoneNumber.number;
-                }
-                
-                // Append the number to the title column
-                let title = [contact.title, " <", number, ">"].join("");
-                
-                // Phone Type Icon
-                let type;
-                
-                switch (phoneNumber.relation_type) {
-                    case GData.GD_PHONE_NUMBER_HOME:
-                        type = this.phone_number_home;
-                        break;
-                    case GData.GD_PHONE_NUMBER_MOBILE:
-                        type = this.phone_number_mobile;
-                        break;
-                    case GData.GD_PHONE_NUMBER_WORK:
-                        type = this.phone_number_work;
-                        break;
-                    case GData.GD_PHONE_NUMBER_OTHER:
-                        type = this.phone_number_other;
-                        break;
-                    default:
-                        type = this.phone_number_default;
-                }
-            
-                this.model.set(
-                    this.model.append(),
-                    [0, 1, 2, 3, 4],
-                    [photo, title, number, type]
+                this._add_contact(
+                    contact.title,
+                    phoneNumber.number,
+                    phoneNumber.relation_type
                 );
             }
         }
+    },
+    
+    _get_folks: function () {
+        let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
+            GLib.getenv('HOME'),            // working dir
+            ["python3", Me.path + "/folks.py"], // argv
+            null,                           // envp
+            GLib.SpawnFlags.SEARCH_PATH,    // enables PATH
+            null                            // child_setup (func)
+        );
+
+        let stream = new Gio.DataInputStream({
+            base_stream: new Gio.UnixInputStream({ fd: out_fd })
+        });
+        
+        this._read_folk(stream);
+    },
+    
+    _read_folk: function (stream) {
+        stream.read_line_async(GLib.PRIORITY_LOW, null, (source, res) => {
+            let [contact, length] = source.read_line_finish(res);
+            
+            if (contact !== null) {
+                let [name, number, type] = contact.toString().split("\t");
+                this._add_contact(name, number, type);
+                this._read_folk(stream);
+            }
+        });
+    },
+    
+    _add_contact: function (name, number, type) {
+        // Load a default avatar
+        let photo = this.default_avatar_pixbuf;
+        
+        // Append the number to the title column
+        let title = name + " <" + number + ">";
+        
+        // Phone Type Icon
+        // TODO: folks->voice === google->work?
+        if (type === "home" || type === GData.GD_PHONE_NUMBER_HOME) {
+            type = this.phone_number_home;
+        } else if (type === "cell" || type === GData.GD_PHONE_NUMBER_MOBILE) {
+            type = this.phone_number_mobile;
+        } else if (type === "voice" || type === GData.GD_PHONE_NUMBER_WORK) {
+            type = this.phone_number_work;
+        } else {
+            type = this.phone_number_default;
+        }
+    
+        this.model.set(
+            this.model.append(),
+            [0, 1, 2, 3],
+            [photo, title, number, type]
+        );
     },
     
     _match: function (completion, key, tree_iter) {
@@ -280,7 +301,7 @@ const ContactEntry = new Lang.Class({
     _init: function () {
         this.parent({
             hexpand: true,
-            placeholder_text: _("Phone number..."),
+            placeholder_text: _("Type a phone number"),
             primary_icon_name: "call-start-symbolic",
             primary_icon_activatable: false,
             primary_icon_sensitive: true,
@@ -288,10 +309,9 @@ const ContactEntry = new Lang.Class({
             completion: new ContactCompletion()
         });
         
-        // Set the entry properties if there are contacts
-        if (this.completion.model.iter_n_children(null)) {
-            this.placeholder_text = _("Search contacts...");
-            this.primary_icon_name = "goa-account-google";
+        if (this.completion._icon !== undefined) {
+            this.placeholder_text = _("Type a phone number or name");
+            this.primary_icon_name = this.completion._icon;
             this.input_purpose = Gtk.InputPurpose.FREE_FORM;
         }
     
@@ -425,7 +445,7 @@ const ApplicationWindow = new Lang.Class({
         // Content -> Message Entry
         this.messageEntry = new Gtk.Entry({
             hexpand: true,
-            placeholder_text: _("Type message here..."),
+            placeholder_text: _("Type an SMS message"),
             //secondary_icon_name: "mail-reply-sender-symbolic",
             secondary_icon_name: "send-sms",
             secondary_icon_activatable: true,
