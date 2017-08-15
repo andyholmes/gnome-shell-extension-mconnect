@@ -13,11 +13,9 @@ const System = imports.system;
 const Gettext = imports.gettext.domain("gnome-shell-extension-mconnect");
 const _ = Gettext.gettext;
 const Folks = imports.gi.Folks;
-const GData = imports.gi.GData;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const Goa = imports.gi.Goa;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 
@@ -41,16 +39,6 @@ const ServiceProvider = {
 
 initTranslations();
 
-/** Phone Number types that support receiving texts */
-const SUPPORTED_TYPES = [
-    GData.GD_PHONE_NUMBER_HOME,
-    GData.GD_PHONE_NUMBER_WORK,
-    GData.GD_PHONE_NUMBER_OTHER,
-    GData.GD_PHONE_NUMBER_MOBILE,
-    GData.GD_PHONE_NUMBER_MAIN,
-    GData.GD_PHONE_NUMBER_PAGER
-];
-
 /** A Gtk.EntryCompletion subclass for Google Contacts */
 const ContactCompletion = new Lang.Class({
     Name: "ContactCompletion",
@@ -69,9 +57,6 @@ const ContactCompletion = new Lang.Class({
         this.phone_number_home = theme.load_icon("phone-number-home", 0, 0);
         this.phone_number_mobile = theme.load_icon("phone-number-mobile", 0, 0);
         this.phone_number_work = theme.load_icon("phone-number-work", 0, 0);
-        this.default_avatar_pixbuf = Gtk.IconTheme.get_default().load_icon(
-                "avatar-default-symbolic", 0, 0
-        );
         
         // Define a completion model
         let listStore = new Gtk.ListStore();
@@ -95,74 +80,14 @@ const ContactCompletion = new Lang.Class({
         this.connect("match-selected", Lang.bind(this, this._select));
         
         if (Folks !== undefined) {
-            this._get_folks();
-            this._icon = "avatar-default-symbolic";
-        } else if (Goa !== undefined && GData !== undefined) {
-            for (let account of this._get_google_accounts()) {
-                this._get_google_contacts(account);
-            }
-            this._icon = "goa-account-google";
+            this._get_contacts();
+            this._has_contacts = true;
+        } else {
+            this._has_contacts = true;
         }
     },
     
-    _get_google_accounts: function () {
-        let goaClient = Goa.Client.new_sync(null, null);
-        let goaAccounts = goaClient.get_accounts();
-        
-        for (let goaAccount in goaAccounts) {
-            let acct = goaAccounts[goaAccount].get_account();
-            
-            if (acct.provider_type === "google") {
-                yield new GData.ContactsService({
-                    authorizer: new GData.GoaAuthorizer({
-                        goa_object: goaClient.lookup_by_id(acct.id)
-                    })
-                })
-            }
-        }
-    },
-    
-    _get_google_contacts: function (account) {
-        let query = new GData.Query({ q: "" });
-        let count = 0;
-        let contacts = [];
-        
-        while (true) {
-            let feed = account.query_contacts(
-                query, // query,
-                null, // cancellable
-                (contact) => {
-                    if (contact.get_phone_numbers().length > 0) {
-                        contacts.push(contact);
-                    }
-                },
-                null
-            );
-            
-            count += feed.items_per_page;
-            query.start_index = count;
-            
-            if (count > feed.total_results) { break; }
-        }
-        
-        for (let contact of contacts) {
-            // Each phone number gets its own completion entry
-            for (let phoneNumber of contact.get_phone_numbers()) {
-                // Exclude number types that are unable to receive texts
-                if (SUPPORTED_TYPES.indexOf(phoneNumber.relation_type) < 0) {
-                    continue;
-                }
-                
-                this._add_contact(
-                    contact.title,
-                    phoneNumber.number,
-                    phoneNumber.relation_type
-                );
-            }
-        }
-    },
-    
-    _get_folks: function () {
+    _get_contacts: function () {
         let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
             GLib.getenv('HOME'),            // working dir
             ["python3", Me.path + "/folks.py"], // argv
@@ -175,17 +100,17 @@ const ContactCompletion = new Lang.Class({
             base_stream: new Gio.UnixInputStream({ fd: out_fd })
         });
         
-        this._read_folk(stream);
+        this._read_contact(stream);
     },
     
-    _read_folk: function (stream) {
+    _read_contact: function (stream) {
         stream.read_line_async(GLib.PRIORITY_LOW, null, (source, res) => {
             let [contact, length] = source.read_line_finish(res);
             
             if (contact !== null) {
                 let [name, number, type] = contact.toString().split("\t");
                 if (type !== "fax") { this._add_contact(name, number, type); }
-                this._read_folk(stream);
+                this._read_contact(stream);
             }
         });
     },
@@ -196,11 +121,11 @@ const ContactCompletion = new Lang.Class({
         
         // Phone Type Icon
         // TODO: folks->voice === google->work?
-        if (type === "home" || type === GData.GD_PHONE_NUMBER_HOME) {
+        if (type === "home") {
             type = this.phone_number_home;
-        } else if (type === "cell" || type === GData.GD_PHONE_NUMBER_MOBILE) {
+        } else if (type === "cell") {
             type = this.phone_number_mobile;
-        } else if (type === "voice" || type === GData.GD_PHONE_NUMBER_WORK) {
+        } else if (type === "work" || type === "voice") {
             type = this.phone_number_work;
         } else {
             type = this.phone_number_default;
@@ -297,9 +222,9 @@ const ContactEntry = new Lang.Class({
             completion: new ContactCompletion()
         });
         
-        if (this.completion._icon !== undefined) {
+        if (this.completion._has_contacts) {
             this.placeholder_text = _("Type a phone number or name");
-            this.primary_icon_name = this.completion._icon;
+            this.primary_icon_name = "avatar-default-symbolic";
             this.input_purpose = Gtk.InputPurpose.FREE_FORM;
         }
     
