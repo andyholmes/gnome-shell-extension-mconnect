@@ -13,9 +13,11 @@ const System = imports.system;
 const Gettext = imports.gettext.domain("gnome-shell-extension-mconnect");
 const _ = Gettext.gettext;
 const Folks = imports.gi.Folks;
+const GData = imports.gi.GData;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Goa = imports.gi.Goa;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 
@@ -38,6 +40,16 @@ const ServiceProvider = {
 };
 
 initTranslations();
+
+/** Phone Number types that support receiving texts */
+const SUPPORTED_TYPES = [
+    GData.GD_PHONE_NUMBER_HOME,
+    GData.GD_PHONE_NUMBER_WORK,
+    GData.GD_PHONE_NUMBER_OTHER,
+    GData.GD_PHONE_NUMBER_MOBILE,
+    GData.GD_PHONE_NUMBER_MAIN,
+    GData.GD_PHONE_NUMBER_PAGER
+];
 
 /** A Gtk.EntryCompletion subclass for Google Contacts */
 const ContactCompletion = new Lang.Class({
@@ -79,11 +91,73 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        if (Folks !== undefined) {
+        if (Goa !== undefined && GData !== undefined) {
+            for (let account in this._get_google_accounts()) {
+                this._get_google_contacts(account);
+                this._has_contacts = true;
+            }
+        } else if (Folks !== undefined) {
             this._get_contacts();
             this._has_contacts = true;
         } else {
-            this._has_contacts = true;
+            this._has_contacts = false;
+        }
+    },
+    
+    _get_google_accounts: function () {
+        let goaClient = Goa.Client.new_sync(null, null);
+        let goaAccounts = goaClient.get_accounts();
+        
+        for (let goaAccount in goaAccounts) {
+            let acct = goaAccounts[goaAccount].get_account();
+            
+            if (acct.provider_type === "google") {
+                yield new GData.ContactsService({
+                    authorizer: new GData.GoaAuthorizer({
+                        goa_object: goaClient.lookup_by_id(acct.id)
+                    })
+                })
+            }
+        }
+    },
+    
+    _get_google_contacts: function (account) {
+        let query = new GData.Query({ q: "" });
+        let count = 0;
+        let contacts = [];
+        
+        while (true) {
+            let feed = account.query_contacts(
+                query, // query,
+                null, // cancellable
+                (contact) => {
+                    if (contact.get_phone_numbers().length > 0) {
+                        contacts.push(contact);
+                    }
+                },
+                null
+            );
+            
+            count += feed.items_per_page;
+            query.start_index = count;
+            
+            if (count > feed.total_results) { break; }
+        }
+        
+        for (let contact of contacts) {
+            // Each phone number gets its own completion entry
+            for (let phoneNumber of contact.get_phone_numbers()) {
+                // Exclude number types that are unable to receive texts
+                if (SUPPORTED_TYPES.indexOf(phoneNumber.relation_type) < 0) {
+                    continue;
+                }
+                
+                this._add_contact(
+                    contact.title,
+                    phoneNumber.number,
+                    phoneNumber.relation_type
+                );
+            }
         }
     },
     
@@ -121,11 +195,11 @@ const ContactCompletion = new Lang.Class({
         
         // Phone Type Icon
         // TODO: folks->voice === google->work?
-        if (type === "home") {
+        if (type === "home" || type === GData.GD_PHONE_NUMBER_HOME) {
             type = this.phone_number_home;
-        } else if (type === "cell") {
+        } else if (type === "cell" || type === GData.GD_PHONE_NUMBER_MOBILE) {
             type = this.phone_number_mobile;
-        } else if (type === "work" || type === "voice") {
+        } else if (type === "voice" || type === "work" || type === GData.GD_PHONE_NUMBER_WORK) {
             type = this.phone_number_work;
         } else {
             type = this.phone_number_default;
