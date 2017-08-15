@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/icons">
+    <file alias="mconnect-symbolic.svg" compressed="true" preprocess="xml-stripblanks">mconnect-symbolic.svg</file>
     <!-- Status Icon Fallbacks c/o Numix -->
     <file alias="laptop-connected.svg" compressed="true" preprocess="xml-stripblanks">laptop-connected.svg</file>
     <file alias="laptop-disconnected.svg" compressed="true" preprocess="xml-stripblanks">laptop-disconnected.svg</file>
@@ -15,7 +16,6 @@
     <file alias="phone-number-default.svg" compressed="true" preprocess="xml-stripblanks">phone-number-default.svg</file>
     <file alias="phone-number-home.svg" compressed="true" preprocess="xml-stripblanks">phone-number-home.svg</file>
     <file alias="phone-number-mobile.svg" compressed="true" preprocess="xml-stripblanks">phone-number-mobile.svg</file>
-    <file alias="phone-number-other.svg" compressed="true" preprocess="xml-stripblanks">phone-number-other.svg</file>
     <file alias="phone-number-work.svg" compressed="true" preprocess="xml-stripblanks">phone-number-work.svg</file>
     <file alias="send-sms.svg" compressed="true" preprocess="xml-stripblanks">send-sms.svg</file>
   </gresource>
