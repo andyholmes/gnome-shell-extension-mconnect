@@ -15,6 +15,7 @@ pythonapi.PyCapsule_GetName.argtypes = (pyc.py_object,)
 pythonapi.PyCapsule_GetPointer.restype = pyc.c_void_p
 pythonapi.PyCapsule_GetPointer.argtypes = (pyc.py_object, pyc.c_char_p)
 
+
 ###############################################################################
 # GObject
 ###############################################################################
@@ -248,13 +249,6 @@ class FolksListener(object):
 
     def _on_quiescent(self, *args):
         self.on_ready(self.aggregator)
-        
-
-class AvatarDetailsWrapper(object):
-    def __init__(self, obj):
-        self.field_details = obj
-        self.value_type = obj.get_value_type()
-        self.value = c_to_py(obj.get_value(), self.value_type)
         
 
 class PhoneFieldDetailsWrapper(object):
