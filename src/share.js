@@ -97,7 +97,7 @@ const Application = new Lang.Class({
             null
         );
         
-        this.register(null, null);
+        this.register(null);
     },
 
     vfunc_startup: function() {
