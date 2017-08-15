@@ -76,29 +76,20 @@ const ContactCompletion = new Lang.Class({
         // Define a completion model
         let listStore = new Gtk.ListStore();
         listStore.set_column_types([
-            GdkPixbuf.Pixbuf,       // Avatar Icon
             GObject.TYPE_STRING,    // Title
             GObject.TYPE_STRING,    // Phone Number
             GdkPixbuf.Pixbuf        // Type Icon
         ]);
-        listStore.set_sort_column_id(1, Gtk.SortType.ASCENDING);
+        listStore.set_sort_column_id(0, Gtk.SortType.ASCENDING);
         //listStore.set_sort_func(1, this._sort, null, null);
         this.set_model(listStore);
         
-        // Avatar
-        let avatarCell = new Gtk.CellRendererPixbuf();
-        this.pack_start(avatarCell, false);
-        this.add_attribute(avatarCell, "pixbuf", 0);
         // Title
-        this.set_text_column(1);
-        // Number
-        //let numberCell = new Gtk.CellRendererText();
-        //this.pack_start(numberCell, false);
-        //this.add_attribute(numberCell, "text", 2);
+        this.set_text_column(0);
         // Type Icon
         let typeCell = new Gtk.CellRendererPixbuf();
         this.pack_start(typeCell, false);
-        this.add_attribute(typeCell, "pixbuf", 3);
+        this.add_attribute(typeCell, "pixbuf", 2);
         
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
@@ -193,16 +184,13 @@ const ContactCompletion = new Lang.Class({
             
             if (contact !== null) {
                 let [name, number, type] = contact.toString().split("\t");
-                this._add_contact(name, number, type);
+                if (type !== "fax") { this._add_contact(name, number, type); }
                 this._read_folk(stream);
             }
         });
     },
     
     _add_contact: function (name, number, type) {
-        // Load a default avatar
-        let photo = this.default_avatar_pixbuf;
-        
         // Append the number to the title column
         let title = name + " <" + number + ">";
         
@@ -220,15 +208,15 @@ const ContactCompletion = new Lang.Class({
     
         this.model.set(
             this.model.append(),
-            [0, 1, 2, 3],
-            [photo, title, number, type]
+            [0, 1, 2],
+            [title, number, type]
         );
     },
     
     _match: function (completion, key, tree_iter) {
         let model = completion.get_model();
-        let title = model.get_value(tree_iter, 1).toLowerCase();
-        let number = model.get_value(tree_iter, 2);
+        let title = model.get_value(tree_iter, 0).toLowerCase();
+        let number = model.get_value(tree_iter, 1);
         let oldContacts = key.split(",").slice(0, -1);
         
         // Set key to the last or only search item, trimmed of whitespace
@@ -253,7 +241,7 @@ const ContactCompletion = new Lang.Class({
     _select: function (completion, model, tree_iter) {
         let entry = completion.get_entry();
         let oldContacts = entry.text.split(",").slice(0, -1);
-        let newContact = model.get_value(tree_iter, 1);
+        let newContact = model.get_value(tree_iter, 0);
         
         // Ignore duplicate selections
         if (oldContacts.indexOf(newContact) > -1) { return; }

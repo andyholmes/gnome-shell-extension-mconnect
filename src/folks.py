@@ -296,7 +296,6 @@ if __name__ == '__main__':
         for folk in get_folks(aggregator):
             for phone_number in get_phone_numbers(folk):
                 output = [
-                    #str(folk.get_avatar()),
                     folk.get_display_name(),
                     phone_number.value,
                     phone_number.parameters['type']
