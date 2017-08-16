@@ -353,6 +353,10 @@ const DeviceIndicator = new Lang.Class({
             this._sync();
         });
         
+        Settings.connect("changed::device-indicators", () => {
+            this._sync();
+        });
+        
         device.connect("notify::reachable", () => { this._sync(); });
         device.connect("notify::trusted", () => { this._sync(); });
 
@@ -368,7 +372,9 @@ const DeviceIndicator = new Lang.Class({
         let { reachable, trusted, type } = this.device;
         
         // Device Visibility
-        if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
+        if (!Settings.get_boolean("device-indicators")) {
+            this.actor.visible = false;
+        } else if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
             this.actor.visible = false;
         } else if (!(flags & DeviceVisibility.OFFLINE) && !reachable) {
             this.actor.visible = false;
@@ -408,6 +414,7 @@ const SystemIndicator = new Lang.Class({
 
         this.manager = false;
         this._indicators = {};
+        this._menus = {};
         
         // Notifications
         this._integrateNautilus();
@@ -425,18 +432,26 @@ const SystemIndicator = new Lang.Class({
 
         // System Indicator
         this.extensionIndicator = this._addIndicator();
-        // previously "phone-apple-iphone-symbolic"
-        this.extensionIndicator.icon_name = "mconnect-symbolic";
+        this.extensionIndicator.icon_name = "device-link-symbolic";
         let userMenuTray = Main.panel.statusArea.aggregateMenu._indicators;
         userMenuTray.insert_child_at_index(this.indicators, 0);
-
-        // Extension Menu
+        
         this.extensionMenu = new PopupMenu.PopupSubMenuMenuItem(
             _("Mobile Devices"),
             true
         );
         this.extensionMenu.icon.icon_name = this.extensionIndicator.icon_name;
         this.menu.addMenuItem(this.extensionMenu);
+
+        // Extension Menu -> [ Devices Section ]
+        this.devicesSection = new PopupMenu.PopupMenuSection();
+        Settings.bind(
+            "device-indicators",
+            this.devicesSection.actor,
+            "visible",
+            Gio.SettingsBindFlags.INVERT_BOOLEAN
+        );
+        this.extensionMenu.menu.addMenuItem(this.devicesSection);
 
         // Extension Menu -> [ Enable Item ]
         this.enableItem = this.extensionMenu.menu.addAction(
@@ -484,7 +499,7 @@ const SystemIndicator = new Lang.Class({
         this.scanItem = this.extensionMenu.menu.addAction(
             "", () => { this.manager.scan(); }
         );
-        this.extensionMenu.menu.box.set_child_at_index(this.scanItem.actor, 0);
+        this.extensionMenu.menu.box.set_child_at_index(this.scanItem.actor, 1);
         this.manager.connect("notify::scanning", () => {
             if (this.manager._scans.indexOf("manager") > -1) {
                 this.scanItem.label.text = _("Stop scanning for Devices");
@@ -536,6 +551,8 @@ const SystemIndicator = new Lang.Class({
         debug("extension.SystemIndicator._deviceAdded(" + dbusPath + ")");
 
         let device = this.manager.devices[dbusPath];
+        
+        // [ Device Indicator ]
         let indicator = new DeviceIndicator(device);
         
         indicator.deviceMenu.connect("scan", (menu) => {
@@ -559,6 +576,22 @@ const SystemIndicator = new Lang.Class({
         
         this._indicators[dbusPath] = indicator;
         Main.panel.addToStatusArea(dbusPath, indicator);
+        
+        // Extension Menu -> [ Devices Section ] -> [ Device Menu ]
+        this._menus[dbusPath] = new DeviceMenu(device);
+        
+        device.connect("notify::reachable", () => {
+            this._deviceMenuVisibility(this._menus[dbusPath]);
+        });
+        device.connect("notify::trusted", () => {
+            this._deviceMenuVisibility(this._menus[dbusPath]);
+        });
+        Settings.connect("changed::device-visibility", () => {
+            this._deviceMenuVisibility(this._menus[dbusPath]);
+        });
+        
+        this.devicesSection.addMenuItem(this._menus[dbusPath]);
+        this._deviceMenuVisibility(this._menus[dbusPath]);
     },
 
     _deviceRemoved: function (manager, dbusPath) {
@@ -566,6 +599,23 @@ const SystemIndicator = new Lang.Class({
 
         Main.panel.statusArea[dbusPath].destroy();
         delete this._indicators[dbusPath];
+        this._menus[dbusPath].destroy();
+        delete this._menus[dbusPath];
+    },
+    
+    _deviceMenuVisibility: function (menu){
+        let flags = Settings.get_flags("device-visibility");
+        let { reachable, trusted } = menu.device;
+        
+        if (Settings.get_boolean("device-indicators")) {
+            menu.actor.visible = false;
+        } else if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
+            menu.actor.visible = false;
+        } else if (!(flags & DeviceVisibility.OFFLINE) && !reachable) {
+            menu.actor.visible = false;
+        } else {
+            menu.actor.visible = true;
+        }
     },
     
     _notifyNautilus: function () {
@@ -620,6 +670,8 @@ const SystemIndicator = new Lang.Class({
         for (let dbusPath in this._indicators) {
             Main.panel.statusArea[dbusPath].destroy();
             delete this._indicators[dbusPath];
+            this._menus[dbusPath].destroy();
+            delete this._menus[dbusPath];
         }
 
         // Destroy the UI

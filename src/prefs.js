@@ -529,6 +529,7 @@ function buildPrefsWidget() {
     let widget = new SettingsWidget();
     
     let preferencesSection = widget.add_section(_("Preferences"));
+    widget.add_setting(preferencesSection, "device-indicators");
     widget.add_setting(preferencesSection, "device-automount");
     widget.add_setting(preferencesSection, "device-visibility");
     widget.add_setting(preferencesSection, "nautilus-integration");
@@ -544,8 +545,7 @@ function buildPrefsWidget() {
         visible: true,
         can_focus: true,
         halign: Gtk.Align.END,
-        valign: Gtk.Align.CENTER,
-        margin_right: 12
+        valign: Gtk.Align.CENTER
     });
     button.get_style_context().add_class("circular");
     button.connect("clicked", (button) => {
@@ -558,7 +558,7 @@ function buildPrefsWidget() {
     widget.add_item(
         serviceSection,
         _("Service Settings"),
-        _("Open the settings for the current service."),
+        _("Open the settings for the current service"),
         button
     );
     
