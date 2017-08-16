@@ -552,7 +552,7 @@ const SystemIndicator = new Lang.Class({
 
         let device = this.manager.devices[dbusPath];
         
-        // [ Device Indicator ]
+        // Status Area -> [ Device Indicator ]
         let indicator = new DeviceIndicator(device);
         
         indicator.deviceMenu.connect("scan", (menu) => {
@@ -577,16 +577,24 @@ const SystemIndicator = new Lang.Class({
         this._indicators[dbusPath] = indicator;
         Main.panel.addToStatusArea(dbusPath, indicator);
         
-        // Extension Menu -> [ Devices Section ] -> [ Device Menu ]
+        // Extension Menu -> [ Devices Section ] -> Device Menu
         this._menus[dbusPath] = new DeviceMenu(device);
+        
+        this._menus[dbusPath].connect("scan", (menu) => {
+            this.manager.scan(menu.device.id);
+        
+            if (this.manager._scans.indexOf(menu.device.id) > -1) {
+                menu.statusLabel.text = _("Scanning for device...");
+                menu.statusButton.child.icon_name = "process-stop-symbolic"
+            } else {
+                menu._statusChanged(menu.device);
+            }
+        });
         
         device.connect("notify::reachable", () => {
             this._deviceMenuVisibility(this._menus[dbusPath]);
         });
         device.connect("notify::trusted", () => {
-            this._deviceMenuVisibility(this._menus[dbusPath]);
-        });
-        Settings.connect("changed::device-visibility", () => {
             this._deviceMenuVisibility(this._menus[dbusPath]);
         });
         
@@ -607,9 +615,7 @@ const SystemIndicator = new Lang.Class({
         let flags = Settings.get_flags("device-visibility");
         let { reachable, trusted } = menu.device;
         
-        if (Settings.get_boolean("device-indicators")) {
-            menu.actor.visible = false;
-        } else if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
+        if (!(flags & DeviceVisibility.UNPAIRED) && !trusted) {
             menu.actor.visible = false;
         } else if (!(flags & DeviceVisibility.OFFLINE) && !reachable) {
             menu.actor.visible = false;
