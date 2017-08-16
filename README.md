@@ -2,7 +2,22 @@
 
 ![SMS window, Nautilus integration, Device Indicator & Menu][screenshot]
 
-This extension provides integration for KDE Connect/MConnect in Gnome Shell.
+
+**Contents:**
+
+* [Overview](#overview)
+* [Features](#features)
+* [Installation](#installation)
+* [Dependencies](#dependencies)
+* [Preferences](#preferences)
+* [Contributing](#contributing)
+* [Credits and Acknowledgements](#credits-and-acknowledgements)
+
+
+## Overview
+
+This extension provides integration for KDE Connect and or MConnect in Gnome
+Shell, making use of as many *stock* resources as possible.
 
 [KDE Connect](https://community.kde.org/KDEConnect) uses an
 [Android app](https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp)
@@ -19,17 +34,17 @@ file managers and should work on any desktop with Gtk.
 
 ## Features
 
-* Send SMS messages with optional Google Contacts auto-completion
+* Send SMS messages (optional: [Google Contacts Auto-complete](#google-contacts-auto-complete))
   
 * Find devices by causing them to ring until found
 
 * Mount and browse folders on your devices
 
-* Send files to devices with optional Nautilus integration
+* Send files to devices (optional: [Nautilus Integration](#nautilus-integration))
 
 * Monitor battery level and charging state
 
-* Supports KDE Connect and MConnect (WIP) as service providers
+* Supports [KDE Connect](#kde-connect) and [MConnect](#mconnect) as service providers
 
 
 ## Installation
@@ -44,21 +59,32 @@ however, you may build and install from git with [Meson](http://mesonbuild.com):
     ninja install-zip
     
     
-### Dependencies
+## Dependencies
 
-The extension is known to work with Gnome Shell 3.24.x, but other recent
-versions may also work; please report your results. Additionally, either KDE
-Connect or MConnect must be installed. Optional features and their requirements
-include:
+The extension is tested with Gnome Shell 3.24.x and has been reported working
+on 3.18.x. Other recent versions may also work; please report your results.
 
-**Google Contacts Auto-complete in SMS Application**
+### Google Contacts Auto-complete
+
+Google Contacts auto-complete is an *optional* feature and requires:
+
 * Gnome Online Accounts with at least one Google account
 * Gnome Online Accounts GIR (eg. gir1.2-goa-1.0)
 * GData GIR (eg. gir1.2-gdata-0.0)
 
-**Nautilus Integration**
+Auto-completion for other sources and GOA accounts is being actively pursued
+in [Issue #16](../../issues/16).
+
+
+### Nautilus Integration
+
+Nautilus integration is an *optional* feature and requires:
+
 * Nautilus Python Bindings (eg. python-nautilus)
 * Nautilus GIR (eg. gir1.2-nautilus-3.0)
+
+See the [Contributing section](#contributing) for guidelines about contributing
+support for other file managers.
 
 
 ### MConnect
@@ -107,32 +133,116 @@ KDE Connect should be installed through normal, stable distribution channels.
 
 ## Preferences
 
-The following options are available in the extension preferences:
+The following options are available in the extension preferences and are
+explained here in greater detail to users requiring more information:
 
-* **Device Visibility**
+* **Device Indicators** - Controls available via Indicators or the User Menu
 
-    In what states a device will be made visible to the user. Paired, online
-    devices will always be shown.
+    If enabled, each device will be given an indicator with an icon that
+    represents the device type (smartphone, tablet or laptop) with an
+    indication of its current state (this may be a colour or an emblem,
+    depending on the icon theme). Controls for the device will be in popup menu
+    available by clicking on the icon.
     
-* **Nautilus Integration**
+    If disabled, the same menu found in the indicator popup will instead appear
+    in the *Mobile Devices* submenu found in the Gnome Shell User Menu. This is
+    the menu on the far right of the panel where Session Controls, Wi-Fi,
+    Location and other services are found.
 
-    If true, a submenu will be added to the Nautilus context menu to allow
-    sending files to devices directly from the file browser.
+* **Device Auto-Mount** - Automatically mount devices that support it
 
-* **Service Autostart**
-
-    If true, the service will be automatically started and restarted if it
-    stops. Otherwise the extension will wait for the service to be started.
-
-* **Service Provider**
-
-    Whether to use KDE Connect or MConnect to provide access to devices.
+    When enabled, any device with the "Remote filesystem browser" (aka SFTP)
+    plugin enabled will be automatically mounted, either when it becomes paired
+    and connected or when the plugin is enabled.
     
-* **Debug Mode**
+    This has a few results. Any delay when pressing the *Remote Folder* icon in
+    the device menu should be removed, and additionally, the device *may*
+    maintain a more resilient connection. Be warned, this may result in a
+    wake-lock on your device and negatively affect battery life.
     
-    If true, the extension will print verbosely to the log. See 'journalctl
-    /usr/bin/gnome-shell -f -o cat' for output.
+* **Device Visibility** - Display devices in offline and unpaired states
+
+    While paired and online devices will always be displayed, you may choose
+    whether or not to display devices that are Offline or Unpaired. This does
+    not affect any connection they have to the backend service.
     
+* **Nautilus Integration** - Send files from the file browser context menu
+    
+    If enabled, a submenu will be added to the Nautilus context menu, listing
+    the names of devices that are online, paired and have the "Share and
+    receive" plugin enabled. Clicking on a device will send the currently
+    selected files to that device.
+
+    When enabled a symbolic link will be made from `nautilus-send-mconnect.py`
+    in the extension directory to `~/.local/share/nautilus-python/extensions/`,
+    after which a notification will appear advising you to restart Nautilus
+    with button titled *Restart* (alternatively you may  run `nautilus -q` in a
+    terminal). Be warned, restarting Nautilus will close any currently open
+    windows. The same notification will appear when disabled and the symbolic
+    link will be removed.
+
+* **Service Auto-Start** - Start the service automatically and restart if stopped
+
+    When the extension is enabled, the service will be automatically started if
+    it isn't already running and restarted if it stops. For sanity reasons,
+    only one attempt is made in each case. If this feature is disabled or the
+    service fails to start, the extension will place an item in the User Menu
+    titled *Enable* and wait for the service to be started.
+
+* **Service Provider** - The service providing devices
+
+    This option determines whether to use [KDE Connect](#kde-connect) or
+    [MConnect](#mconnect) to provide access to devices. Please see the
+    descriptions above for installation and current support status.
+
+* **Service Settings** - Open the settings for the current service
+
+    This is just a convenience button which will open the settings for the
+    currently selected service provider. For KDE Connect it will open the
+    *System Settings Module*, while for MConnect it will use `xdg-open` to open
+    `~/.config/mconnect/mconnect.conf` in your default text editor.
+    
+* **Debug Mode** - Enable debug features and logging
+    
+    If true, the extension will enable some debug features and print verbosely
+    to the log (see `journalctl /usr/bin/gnome-shell -f -o cat` for output).
+    These messages may not include everything being emitted and the enabled
+    features provide no extra functionality to regular users.
+    
+    Follow these steps to start debugging `sms.js` or `share.js`:
+    
+        cd ~/.local/share/gnome-shell/extensions/mconnect@andyholmes.github.io
+        # lists devices in the format "<device-name>: <device-id>"
+        gjs share.js -l
+        gjs sms.js --device=<device-id>
+        
+    You may run either program with the --help flag to see all options.
+
+
+## Contributing
+
+Thank you for considering contributing to this project. It means that you not
+only find it useful, but that you think there's something that could be done to
+make it more useful, or useful to more people. *Any* suggestions are welcome,
+including open discussion about the direction of the project as a whole. Don't
+worry if you can't code, can't document, can't design graphics, can't translate
+or have trouble with english; I still want to hear from you.
+
+That being said, the current vision is to be a stock Gnome project, although
+not necessarily *pure* Gnome. For example, there are no plans to include
+integration for file managers other that Nautilus, however contributions for
+other file managers would be accepted so long as including them doesn't *force*
+other users to install dependencies that they don't need or wouldn't normally
+be found in a stock Gnome desktop.
+
+Additionally, all code should be written in [GJS][gjs] if at all possible and
+should not be written in compiled languages that are architecture dependent. As
+long as it can be unpacked from a ZIP and ready to go for everyone, that's good
+enough.
+
+The best way to get in touch is either by [opening a new issue][issue] or by
+contacting one of the current [contributors][contributors] directly.
+
     
 ## Credits and Acknowledgements
 
@@ -142,12 +252,12 @@ The following options are available in the extension preferences:
 [@Bajoja][Bajoja] and the [indicator-kdeconnect][kindicator] developers, for
 advice and code I frequently reference.
 
-This extension includes fallback icons from the [Numix][numix] project, and
-phone number icons from Google's [Material Design][material] project.
+This extension includes icons from the [Numix][numix] project and Google's
+[Material Design][material] project.
 
 A special mention goes to [@ptomato][ptomato] for the large amount of work and
-the [bright future][bright-future] he has contributed to GJS, as well as help
-on StackOverflow.
+the [bright future][gjs-future] he has contributed to GJS, as well as help on
+StackOverflow.
 
 The screenshot of the extension features the [Vimix Dark Laptop][vimix] Gtk &
 Gnome Shell theme with the [Numix Circle][numix] icon theme.
@@ -155,12 +265,16 @@ Gnome Shell theme with the [Numix Circle][numix] icon theme.
 [screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png
 [kindicator]: https://github.com/Bajoja/indicator-kdeconnect
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
+[folks]: https://wiki.gnome.org/Projects/Folks
 [dbus-support]: https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support
+[issue]: ../../issues/new
+[contributors]: ../../graphs/contributors
+[gjs]: https://wiki.gnome.org/Projects/Gjs
 [albertvaka]: https://github.com/albertvaka
 [bboozzoo]: https://github.com/bboozzoo
 [Bajoja]: https://github.com/Bajoja
 [ptomato]: https://github.com/ptomato
-[bright-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
+[gjs-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
 [vimix]: https://github.com/vinceliuice/vimix-gtk-themes
 [numix]: https://numixproject.org/
 [material]: https://material.io/
