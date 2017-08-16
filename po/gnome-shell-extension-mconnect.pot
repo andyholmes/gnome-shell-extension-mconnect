@@ -1,0 +1,199 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-shell-extension-mconnect package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-shell-extension-mconnect\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-16 16:58-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/extension.js:277
+msgid "Device is unpaired"
+msgstr ""
+
+#: src/extension.js:280 src/sms.js:366
+msgid "Device is offline"
+msgstr ""
+
+#: src/extension.js:318
+msgid "Failed to mount device filesystem"
+msgstr ""
+
+#: src/extension.js:458
+msgid "Mobile Devices"
+msgstr ""
+
+#: src/extension.js:476
+msgid "Enable"
+msgstr ""
+
+#: src/extension.js:482
+msgid "Mobile Settings"
+msgstr ""
+
+#: src/extension.js:523
+msgid "Stop scanning for Devices"
+msgstr ""
+
+#: src/extension.js:525
+msgid "Scan for Devices"
+msgstr ""
+
+#: src/extension.js:580 src/extension.js:605
+msgid "Scanning for device..."
+msgstr ""
+
+#: src/extension.js:651
+msgid "Nautilus extensions changed"
+msgstr ""
+
+#: src/extension.js:652
+msgid "Restart Nautilus to apply changes"
+msgstr ""
+
+#: src/extension.js:657
+msgid "Restart"
+msgstr ""
+
+#: src/prefs.js:154
+msgid "Nothing"
+msgstr ""
+
+#: src/prefs.js:167
+msgid "True"
+msgstr ""
+
+#: src/prefs.js:180
+msgid "False"
+msgstr ""
+
+#: src/prefs.js:531
+msgid "Preferences"
+msgstr ""
+
+#: src/prefs.js:537
+msgid "Service"
+msgstr ""
+
+#: src/prefs.js:560
+msgid "Service Settings"
+msgstr ""
+
+#: src/prefs.js:561
+msgid "Open the settings for the current service"
+msgstr ""
+
+#: src/prefs.js:565
+msgid "Development"
+msgstr ""
+
+#: src/share.js:38
+msgid "Send file..."
+msgstr ""
+
+#: src/share.js:44
+msgid "Cancel"
+msgstr ""
+
+#: src/share.js:45
+msgid "Send"
+msgstr ""
+
+#: src/share.js:62
+msgid "MConnect File Share"
+msgstr ""
+
+#: src/sms.js:259
+msgid "Type a phone number"
+msgstr ""
+
+#: src/sms.js:268
+msgid "Type a phone number or name"
+msgstr ""
+
+#: src/sms.js:403
+msgid "Type an SMS message"
+msgstr ""
+
+#: src/sms.js:533
+msgid "MConnect SMS"
+msgstr ""
+
+#: src/nautilus-send-mconnect.py:79
+#, python-brace-format
+msgid "Sending {num_files} file(s)"
+msgstr ""
+
+#: src/nautilus-send-mconnect.py:109
+msgid "Send To Mobile Device"
+msgstr ""
+
+#: src/nautilus-send-mconnect.py:110
+msgid "Send file(s) with mconnect"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:14
+msgid "Debug mode"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:15
+msgid "Enable debug features and logging"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:19
+msgid "Device Auto-Mount"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:20
+msgid "Automatically mount devices that support it"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:24
+msgid "Device Indicators"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
+msgid "Controls available via Indicators or the User Menu"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:29
+msgid "Device Visibility"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:30
+msgid "Display devices in offline and unpaired states"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
+msgid "Nautilus Integration"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
+msgid "Send files from the file browser context menu"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
+msgid "Service Auto-Start"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
+msgid "Start the service automatically and restart if stopped"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
+msgid "Service Provider"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
+msgid "The service providing devices."
+msgstr ""

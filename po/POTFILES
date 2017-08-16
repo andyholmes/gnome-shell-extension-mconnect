@@ -3,5 +3,5 @@ src/prefs.js
 src/share.js
 src/sms.js
 src/nautilus-send-mconnect.py
-src/org.gnome.shell.extensions.mconnect.gschema.xml
+data/org.gnome.shell.extensions.mconnect.gschema.xml
 
