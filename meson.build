@@ -29,7 +29,6 @@ Files = files(
   'src/share.js',
   'src/sms.js',
   # non-GJS files
-  'src/folks.py',
   'src/nautilus-send-mconnect.py'
 )
 
