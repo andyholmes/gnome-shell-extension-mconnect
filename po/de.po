@@ -1,0 +1,199 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-shell-extension-mconnect package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-shell-extension-mconnect\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-16 13:16-0700\n"
+"PO-Revision-Date: 2017-08-16 22:59+0200\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
+"Language-Team: Jonatan Hatakeyama Zeidler\n"
+"X-Generator: Poedit 2.0.1\n"
+
+#: src/extension.js:259
+msgid "Device is unpaired"
+msgstr "Gerät ist nicht gekoppelt"
+
+#: src/extension.js:262 src/sms.js:366
+msgid "Device is offline"
+msgstr "Gerät ist nicht verbunden"
+
+#: src/extension.js:300
+msgid "Failed to mount device filesystem"
+msgstr "Einhängen des Gerätedateisystems fehlgeschlagen"
+
+#: src/extension.js:440
+msgid "Mobile Devices"
+msgstr "Mobile Geräte"
+
+#: src/extension.js:458
+msgid "Enable"
+msgstr "Aktivieren"
+
+#: src/extension.js:464
+msgid "Mobile Settings"
+msgstr "Einstellungen Mobile Geräte"
+
+#: src/extension.js:505
+msgid "Stop scanning for Devices"
+msgstr "Suche nach Geräten abbrechen"
+
+#: src/extension.js:507
+msgid "Scan for Devices"
+msgstr "Geräte suchen"
+
+#: src/extension.js:562
+msgid "Scanning for device..."
+msgstr "Gerät werden gesucht …"
+
+#: src/extension.js:627
+msgid "Nautilus extensions changed"
+msgstr "Nautilus-Erweiterungen wurden geändert"
+
+#: src/extension.js:628
+msgid "Restart Nautilus to apply changes"
+msgstr "Nautilus neustarten, um Änderungen zu übernehmen"
+
+#: src/extension.js:633
+msgid "Restart"
+msgstr "Neustart"
+
+#: src/prefs.js:154
+msgid "Nothing"
+msgstr "Nichts"
+
+#: src/prefs.js:167
+msgid "True"
+msgstr "Wahr"
+
+#: src/prefs.js:180
+msgid "False"
+msgstr "Falsch"
+
+#: src/prefs.js:531
+msgid "Preferences"
+msgstr "Einstellungen"
+
+#: src/prefs.js:537
+msgid "Service"
+msgstr "Dienst"
+
+#: src/prefs.js:560
+msgid "Service Settings"
+msgstr "Einstellungen Dienst"
+
+#: src/prefs.js:561
+msgid "Open the settings for the current service"
+msgstr "Einstellungen des gewählten Dienstes öffnen"
+
+#: src/prefs.js:565
+msgid "Development"
+msgstr "Entwicklung"
+
+#: src/share.js:38
+msgid "Send file..."
+msgstr "Datei senden …"
+
+#: src/share.js:44
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: src/share.js:45
+msgid "Send"
+msgstr "Senden"
+
+#: src/share.js:62
+msgid "MConnect File Share"
+msgstr "MConnect Dateitransfer"
+
+#: src/sms.js:259
+msgid "Type a phone number"
+msgstr "Telefonnummer eingeben"
+
+#: src/sms.js:268
+msgid "Type a phone number or name"
+msgstr "Telefonnummer oder Name eingeben"
+
+#: src/sms.js:403
+msgid "Type an SMS message"
+msgstr "SMS-Nachricht eingeben"
+
+#: src/sms.js:533
+msgid "MConnect SMS"
+msgstr "MConnect SMS"
+
+#: src/nautilus-send-mconnect.py:79
+#, python-brace-format
+msgid "Sending {num_files} file(s)"
+msgstr "{num_files} Dateien werden gesendet"
+
+#: src/nautilus-send-mconnect.py:109
+msgid "Send To Mobile Device"
+msgstr "An mobiles Gerät senden"
+
+#: src/nautilus-send-mconnect.py:110
+msgid "Send file(s) with mconnect"
+msgstr "Dateien mit mconnect senden"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:14
+msgid "Debug mode"
+msgstr "Fehlerdiagnose-Modus"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:15
+msgid "Enable debug features and logging"
+msgstr "Fehlerdiagnose-Funktionen und Logging aktivieren"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:19
+msgid "Device Auto-Mount"
+msgstr "Geräte automatisch verbinden"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:20
+msgid "Automatically mount devices that support it"
+msgstr "Automatisch Geräte einhängen, falls vom Gerät unterstützt"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:24
+msgid "Device Indicators"
+msgstr "Geräteindikatoren"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
+msgid "Controls available via Indicators or the User Menu"
+msgstr "Indikatoren für gekoppelte Geräte anzeigen"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:29
+msgid "Device Visibility"
+msgstr "Gerätesichtbarkeit"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:30
+msgid "Display devices in offline and unpaired states"
+msgstr "Auch nicht verbundene oder gekoppelte Geräte anzeigen"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
+msgid "Nautilus Integration"
+msgstr "Nautilus-Integration"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
+msgid "Send files from the file browser context menu"
+msgstr "Dateien vom Dateibrowser-Kontextmenü aus senden"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
+msgid "Service Auto-Start"
+msgstr "Dienst-Autostart"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
+msgid "Start the service automatically and restart if stopped"
+msgstr "Dienst automatisch starten und neustarten, falls gestoppt"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
+msgid "Service Provider"
+msgstr "Dienst"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
+msgid "The service providing devices."
+msgstr "Der Hintergrunddienst, der Geräteverbindungen bereitstellt."
