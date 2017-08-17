@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-16 16:58-0700\n"
+"POT-Creation-Date: 2017-08-17 14:17-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,52 +16,53 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: src/extension.js:277
+#: src/extension.js:267
 msgid "Device is unpaired"
 msgstr ""
 
-#: src/extension.js:280 src/sms.js:366
+#: src/extension.js:270 src/sms.js:366
 msgid "Device is offline"
 msgstr ""
 
-#: src/extension.js:318
+#: src/extension.js:308
 msgid "Failed to mount device filesystem"
 msgstr ""
 
-#: src/extension.js:458
+#: src/extension.js:448
 msgid "Mobile Devices"
 msgstr ""
 
-#: src/extension.js:476
+#: src/extension.js:466
 msgid "Enable"
 msgstr ""
 
-#: src/extension.js:482
+#: src/extension.js:472
 msgid "Mobile Settings"
 msgstr ""
 
-#: src/extension.js:523
+#: src/extension.js:513
 msgid "Stop scanning for Devices"
 msgstr ""
 
-#: src/extension.js:525
+#: src/extension.js:515
 msgid "Scan for Devices"
 msgstr ""
 
-#: src/extension.js:580 src/extension.js:605
+#: src/extension.js:570 src/extension.js:595
 msgid "Scanning for device..."
 msgstr ""
 
-#: src/extension.js:651
+#: src/extension.js:641
 msgid "Nautilus extensions changed"
 msgstr ""
 
-#: src/extension.js:652
+#: src/extension.js:642
 msgid "Restart Nautilus to apply changes"
 msgstr ""
 
-#: src/extension.js:657
+#: src/extension.js:647
 msgid "Restart"
 msgstr ""
 
@@ -131,15 +132,13 @@ msgstr ""
 
 #: src/nautilus-send-mconnect.py:79
 #, python-brace-format
-msgid "Sending {num_files} file(s)"
-msgstr ""
+msgid "Sending {num} file"
+msgid_plural "Sending {num} files"
+msgstr[0] ""
+msgstr[1] ""
 
 #: src/nautilus-send-mconnect.py:109
 msgid "Send To Mobile Device"
-msgstr ""
-
-#: src/nautilus-send-mconnect.py:110
-msgid "Send file(s) with mconnect"
 msgstr ""
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:14

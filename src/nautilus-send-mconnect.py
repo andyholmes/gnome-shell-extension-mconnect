@@ -58,7 +58,7 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
 
         return devices
 
-    def send_files(self, menu, files, device_id):
+    def send_files(self, menu, files, device):
         """Send *files* to *device_id*"""
         
         for file in files:
@@ -66,7 +66,7 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
                 'gjs',
                 CLI_PATH,
                 '--device',
-                device_id,
+                device['id'],
                 '--share',
                 urllib.url2pathname(file.get_uri()[7:])
             ])
@@ -75,8 +75,8 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
         
         Notify.init('gnome-shell-extension-mconnect')
         Notify.Notification.new(
-            device_name,
-            _('Sending {num_files} file(s)').format(num_files=len(files)),
+            device['name'],
+            gettext.ngettext('Sending {num} file', 'Sending {num} files', len(files)).format(num=len(files)),
             'send-to-symbolic'
         ).show()
 
@@ -107,7 +107,6 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
         menu = Nautilus.MenuItem(
             name='MConnectShareExtension::Devices',
             label=_('Send To Mobile Device'),
-            tip=_('Send file(s) with mconnect'),
             icon='smartphone-symbolic'
         )
 
@@ -123,7 +122,7 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
                 icon='smartphone-symbolic'
             )
             
-            item.connect('activate', self.send_files, files, device['id'])
+            item.connect('activate', self.send_files, files, device)
             
             submenu.append_item(item)
 

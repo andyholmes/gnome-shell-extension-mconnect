@@ -7,61 +7,61 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-16 13:16-0700\n"
+"POT-Creation-Date: 2017-08-17 14:17-0700\n"
 "PO-Revision-Date: 2017-08-16 22:59+0200\n"
+"Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
+"Language-Team: Jonatan Hatakeyama Zeidler\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
-"Language-Team: Jonatan Hatakeyama Zeidler\n"
 "X-Generator: Poedit 2.0.1\n"
 
-#: src/extension.js:259
+#: src/extension.js:267
 msgid "Device is unpaired"
 msgstr "Gerät ist nicht gekoppelt"
 
-#: src/extension.js:262 src/sms.js:366
+#: src/extension.js:270 src/sms.js:366
 msgid "Device is offline"
 msgstr "Gerät ist nicht verbunden"
 
-#: src/extension.js:300
+#: src/extension.js:308
 msgid "Failed to mount device filesystem"
 msgstr "Einhängen des Gerätedateisystems fehlgeschlagen"
 
-#: src/extension.js:440
+#: src/extension.js:448
 msgid "Mobile Devices"
 msgstr "Mobile Geräte"
 
-#: src/extension.js:458
+#: src/extension.js:466
 msgid "Enable"
 msgstr "Aktivieren"
 
-#: src/extension.js:464
+#: src/extension.js:472
 msgid "Mobile Settings"
 msgstr "Einstellungen Mobile Geräte"
 
-#: src/extension.js:505
+#: src/extension.js:513
 msgid "Stop scanning for Devices"
 msgstr "Suche nach Geräten abbrechen"
 
-#: src/extension.js:507
+#: src/extension.js:515
 msgid "Scan for Devices"
 msgstr "Geräte suchen"
 
-#: src/extension.js:562
+#: src/extension.js:570 src/extension.js:595
 msgid "Scanning for device..."
 msgstr "Gerät werden gesucht …"
 
-#: src/extension.js:627
+#: src/extension.js:641
 msgid "Nautilus extensions changed"
 msgstr "Nautilus-Erweiterungen wurden geändert"
 
-#: src/extension.js:628
+#: src/extension.js:642
 msgid "Restart Nautilus to apply changes"
 msgstr "Nautilus neustarten, um Änderungen zu übernehmen"
 
-#: src/extension.js:633
+#: src/extension.js:647
 msgid "Restart"
 msgstr "Neustart"
 
@@ -130,17 +130,15 @@ msgid "MConnect SMS"
 msgstr "MConnect SMS"
 
 #: src/nautilus-send-mconnect.py:79
-#, python-brace-format
-msgid "Sending {num_files} file(s)"
-msgstr "{num_files} Dateien werden gesendet"
+#, fuzzy, python-brace-format
+msgid "Sending {num} file"
+msgid_plural "Sending {num} files"
+msgstr[0] "{num_files} Dateien werden gesendet"
+msgstr[1] "{num_files} Dateien werden gesendet"
 
 #: src/nautilus-send-mconnect.py:109
 msgid "Send To Mobile Device"
 msgstr "An mobiles Gerät senden"
-
-#: src/nautilus-send-mconnect.py:110
-msgid "Send file(s) with mconnect"
-msgstr "Dateien mit mconnect senden"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:14
 msgid "Debug mode"
@@ -197,3 +195,10 @@ msgstr "Dienst"
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
 msgid "The service providing devices."
 msgstr "Der Hintergrunddienst, der Geräteverbindungen bereitstellt."
+
+#, fuzzy
+#~ msgid "Sending %d file"
+#~ msgstr "Datei senden …"
+
+#~ msgid "Send file(s) with mconnect"
+#~ msgstr "Dateien mit mconnect senden"
