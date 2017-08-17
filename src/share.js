@@ -124,13 +124,16 @@ const Application = new Lang.Class({
                 }
             }
         } else if (this._cmd === "share" && this._id) {
+            let found = false;
+            
             for (let device of devices) {
                 if (device.id === this._id && device.hasOwnProperty("share")) {
                     device.shareURI(this._path.toString());
-                } else {
-                    throw Error("no device or share not supported");
+                    found = true;
                 }
             }
+            
+            if (!found) { throw Error("no device or share not supported"); }
         } else if (this._id) {
             Gtk.init(null);
             
