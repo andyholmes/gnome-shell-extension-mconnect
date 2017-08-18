@@ -12,6 +12,7 @@ const Lang = imports.lang;
 const System = imports.system;
 const Gettext = imports.gettext.domain("gnome-shell-extension-mconnect");
 const _ = Gettext.gettext;
+const Folks = imports.gi.Folks;
 const GData = imports.gi.GData;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gio = imports.gi.Gio;
@@ -90,10 +91,13 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        if (Goa !== undefined && GData !== undefined) {
+        if (Folks !== undefined) {
+            this._get_contacts();
+            this._has_contacts = "avatar-default-symbolic";
+        } else if (Goa !== undefined && GData !== undefined) {
             for (let account in this._get_google_accounts()) {
                 this._get_google_contacts(account);
-                this._has_contacts = true;
+                this._has_contacts = "goa-account-google";
             }
         } else {
             this._has_contacts = false;
@@ -157,17 +161,45 @@ const ContactCompletion = new Lang.Class({
         }
     },
     
+    _get_contacts: function () {
+        let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
+            GLib.getenv('HOME'),            // working dir
+            ["python3", Me.path + "/folks.py"], // argv
+            null,                           // envp
+            GLib.SpawnFlags.SEARCH_PATH,    // enables PATH
+            null                            // child_setup (func)
+        );
+
+        let stream = new Gio.DataInputStream({
+            base_stream: new Gio.UnixInputStream({ fd: out_fd })
+        });
+        
+        this._read_contact(stream);
+    },
+    
+    _read_contact: function (stream) {
+        stream.read_line_async(GLib.PRIORITY_LOW, null, (source, res) => {
+            let [contact, length] = source.read_line_finish(res);
+            
+            if (contact !== null) {
+                let [name, number, type] = contact.toString().split("\t");
+                if (type !== "fax") { this._add_contact(name, number, type); }
+                this._read_contact(stream);
+            }
+        });
+    },
+    
     _add_contact: function (name, number, type) {
         // Append the number to the title column
         let title = name + " <" + number + ">";
         
         // Phone Type Icon
         // TODO: folks->voice === google->work?
-        if (type === GData.GD_PHONE_NUMBER_HOME) {
+        if (type === "home" || type === GData.GD_PHONE_NUMBER_HOME) {
             type = this.phone_number_home;
-        } else if (type === GData.GD_PHONE_NUMBER_MOBILE) {
+        } else if (type === "cell" || type === GData.GD_PHONE_NUMBER_MOBILE) {
             type = this.phone_number_mobile;
-        } else if (type === GData.GD_PHONE_NUMBER_WORK) {
+        } else if (type === "work" || type === "voice" || type === GData.GD_PHONE_NUMBER_WORK) {
             type = this.phone_number_work;
         } else {
             type = this.phone_number_default;
@@ -264,9 +296,9 @@ const ContactEntry = new Lang.Class({
             completion: new ContactCompletion()
         });
         
-        if (this.completion._has_contacts) {
+        if (this.completion._has_contacts !== false) {
             this.placeholder_text = _("Type a phone number or name");
-            this.primary_icon_name = "goa-account-google";
+            this.primary_icon_name = this.completion._has_contacts;
             this.input_purpose = Gtk.InputPurpose.FREE_FORM;
         }
     
