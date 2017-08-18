@@ -9,8 +9,13 @@
 * [Features](#features)
 * [Installation](#installation)
 * [Dependencies](#dependencies)
+  * [Contacts Auto-Complete](#contacts-auto-complete)
+  * [Nautilus Integration](#nautilus-integration)
+  * [MConnect](#mconnect)
+  * [KDE Connect](#kde-connect)
 * [Preferences](#preferences)
 * [Contributing](#contributing)
+  * [Translations](#translations)
 * [Credits and Acknowledgements](#credits-and-acknowledgements)
 
 
@@ -34,7 +39,7 @@ file managers and should work on any desktop with Gtk.
 
 ## Features
 
-* Send SMS messages (optional: [Google Contacts Auto-complete](#google-contacts-auto-complete))
+* Send SMS messages (optional: [Contacts Auto-complete](#contacts-auto-complete))
   
 * Find devices by causing them to ring until found
 
@@ -64,16 +69,24 @@ however, you may build and install from git with [Meson](http://mesonbuild.com):
 The extension is tested with Gnome Shell 3.24.x and has been reported working
 on 3.18.x. Other recent versions may also work; please report your results.
 
-### Google Contacts Auto-complete
+### Contacts Auto-complete
 
-Google Contacts auto-complete is an *optional* feature and requires:
+Contacts auto-completion is an *optional* feature and requires support for
+either [Folks][folks] or [Gnome Online Accounts][goa] and [GData][gdata],
+although Folks is now preferred. For current Google Contacts users, your
+contacts should continue to be supported; Folks aggregates GOA sources, and if
+not supported the SMS Application will fallback to GOA and GData.
+
+* At least one account in a provider supported by Folks
+* Folks GIR (eg. gir1.2-folks-0.6)
+
+OR
 
 * Gnome Online Accounts with at least one Google account
 * Gnome Online Accounts GIR (eg. gir1.2-goa-1.0)
 * GData GIR (eg. gir1.2-gdata-0.0)
 
-Auto-completion for other sources and GOA accounts is being actively pursued
-in [Issue #16](../../issues/16).
+Please report any problems you encounter in [Issue #16](../../issues/16).
 
 
 ### Nautilus Integration
@@ -242,6 +255,24 @@ enough.
 
 The best way to get in touch is either by [opening a new issue][issue] or by
 contacting one of the current [contributors][contributors] directly.
+    
+### Translations
+
+The POT file for translations can be found in the po directory, or downloaded
+directly from [here][pot]. If the POT file has not been regenerated recently,
+you may do so in the [build directory](#installation) by running the command:
+
+    ninja gnome-shell-extension-mconnect-pot
+    
+For contributors submitting a [Pull Request](../../pulls), try to remember to
+run the these two commands to re-align the POT file and the PO files for each
+language with current source (in the [build directory](#installation)):
+
+    ninja gnome-shell-extension-mconnect-pot
+    ninja gnome-shell-extension-mconnect-update-po
+    
+Please post any new translations you wish to have included in
+[Issue #22](../../issues/22).
 
     
 ## Credits and Acknowledgements
@@ -251,6 +282,9 @@ contacting one of the current [contributors][contributors] directly.
 
 [@Bajoja][Bajoja] and the [indicator-kdeconnect][kindicator] developers, for
 advice and code I frequently reference.
+
+Folks support is based on the Python shim for libgee written by
+[@hugosenari][hugosenari], who graciously donated his time helping out.
 
 This extension includes icons from the [Numix][numix] project and Google's
 [Material Design][material] project.
@@ -266,12 +300,16 @@ Gnome Shell theme with the [Numix Circle][numix] icon theme.
 [kindicator]: https://github.com/Bajoja/indicator-kdeconnect
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
 [folks]: https://wiki.gnome.org/Projects/Folks
+[goa]: https://help.gnome.org/users/gnome-help/stable/accounts.html
+[gdata]: https://developers.google.com/gdata/
 [dbus-support]: https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support
 [issue]: ../../issues/new
 [contributors]: ../../graphs/contributors
 [gjs]: https://wiki.gnome.org/Projects/Gjs
+[pot]: https://github.com/andyholmes/gnome-shell-extension-mconnect/tree/master/po/gnome-shell-extension-mconnect.pot
 [albertvaka]: https://github.com/albertvaka
 [bboozzoo]: https://github.com/bboozzoo
+[hugosenari]: https://github.com/hugosenari
 [Bajoja]: https://github.com/Bajoja
 [ptomato]: https://github.com/ptomato
 [gjs-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
