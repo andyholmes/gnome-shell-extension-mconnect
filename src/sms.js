@@ -78,7 +78,7 @@ const ContactCompletion = new Lang.Class({
             GdkPixbuf.Pixbuf        // Type Icon
         ]);
         listStore.set_sort_column_id(0, Gtk.SortType.ASCENDING);
-        //listStore.set_sort_func(1, this._sort, null, null);
+        //listStore.set_sort_func(0, this._sort, null, null);
         this.set_model(listStore);
         
         // Title
@@ -213,14 +213,22 @@ const ContactCompletion = new Lang.Class({
         let model = completion.get_model();
         let title = model.get_value(tree_iter, 0).toLowerCase();
         let number = model.get_value(tree_iter, 1);
-        let oldContacts = key.split(",").slice(0, -1);
+        
+        let currentContacts = key.split(",").slice(0, -1);
         
         // Set key to the last or only search item, trimmed of whitespace
         if (key.indexOf(",") > -1) { key = key.split(",").pop().trim(); }
-        // Return if key is empty or this contact has already been added
-        if (!key.length || oldContacts.indexOf(title) > -1) { return false; }
-        // Clear current matches if the key has changed and reset last key
-        if (key !== this._last) {
+        
+        // Return if the possible match is in the current list
+        if (currentContacts.indexOf(title) > -1) { return false; }
+        
+        // Clear current matches, reset last key and return if the key is empty
+        if (!key.length) {
+            this._matched = [];
+            this._last = null;
+            return;
+        // Clear current matches and reset last key if the key has changed
+        } else if (key !== this._last) {
             this._matched = [];
             this._last = key;
         }
@@ -236,16 +244,16 @@ const ContactCompletion = new Lang.Class({
     
     _select: function (completion, model, tree_iter) {
         let entry = completion.get_entry();
-        let oldContacts = entry.text.split(",").slice(0, -1);
-        let newContact = model.get_value(tree_iter, 0);
+        let currentContacts = entry.text.split(",").slice(0, -1);
+        let selectedContact = model.get_value(tree_iter, 0);
         
-        // Ignore duplicate selections
-        if (oldContacts.indexOf(newContact) > -1) { return; }
+        // Return if this contact is in the current list
+        if (currentContacts.indexOf(selectedContact) > -1) { return; }
         
         entry.set_text(
-            oldContacts.join(", ")
-            + ((oldContacts.length) ? ", " : "")
-            + newContact + ", "
+            currentContacts.join(", ")
+            + ((currentContacts.length) ? ", " : "")
+            + selectedContact + ", "
         );
         
         entry.set_position(-1);
@@ -302,13 +310,12 @@ const ContactEntry = new Lang.Class({
         // Select the first completion suggestion on "activate"
         this.connect("activate", () => { this._select(this); });
         
-        // Remove error class on "changed"
+        // Workaround for empty searches not calling CompletionMatchFunc
         this.connect("changed", (entry) => {
-            entry.secondary_icon_name = "";
-            let styleContext = entry.get_style_context();
-            
-            if (styleContext.has_class("error")) {
-                styleContext.remove_class("error");
+            if (entry.text === "") {
+                let completion = entry.get_completion();
+                completion._matched = [];
+                completion._last = null;
             }
         });
     },
@@ -501,20 +508,6 @@ const ApplicationWindow = new Lang.Class({
             // Found a matching Contact
             if (contactNumber) {
                 contactNumbers.push(contactNumber);
-            // No matching Contact, but includes alpha characters
-            } else if (/[a-zA-Z]/.test(item)) {
-                let start = this.contactEntry.text.indexOf(item);
-                let end = start + item.length;
-                
-                this.contactEntry.has_focus = true;
-                this.contactEntry.secondary_icon_name = "dialog-error-symbolic";
-                this.contactEntry.select_region(start, end);
-                
-                if (!styleContext.has_class("error")) {
-                    styleContext.add_class("error");
-                }
-                
-                return false;
             // Anything else can be handled by the device (libphonenumber)
             } else {
                 contactNumbers.push(item);
@@ -555,8 +548,7 @@ const Application = new Lang.Class({
     _init: function() {
         this.parent({
             application_id: "org.gnome.shell.extensions.mconnect.sms",
-            flags: Gio.ApplicationFlags.FLAGS_NONE,
-            register_session: true
+            flags: Gio.ApplicationFlags.FLAGS_NONE
         });
         
         let application_name = _("MConnect SMS");
