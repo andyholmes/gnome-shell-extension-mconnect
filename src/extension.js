@@ -43,21 +43,16 @@ const ActionButton = new Lang.Class({
         params = Object.assign({
             icon_name: null,
             callback: () => {},
-            tooltip: false,
-            toggle: false
+            toggle_mode: false
         }, params);
     
         this.parent({
             style_class: "system-menu-action",
             style: "padding: 8px;",
             child: new St.Icon({ icon_name: params.icon_name }),
-            toggle_mode: params.toggle
+            toggle_mode: params.toggle_mode
         });
         this.connect("clicked", params.callback);
-        
-        if (params.tooltip) {
-            //this.tooltip = new ActionTooltip(params.tooltip, this);
-        }
     }
 });
 
@@ -95,30 +90,26 @@ const DeviceMenu = new Lang.Class({
         
         this.smsButton = new ActionButton({
             icon_name: "user-available-symbolic",
-            callback: Lang.bind(this, this._smsAction),
-            tooltip: "Send SMS"
+            callback: Lang.bind(this, this._smsAction)
         });
         this.pluginBar.actor.add(this.smsButton, { expand: true, x_fill: false });
         
         this.findButton = new ActionButton({
             icon_name: "find-location-symbolic",
-            callback: Lang.bind(this, this._findAction),
-            tooltip: "Find my Device"
+            callback: Lang.bind(this, this._findAction)
         });
         this.pluginBar.actor.add(this.findButton, { expand: true, x_fill: false });
         
         this.browseButton = new ActionButton({
             icon_name: "folder-remote-symbolic",
             callback: Lang.bind(this, this._browseAction),
-            tooltip: "Browse Device",
-            toggle: true
+            toggle_mode: true
         });
         this.pluginBar.actor.add(this.browseButton, { expand: true, x_fill: false });
         
         this.shareButton = new ActionButton({
             icon_name: "send-to-symbolic",
-            callback: Lang.bind(this, this._shareAction),
-            tooltip: "Send Files"
+            callback: Lang.bind(this, this._shareAction)
         });
         this.pluginBar.actor.add(this.shareButton, { expand: true, x_fill: false });
         
@@ -148,8 +139,7 @@ const DeviceMenu = new Lang.Class({
             icon_name: "channel-insecure-symbolic",
             callback: () => {
                 (device.trusted) ? this.emit("scan") : device.pair();
-            },
-            tooltip: "Scan/Pair"
+            }
         });
         this.statusBar.actor.add(this.statusButton, { x_fill: false });
         
