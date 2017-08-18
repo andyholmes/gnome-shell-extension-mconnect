@@ -91,10 +91,7 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        if (Folks !== undefined) {
-            this._get_contacts();
-            this._has_contacts = "avatar-default-symbolic";
-        } else if (Goa !== undefined && GData !== undefined) {
+        if (Goa !== undefined && GData !== undefined) {
             for (let account in this._get_google_accounts()) {
                 this._get_google_contacts(account);
                 this._has_contacts = "goa-account-google";

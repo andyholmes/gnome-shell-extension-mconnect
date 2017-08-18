@@ -71,22 +71,14 @@ on 3.18.x. Other recent versions may also work; please report your results.
 
 ### Contacts Auto-complete
 
-Contacts auto-completion is an *optional* feature and requires support for
-either [Folks][folks] or [Gnome Online Accounts][goa] and [GData][gdata],
-although Folks is now preferred. For current Google Contacts users, your
-contacts should continue to be supported; Folks aggregates GOA sources, and if
-not supported the SMS Application will fallback to GOA and GData.
-
-* At least one account in a provider supported by Folks
-* Folks GIR (eg. gir1.2-folks-0.6)
-
-OR
+Contacts auto-complete is an *optional* feature and requires:
 
 * Gnome Online Accounts with at least one Google account
 * Gnome Online Accounts GIR (eg. gir1.2-goa-1.0)
 * GData GIR (eg. gir1.2-gdata-0.0)
 
-Please report any problems you encounter in [Issue #16](../../issues/16).
+Auto-completion for other sources and GOA accounts is being actively pursued
+in [Issue #16](../../issues/16).
 
 
 ### Nautilus Integration
@@ -271,7 +263,7 @@ language with current source (in the [build directory](#installation)):
     ninja gnome-shell-extension-mconnect-pot
     ninja gnome-shell-extension-mconnect-update-po
     
-Please post any new translations you wish to have included in
+Please submit new translations as either a Pull Request or by posting it in
 [Issue #22](../../issues/22).
 
     
@@ -283,8 +275,8 @@ Please post any new translations you wish to have included in
 [@Bajoja][Bajoja] and the [indicator-kdeconnect][kindicator] developers, for
 advice and code I frequently reference.
 
-Folks support is based on the Python shim for libgee written by
-[@hugosenari][hugosenari], who graciously donated his time helping out.
+Work-in-progress Folks support is based on a Python shim for libgee written by
+[@hugosenari][hugosenari], who has graciously donated his time by helping out.
 
 This extension includes icons from the [Numix][numix] project and Google's
 [Material Design][material] project.
