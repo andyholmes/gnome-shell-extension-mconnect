@@ -21,6 +21,25 @@ const Goa = imports.gi.Goa;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 
+const SUPPORTED_TYPES = [
+    // GData: https://developers.google.com/gdata/docs/2.0/elements#rel-values_71
+    "http://schemas.google.com/g/2005#home",
+    "http://schemas.google.com/g/2005#main",
+    "http://schemas.google.com/g/2005#mobile",
+    "http://schemas.google.com/g/2005#other",
+    "http://schemas.google.com/g/2005#pager",
+    "http://schemas.google.com/g/2005#work",
+    "http://schemas.google.com/g/2005#work_mobile",
+    "http://schemas.google.com/g/2005#work_pager",
+    // Folks types
+    "home",
+    "cell",     // Equal to GData->mobile
+    "pager",
+    "pref",     // Equal to GData->main
+    "work",
+    "voice"     // Sometimes mapped from GData#work
+];
+
 // Local Imports
 function getPath() {
     // Diced from: https://github.com/optimisme/gjs-examples/
@@ -42,14 +61,6 @@ const ServiceProvider = {
 initTranslations();
 
 /** Phone Number types that support receiving texts */
-const SUPPORTED_TYPES = [
-    GData.GD_PHONE_NUMBER_HOME,
-    GData.GD_PHONE_NUMBER_WORK,
-    GData.GD_PHONE_NUMBER_OTHER,
-    GData.GD_PHONE_NUMBER_MOBILE,
-    GData.GD_PHONE_NUMBER_MAIN,
-    GData.GD_PHONE_NUMBER_PAGER
-];
 
 /** A Gtk.EntryCompletion subclass for Google Contacts */
 const ContactCompletion = new Lang.Class({
@@ -128,8 +139,13 @@ const ContactCompletion = new Lang.Class({
                 query, // query,
                 null, // cancellable
                 (contact) => {
-                    if (contact.get_phone_numbers().length > 0) {
-                        contacts.push(contact);
+                    // Each phone number gets its own completion entry
+                    for (let phoneNumber of contact.get_phone_numbers()) {
+                        this._add_contact(
+                            contact.title,
+                            phoneNumber.number,
+                            phoneNumber.relation_type
+                        );
                     }
                 },
                 null
@@ -140,33 +156,27 @@ const ContactCompletion = new Lang.Class({
             
             if (count > feed.total_results) { break; }
         }
-        
-        for (let contact of contacts) {
-            // Each phone number gets its own completion entry
-            for (let phoneNumber of contact.get_phone_numbers()) {
-                // Exclude number types that are unable to receive texts
-                if (SUPPORTED_TYPES.indexOf(phoneNumber.relation_type) < 0) {
-                    continue;
-                }
-                
-                this._add_contact(
-                    contact.title,
-                    phoneNumber.number,
-                    phoneNumber.relation_type
-                );
-            }
-        }
     },
     
     _get_contacts: function () {
         let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
-            GLib.getenv('HOME'),            // working dir
+            null,                               // working dir
             ["python3", Me.path + "/folks.py"], // argv
-            null,                           // envp
-            GLib.SpawnFlags.SEARCH_PATH,    // enables PATH
-            null                            // child_setup (func)
+            null,                               // envp
+            GLib.SpawnFlags.SEARCH_PATH,        // enables PATH
+            null                                // child_setup (func)
         );
+        
+        // Sketchy error checking for folks.py
+        let errstream = new Gio.DataInputStream({
+            base_stream: new Gio.UnixInputStream({ fd: err_fd })
+        });
+        
+        if (errstream.read_line(null)[0] !== null) {
+            throw Error("error reading folks");
+        }
 
+        // Should be good to go
         let stream = new Gio.DataInputStream({
             base_stream: new Gio.UnixInputStream({ fd: out_fd })
         });
@@ -180,23 +190,25 @@ const ContactCompletion = new Lang.Class({
             
             if (contact !== null) {
                 let [name, number, type] = contact.toString().split("\t");
-                if (type !== "fax") { this._add_contact(name, number, type); }
+                this._add_contact(name, number, type);
                 this._read_contact(stream);
             }
         });
     },
     
     _add_contact: function (name, number, type) {
+        // Only include types that could possibly support SMS
+        if (SUPPORTED_TYPES.indexOf(type) < 0) { return; }
+    
         // Append the number to the title column
         let title = name + " <" + number + ">";
         
         // Phone Type Icon
-        // TODO: folks->voice === google->work?
-        if (type === "home" || type === GData.GD_PHONE_NUMBER_HOME) {
+        if (type.indexOf("home") > -1) {
             type = this.phone_number_home;
-        } else if (type === "cell" || type === GData.GD_PHONE_NUMBER_MOBILE) {
+        } else if (type.indexOf("cell") > -1 || type.indexOf("mobile") > -1) {
             type = this.phone_number_mobile;
-        } else if (type === "work" || type === "voice" || type === GData.GD_PHONE_NUMBER_WORK) {
+        } else if (type.indexOf("work") > -1 || type.indexOf("voice") > -1) {
             type = this.phone_number_work;
         } else {
             type = this.phone_number_default;
