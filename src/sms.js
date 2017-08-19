@@ -12,14 +12,19 @@ const Lang = imports.lang;
 const System = imports.system;
 const Gettext = imports.gettext.domain("gnome-shell-extension-mconnect");
 const _ = Gettext.gettext;
-const Folks = imports.gi.Folks;
-const GData = imports.gi.GData;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const Goa = imports.gi.Goa;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
+
+try {
+    var GData = imports.gi.GData;
+    var Goa = imports.gi.Goa;
+} catch (e) {
+    var GData = undefined;
+    var Goa = undefined;
+}
 
 const SUPPORTED_TYPES = [
     // GData: https://developers.google.com/gdata/docs/2.0/elements#rel-values_71
