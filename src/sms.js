@@ -514,8 +514,8 @@ const ApplicationWindow = new Lang.Class({
             
             // Search the completion (if present) for an exact contact match
             model.foreach((model, path, iter) => {
-                if (item === model.get_value(iter, 1)) {
-                    contactNumber = model.get_value(iter, 2);
+                if (item === model.get_value(iter, 0)) {
+                    contactNumber = model.get_value(iter, 1);
                     return true;
                 }
                 
