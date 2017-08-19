@@ -333,6 +333,9 @@ const ContactEntry = new Lang.Class({
                 let completion = entry.get_completion();
                 completion._matched = [];
                 completion._last = null;
+            } else if (styleContext.has_class("error")) {
+                entry.secondary_icon_name = "edit-clear-symbolic";
+                styleContext.remove_class("error");
             }
         });
     },
