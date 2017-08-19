@@ -329,6 +329,8 @@ const ContactEntry = new Lang.Class({
         
         // Workaround for empty searches not calling CompletionMatchFunc
         this.connect("changed", (entry) => {
+            let styleContext = entry.get_style_context();
+            
             if (entry.text === "") {
                 let completion = entry.get_completion();
                 completion._matched = [];
