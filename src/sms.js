@@ -107,13 +107,20 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        if (Goa !== undefined && GData !== undefined) {
-            for (let account in this._get_google_accounts()) {
-                this._get_google_contacts(account);
-                this._has_contacts = "goa-account-google";
+        try {
+            this._get_contacts();
+            this._contacts_provider = "avatar-default-symbolic";
+        } catch (e) {
+            log("Folks: " + e.message);
+            
+            try {
+                for (let account in this._get_google_accounts()) {
+                    this._get_google_contacts(account);
+                    this._contacts_provider = "goa-account-google";
+                }
+            } catch (e) {
+                log("Google: " + e.message);
             }
-        } else {
-            this._has_contacts = false;
         }
     },
     
@@ -144,7 +151,6 @@ const ContactCompletion = new Lang.Class({
                 query, // query,
                 null, // cancellable
                 (contact) => {
-                    // Each phone number gets its own completion entry
                     for (let phoneNumber of contact.get_phone_numbers()) {
                         this._add_contact(
                             contact.title,
@@ -318,9 +324,9 @@ const ContactEntry = new Lang.Class({
             completion: new ContactCompletion()
         });
         
-        if (this.completion._has_contacts !== false) {
+        if (this.completion._contacts_provider !== undefined) {
             this.placeholder_text = _("Type a phone number or name");
-            this.primary_icon_name = this.completion._has_contacts;
+            this.primary_icon_name = this.completion._contacts_provider;
             this.input_purpose = Gtk.InputPurpose.FREE_FORM;
         }
     
