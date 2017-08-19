@@ -26,7 +26,7 @@ try {
     var Goa = undefined;
 }
 
-const SUPPORTED_TYPES = [
+const SUPPORTED_NUMBER_TYPES = [
     // GData: https://developers.google.com/gdata/docs/2.0/elements#rel-values_71
     "http://schemas.google.com/g/2005#home",
     "http://schemas.google.com/g/2005#main",
@@ -36,7 +36,7 @@ const SUPPORTED_TYPES = [
     "http://schemas.google.com/g/2005#work",
     "http://schemas.google.com/g/2005#work_mobile",
     "http://schemas.google.com/g/2005#work_pager",
-    // Folks types
+    // Folks: http://www.ietf.org/rfc/rfc2426.txt
     "home",
     "cell",     // Equal to GData->mobile
     "pager",
@@ -203,7 +203,7 @@ const ContactCompletion = new Lang.Class({
     
     _add_contact: function (name, number, type) {
         // Only include types that could possibly support SMS
-        if (SUPPORTED_TYPES.indexOf(type) < 0) { return; }
+        if (SUPPORTED_NUMBER_TYPES.indexOf(type) < 0) { return; }
     
         // Append the number to the title column
         let title = name + " <" + number + ">";
@@ -231,10 +231,10 @@ const ContactCompletion = new Lang.Class({
         let title = model.get_value(tree_iter, 0).toLowerCase();
         let number = model.get_value(tree_iter, 1);
         
-        let currentContacts = key.split(",").slice(0, -1);
+        let currentContacts = key.split(";").slice(0, -1);
         
         // Set key to the last or only search item, trimmed of whitespace
-        if (key.indexOf(",") > -1) { key = key.split(",").pop().trim(); }
+        if (key.indexOf(";") > -1) { key = key.split(";").pop().trim(); }
         
         // Return if the possible match is in the current list
         if (currentContacts.indexOf(title) > -1) { return false; }
@@ -261,16 +261,16 @@ const ContactCompletion = new Lang.Class({
     
     _select: function (completion, model, tree_iter) {
         let entry = completion.get_entry();
-        let currentContacts = entry.text.split(",").slice(0, -1);
+        let currentContacts = entry.text.split(";").slice(0, -1);
         let selectedContact = model.get_value(tree_iter, 0);
         
         // Return if this contact is in the current list
         if (currentContacts.indexOf(selectedContact) > -1) { return; }
         
         entry.set_text(
-            currentContacts.join(", ")
-            + ((currentContacts.length) ? ", " : "")
-            + selectedContact + ", "
+            currentContacts.join("; ")
+            + ((currentContacts.length) ? "; " : "")
+            + selectedContact + "; "
         );
         
         entry.set_position(-1);
@@ -343,16 +343,16 @@ const ContactEntry = new Lang.Class({
         if (completion._matched.length > 0) {
             let iter_path = completion._matched["0"];
             let [b, iter] = completion.model.get_iter_from_string(iter_path);
-            let oldContacts = entry.text.split(",").slice(0, -1);
+            let oldContacts = entry.text.split(";").slice(0, -1);
             let newContact = completion.model.get_value(iter, 1);
         
             // Ignore duplicate selections
             if (oldContacts.indexOf(newContact) > -1) { return; }
         
             entry.set_text(
-                oldContacts.join(", ")
-                + ((oldContacts.length) ? ", " : "")
-                + newContact + ", "
+                oldContacts.join("; ")
+                + ((oldContacts.length) ? "; " : "")
+                + newContact + "; "
             );
         
             entry.set_position(-1);
@@ -501,7 +501,7 @@ const ApplicationWindow = new Lang.Class({
     
     /** Return a list of phone numbers that the SMS will be sent to */
     send: function (entry, signal_id, event) {
-        let contactItems = this.contactEntry.text.split(",").filter((s) => {
+        let contactItems = this.contactEntry.text.split(";").filter((s) => {
             return /\S/.test(s);
         });
         let contactNumbers = [];
