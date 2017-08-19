@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-18 21:30-0700\n"
-"PO-Revision-Date: 2017-08-16 22:59+0200\n"
+"POT-Creation-Date: 2017-08-19 14:53+0200\n"
+"PO-Revision-Date: 2017-08-19 14:55+0200\n"
 "Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
 "Language-Team: Jonatan Hatakeyama Zeidler\n"
 "Language: de\n"
@@ -16,6 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.0.1\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/extension.js:267
 msgid "Device is unpaired"
@@ -130,11 +131,11 @@ msgid "MConnect SMS"
 msgstr "MConnect SMS"
 
 #: src/nautilus-send-mconnect.py:79
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Sending {num} file"
 msgid_plural "Sending {num} files"
-msgstr[0] "{num_files} Dateien werden gesendet"
-msgstr[1] "{num_files} Dateien werden gesendet"
+msgstr[0] "{num} Datei wird gesendet"
+msgstr[1] "{num} Dateien werden gesendet"
 
 #: src/nautilus-send-mconnect.py:109
 msgid "Send To Mobile Device"
