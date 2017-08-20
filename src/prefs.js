@@ -56,7 +56,7 @@ const EnumSetting = new Lang.Class({
         let enums = key.get_range().deep_unpack()[1].deep_unpack();
         
         enums.forEach((enum_nick) => {
-            this.append(enum_nick, enum_nick); // TODO: better
+            this.append(enum_nick, _(enum_nick)); // TODO: better
         });
         
         this.active_id = Settings.get_string(setting);
@@ -104,7 +104,7 @@ const FlagsSetting = new Lang.Class({
         
         flags.forEach((flagNick) => {
             flag = new Gtk.CheckButton({
-                label: flagNick,
+                label: _(flagNick),
                 visible: true,
                 active: (old_flags.indexOf(flagNick) > -1)
             });
@@ -113,9 +113,9 @@ const FlagsSetting = new Lang.Class({
                 let new_flags = Settings.get_value(setting).deep_unpack();
                 
                 if (button.active) {
-                    new_flags.push(button.label);
+                    new_flags.push(flagNick);
                 } else {
-                    new_flags.splice(new_flags.indexOf(button.label), 1);
+                    new_flags.splice(new_flags.indexOf(flagNick), 1);
                 }
                 
                 Settings.set_value(setting, new GLib.Variant("as", new_flags));
@@ -358,7 +358,7 @@ const OtherSetting = new Lang.Class({
     }
 });
 
-/** A composite widget for GSettings resmbling Gnome Control Center panels. */
+/** A composite widget for GSettings resampling Gnome Control Center panels. */
 const SettingsWidget = new Lang.Class({
     Name: "SettingsWidget",
     Extends: Gtk.ScrolledWindow,
