@@ -29,6 +29,11 @@ var DeviceVisibility = {
     UNPAIRED: 2
 };
 
+var DeviceVisibilityNames = {
+    OFFLINE: _("OFFLINE"),
+    UNPAIRED: _("UNPAIRED")
+};
+
 var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
