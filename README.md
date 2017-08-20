@@ -17,6 +17,7 @@
 * [Contributing](#contributing)
   * [Translations](#translations)
 * [Credits and Acknowledgements](#credits-and-acknowledgements)
+  * [Special Mention](#special-mention)
 
 
 ## Overview
@@ -245,8 +246,8 @@ should not be written in compiled languages that are architecture dependent. As
 long as it can be unpacked from a ZIP and ready to go for everyone, that's good
 enough.
 
-The best way to get in touch is either by [opening a new issue][issue] or by
-contacting one of the current [contributors][contributors] directly.
+The best way to get in touch is either by [opening a new issue][new-issue] or
+by contacting one of the current [contributors][contributors] directly.
     
 ### Translations
 
@@ -275,15 +276,23 @@ Please submit new translations as either a Pull Request or by posting it in
 [@Bajoja][Bajoja] and the [indicator-kdeconnect][kindicator] developers, for
 advice and code I frequently reference.
 
-Work-in-progress Folks support is based on a Python shim for libgee written by
+Folks support is based on a Python shim for libgee written by
 [@hugosenari][hugosenari], who has graciously donated his time by helping out.
 
 This extension includes icons from the [Numix][numix] project and Google's
 [Material Design][material] project.
 
-A special mention goes to [@ptomato][ptomato] for the large amount of work and
-the [bright future][gjs-future] he has contributed to GJS, as well as help on
-StackOverflow.
+Of course anyone who has submitted a Pull Request or translation, opened an
+issue, helped to debug, offered their opinion or expertise - thank you for
+visiting our stand at the [bazaar][bazaar].
+
+### Special Mention
+
+[@ptomato][ptomato] for the work and the [bright future][gjs-future] he has
+contributed to GJS, as well as help on StackOverflow.
+
+[Joey Sneddon][d0od88], who was the first to star this project, wrote a great
+[article on OMG! Ubuntu][omg-article] and helped raise awareness of MConnect.
 
 The screenshot of the extension features the [Vimix Dark Laptop][vimix] Gtk &
 Gnome Shell theme with the [Numix Circle][numix] icon theme.
@@ -291,11 +300,11 @@ Gnome Shell theme with the [Numix Circle][numix] icon theme.
 [screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png
 [kindicator]: https://github.com/Bajoja/indicator-kdeconnect
 [releases]: https://github.com/andyholmes/gnome-shell-extension-mconnect/releases
+[gnome-contacts]: https://wiki.gnome.org/Apps/Contacts
 [folks]: https://wiki.gnome.org/Projects/Folks
 [goa]: https://help.gnome.org/users/gnome-help/stable/accounts.html
-[gdata]: https://developers.google.com/gdata/
 [dbus-support]: https://github.com/bboozzoo/mconnect/tree/bboozzoo/dbus-support
-[issue]: ../../issues/new
+[new-issue]: ../../issues/new
 [contributors]: ../../graphs/contributors
 [gjs]: https://wiki.gnome.org/Projects/Gjs
 [pot]: https://github.com/andyholmes/gnome-shell-extension-mconnect/tree/master/po/gnome-shell-extension-mconnect.pot
@@ -303,7 +312,10 @@ Gnome Shell theme with the [Numix Circle][numix] icon theme.
 [bboozzoo]: https://github.com/bboozzoo
 [hugosenari]: https://github.com/hugosenari
 [Bajoja]: https://github.com/Bajoja
+[bazaar]: https://wikipedia.org/wiki/The_Cathedral_and_the_Bazaar
 [ptomato]: https://github.com/ptomato
+[d0od88]: https://github.com/d0od88
+[omg-article]: http://www.omgubuntu.co.uk/2017/08/kde-connect-gnome-extension
 [gjs-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
 [vimix]: https://github.com/vinceliuice/vimix-gtk-themes
 [numix]: https://numixproject.org/
