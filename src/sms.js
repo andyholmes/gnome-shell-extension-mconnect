@@ -170,12 +170,15 @@ const ContactCompletion = new Lang.Class({
     },
     
     _get_contacts: function () {
+        let envp = GLib.get_environ();
+        envp.push("FOLKS_BACKENDS_DISABLED=telepathy")
+        
         let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
-            null,                               // working dir
-            ["python3", Me.path + "/folks.py"], // argv
-            null,                               // envp
-            GLib.SpawnFlags.SEARCH_PATH,        // enables PATH
-            null                                // child_setup (func)
+            null,                                   // working dir
+            ["python3", Me.path + "/folks.py"],     // argv
+            envp,                                   // envp
+            GLib.SpawnFlags.SEARCH_PATH,            // enables PATH
+            null                                    // child_setup (func)
         );
         
         // Sketchy error checking for folks.py
