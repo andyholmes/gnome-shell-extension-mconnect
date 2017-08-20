@@ -71,6 +71,15 @@ initTranslations();
 const ContactCompletion = new Lang.Class({
     Name: "ContactCompletion",
     Extends: Gtk.EntryCompletion,
+    Properties: {
+        "provider": GObject.ParamSpec.string(
+            "provider",
+            "ContactsProvider",
+            "The provider for contacts",
+            GObject.ParamFlags.READWRITE,
+            "none"
+        )
+    },
     
     _init: function () {
         this.parent();
@@ -107,23 +116,74 @@ const ContactCompletion = new Lang.Class({
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
         
-        try {
-            this._get_contacts();
-            this._contacts_provider = "avatar-default-symbolic";
-        } catch (e) {
-            log("Folks: " + e.message);
-            
-            try {
-                for (let account in this._get_google_accounts()) {
-                    this._get_google_contacts(account);
-                    this._contacts_provider = "goa-account-google";
-                }
-            } catch (e) {
-                log("Google: " + e.message);
-            }
-        }
+        this._get_contacts();
     },
     
+    /** Spawn folks.py */
+    _get_contacts: function () {
+        let envp = GLib.get_environ();
+        envp.push("FOLKS_BACKENDS_DISABLED=telepathy")
+        
+        let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
+            null,                                   // working dir
+            ["python3", Me.path + "/folks.py"],     // argv
+            envp,                                   // envp
+            GLib.SpawnFlags.SEARCH_PATH,            // enables PATH
+            null                                    // child_setup (func)
+        );
+        
+        this._check_folks(err_fd, out_fd);
+    },
+    
+    /** Check spawned folks.py for errors on stderr */
+    _check_folks: function (err_fd, out_fd) {
+        let errstream = new Gio.DataInputStream({
+            base_stream: new Gio.UnixInputStream({ fd: err_fd })
+        });
+    
+        errstream.read_line_async(GLib.PRIORITY_LOW, null, (source, res) => {
+            let [errline, length] = source.read_line_finish(res);
+            
+            if (errline === null) {
+                let stream = new Gio.DataInputStream({
+                    base_stream: new Gio.UnixInputStream({ fd: out_fd })
+                });
+                
+                this.provider = "avatar-default-symbolic";
+                this.notify("provider");
+                
+                this._read_folk(stream)
+            } else {
+                log("Folks: " + errline);
+                
+                try {
+                    for (let account in this._get_google_accounts()) {
+                        this._get_google_contacts(account);
+                        this.provider = "goa-account-google";
+                        this.notify("provider");
+                    }
+                } catch (e) {
+                    log("Google: " + e.message);
+                }
+            }
+        });
+        
+    },
+    
+    /** Read a folk from folks.py output */
+    _read_folk: function (stream) {
+        stream.read_line_async(GLib.PRIORITY_LOW, null, (source, res) => {
+            let [contact, length] = source.read_line_finish(res);
+            
+            if (contact !== null) {
+                let [name, number, type] = contact.toString().split("\t");
+                this._add_contact(name, number, type);
+                this._read_folk(stream);
+            }
+        });
+    },
+    
+    /** Get all google accounts in Goa */
     _get_google_accounts: function () {
         let goaClient = Goa.Client.new_sync(null, null);
         let goaAccounts = goaClient.get_accounts();
@@ -169,47 +229,7 @@ const ContactCompletion = new Lang.Class({
         }
     },
     
-    _get_contacts: function () {
-        let envp = GLib.get_environ();
-        envp.push("FOLKS_BACKENDS_DISABLED=telepathy")
-        
-        let [res, pid, in_fd, out_fd, err_fd] = GLib.spawn_async_with_pipes(
-            null,                                   // working dir
-            ["python3", Me.path + "/folks.py"],     // argv
-            envp,                                   // envp
-            GLib.SpawnFlags.SEARCH_PATH,            // enables PATH
-            null                                    // child_setup (func)
-        );
-        
-        // Sketchy error checking for folks.py
-        let errstream = new Gio.DataInputStream({
-            base_stream: new Gio.UnixInputStream({ fd: err_fd })
-        });
-        
-        if (errstream.read_line(null)[0] !== null) {
-            throw Error("error reading folks");
-        }
-
-        // Should be good to go
-        let stream = new Gio.DataInputStream({
-            base_stream: new Gio.UnixInputStream({ fd: out_fd })
-        });
-        
-        this._read_contact(stream);
-    },
-    
-    _read_contact: function (stream) {
-        stream.read_line_async(GLib.PRIORITY_LOW, null, (source, res) => {
-            let [contact, length] = source.read_line_finish(res);
-            
-            if (contact !== null) {
-                let [name, number, type] = contact.toString().split("\t");
-                this._add_contact(name, number, type);
-                this._read_contact(stream);
-            }
-        });
-    },
-    
+    /** Add contact */
     _add_contact: function (name, number, type) {
         // Only include types that could possibly support SMS
         if (SUPPORTED_NUMBER_TYPES.indexOf(type) < 0) { return; }
@@ -235,6 +255,7 @@ const ContactCompletion = new Lang.Class({
         );
     },
     
+    /** Multi-recipient capable match function */
     _match: function (completion, key, tree_iter) {
         let model = completion.get_model();
         let title = model.get_value(tree_iter, 0).toLowerCase();
@@ -268,12 +289,13 @@ const ContactCompletion = new Lang.Class({
         }
     },
     
+    /** Add selected auto-complete entry to list of contacts in the entry */
     _select: function (completion, model, tree_iter) {
         let entry = completion.get_entry();
         let currentContacts = entry.text.split(";").slice(0, -1);
         let selectedContact = model.get_value(tree_iter, 0);
         
-        // Return if this contact is in the current list
+        // Return if this contact is already in the current list
         if (currentContacts.indexOf(selectedContact) > -1) { return; }
         
         entry.set_text(
@@ -288,7 +310,10 @@ const ContactCompletion = new Lang.Class({
         return true;
     },
     
-    // https://gist.github.com/andrei-m/982927#gistcomment-2059365
+    /** 
+     * A levenshtein sort function
+     * See: https://gist.github.com/andrei-m/982927#gistcomment-2059365
+     */
     _sort: function (model, a, b, user_data) {
 	    var tmp;
 	    if (a.length === 0) { return b.length; }
@@ -306,8 +331,8 @@ const ContactCompletion = new Lang.Class({
 			    res = b[i - 1] === a[j - 1] ? tmp : Math.min(tmp + 1, Math.min(res + 1, row[j] + 1));
 		    }
 	    }
+	    
 	    return res;
-        
     }
 });
 
@@ -327,11 +352,11 @@ const ContactEntry = new Lang.Class({
             completion: new ContactCompletion()
         });
         
-        if (this.completion._contacts_provider !== undefined) {
+        this.completion.connect("notify::provider", (completion) => {
             this.placeholder_text = _("Type a phone number or name");
-            this.primary_icon_name = this.completion._contacts_provider;
+            this.primary_icon_name = this.completion.provider;
             this.input_purpose = Gtk.InputPurpose.FREE_FORM;
-        }
+        });
     
         // Select the first completion suggestion on "activate"
         this.connect("activate", () => { this._select(this); });
