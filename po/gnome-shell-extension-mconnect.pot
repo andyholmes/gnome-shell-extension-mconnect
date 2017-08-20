@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-18 21:30-0700\n"
+"POT-Creation-Date: 2017-08-20 10:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,51 +18,59 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: src/extension.js:267
+#: src/extension.js:33
+msgid "OFFLINE"
+msgstr ""
+
+#: src/extension.js:34
+msgid "UNPAIRED"
+msgstr ""
+
+#: src/extension.js:272
 msgid "Device is unpaired"
 msgstr ""
 
-#: src/extension.js:270 src/sms.js:424
+#: src/extension.js:275 src/sms.js:458
 msgid "Device is offline"
 msgstr ""
 
-#: src/extension.js:308
+#: src/extension.js:313
 msgid "Failed to mount device filesystem"
 msgstr ""
 
-#: src/extension.js:448
+#: src/extension.js:453
 msgid "Mobile Devices"
 msgstr ""
 
-#: src/extension.js:466
+#: src/extension.js:471
 msgid "Enable"
 msgstr ""
 
-#: src/extension.js:472
+#: src/extension.js:477
 msgid "Mobile Settings"
 msgstr ""
 
-#: src/extension.js:513
+#: src/extension.js:518
 msgid "Stop scanning for Devices"
 msgstr ""
 
-#: src/extension.js:515
+#: src/extension.js:520
 msgid "Scan for Devices"
 msgstr ""
 
-#: src/extension.js:570 src/extension.js:595
+#: src/extension.js:575 src/extension.js:600
 msgid "Scanning for device..."
 msgstr ""
 
-#: src/extension.js:641
+#: src/extension.js:646
 msgid "Nautilus extensions changed"
 msgstr ""
 
-#: src/extension.js:642
+#: src/extension.js:647
 msgid "Restart Nautilus to apply changes"
 msgstr ""
 
-#: src/extension.js:647
+#: src/extension.js:652
 msgid "Restart"
 msgstr ""
 
@@ -114,19 +122,19 @@ msgstr ""
 msgid "MConnect File Share"
 msgstr ""
 
-#: src/sms.js:313
+#: src/sms.js:347
 msgid "Type a phone number"
 msgstr ""
 
-#: src/sms.js:322
+#: src/sms.js:356
 msgid "Type a phone number or name"
 msgstr ""
 
-#: src/sms.js:461
+#: src/sms.js:495
 msgid "Type an SMS message"
 msgstr ""
 
-#: src/sms.js:576
+#: src/sms.js:610
 msgid "MConnect SMS"
 msgstr ""
 
