@@ -372,7 +372,6 @@ const ContactEntry = new Lang.Class({
                 completion._matched = [];
                 completion._last = null;
             } else if (styleContext.has_class("error")) {
-                entry.secondary_icon_name = "edit-clear-symbolic";
                 styleContext.remove_class("error");
             }
         });
