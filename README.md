@@ -72,14 +72,21 @@ on 3.18.x. Other recent versions may also work; please report your results.
 
 ### Contacts Auto-complete
 
-Contacts auto-complete is an *optional* feature and requires:
+Contacts auto-completion is an *optional* feature that supports either
+[Folks][folks] and/or [Gnome Online Accounts][goa] and requires:
 
-* Gnome Online Accounts with at least one Google account
+* An account supported by Folks (eg. Gnome Online Accounts, Evolution)
+* Folks GIR (eg. gir1.2-folks-0.6)
+
+***OR***
+
+* An account supported by Gnome Online Accounts (eg. Google)
 * Gnome Online Accounts GIR (eg. gir1.2-goa-1.0)
 * GData GIR (eg. gir1.2-gdata-0.0)
 
-Auto-completion for other sources and GOA accounts is being actively pursued
-in [Issue #16](../../issues/16).
+This feature is difficult to test for all possible account types, so please
+[open a new issue][new-issue] if you encounter any problems or accounts that
+seem unsupported.
 
 
 ### Nautilus Integration
@@ -277,14 +284,14 @@ Please submit new translations as either a Pull Request or by posting it in
 advice and code I frequently reference.
 
 Folks support is based on a Python shim for libgee written by
-[@hugosenari][hugosenari], who has graciously donated his time by helping out.
+[@hugosenari][hugosenari], who graciously donated his time helping out.
 
 This extension includes icons from the [Numix][numix] project and Google's
 [Material Design][material] project.
 
-Of course anyone who has submitted a Pull Request or translation, opened an
-issue, helped to debug, offered their opinion or expertise - thank you for
-visiting our stand at the [bazaar][bazaar].
+Last, but not least, anyone who has submitted a Pull Request or translation,
+opened an issue, helped to debug, offered their opinion or expertise - thank
+you for visiting my little stand at the [bazaar][bazaar].
 
 ### Special Mention
 
