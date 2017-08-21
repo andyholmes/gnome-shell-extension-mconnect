@@ -98,12 +98,13 @@ const ContactCompletion = new Lang.Class({
         // Define a completion model
         let listStore = new Gtk.ListStore();
         listStore.set_column_types([
-            GObject.TYPE_STRING,    // Title
+            GObject.TYPE_STRING,    // Title ("Name <Phone Number>")
+            GObject.TYPE_STRING,    // Name
             GObject.TYPE_STRING,    // Phone Number
             GdkPixbuf.Pixbuf        // Type Icon
         ]);
         listStore.set_sort_column_id(0, Gtk.SortType.ASCENDING);
-        //listStore.set_sort_func(0, this._sort, null, null);
+        listStore.set_sort_func(1, this._levenshtein, null, null);
         this.set_model(listStore);
         
         // Title
@@ -111,7 +112,7 @@ const ContactCompletion = new Lang.Class({
         // Type Icon
         let typeCell = new Gtk.CellRendererPixbuf();
         this.pack_start(typeCell, false);
-        this.add_attribute(typeCell, "pixbuf", 2);
+        this.add_attribute(typeCell, "pixbuf", 3);
         
         this.set_match_func(Lang.bind(this, this._match), null, null);
         this.connect("match-selected", Lang.bind(this, this._select));
@@ -250,8 +251,8 @@ const ContactCompletion = new Lang.Class({
     
         this.model.set(
             this.model.append(),
-            [0, 1, 2],
-            [title, number, type]
+            [0, 1, 2, 3],
+            [title, name, number, type]
         );
     },
     
@@ -259,7 +260,8 @@ const ContactCompletion = new Lang.Class({
     _match: function (completion, key, tree_iter) {
         let model = completion.get_model();
         let title = model.get_value(tree_iter, 0).toLowerCase();
-        let number = model.get_value(tree_iter, 1);
+        let name = model.get_value(tree_iter, 1).toLowerCase();
+        let number = model.get_value(tree_iter, 2);
         
         let currentContacts = key.split(";").slice(0, -1);
         
@@ -282,8 +284,8 @@ const ContactCompletion = new Lang.Class({
         
         if (this._matched.length >= 20) { return false; }
         
-        // Match title (eg. "Name (type)") and number
-        if (title.indexOf(key) > -1 || number.indexOf(key) > -1) {
+        // Match name or number
+        if (name.indexOf(key) > -1 || number.indexOf(key) > -1) {
             this._matched.push(model.get_string_from_iter(tree_iter));
             return true;
         }
@@ -314,7 +316,7 @@ const ContactCompletion = new Lang.Class({
      * A levenshtein sort function
      * See: https://gist.github.com/andrei-m/982927#gistcomment-2059365
      */
-    _sort: function (model, a, b, user_data) {
+    _levenshtein: function (model, a, b, user_data) {
 	    var tmp;
 	    if (a.length === 0) { return b.length; }
 	    if (b.length === 0) { return a.length; }
@@ -383,7 +385,7 @@ const ContactEntry = new Lang.Class({
             let iter_path = completion._matched["0"];
             let [b, iter] = completion.model.get_iter_from_string(iter_path);
             let oldContacts = entry.text.split(";").slice(0, -1);
-            let newContact = completion.model.get_value(iter, 1);
+            let newContact = completion.model.get_value(iter, 0);
         
             // Ignore duplicate selections
             if (oldContacts.indexOf(newContact) > -1) { return; }
