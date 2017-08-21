@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-20 10:56+0200\n"
+"POT-Creation-Date: 2017-08-20 23:26-0700\n"
 "PO-Revision-Date: 2017-08-20 10:56+0200\n"
 "Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
 "Language-Team: Jonatan Hatakeyama Zeidler\n"
@@ -30,7 +30,7 @@ msgstr "Nicht gekoppelt"
 msgid "Device is unpaired"
 msgstr "Gerät ist nicht gekoppelt"
 
-#: src/extension.js:275 src/sms.js:458
+#: src/extension.js:275 src/sms.js:459
 msgid "Device is offline"
 msgstr "Gerät ist nicht verbunden"
 
@@ -122,19 +122,19 @@ msgstr "Senden"
 msgid "MConnect File Share"
 msgstr "MConnect Dateitransfer"
 
-#: src/sms.js:347
+#: src/sms.js:349
 msgid "Type a phone number"
 msgstr "Telefonnummer eingeben"
 
-#: src/sms.js:356
+#: src/sms.js:358
 msgid "Type a phone number or name"
 msgstr "Telefonnummer oder Name eingeben"
 
-#: src/sms.js:495
+#: src/sms.js:496
 msgid "Type an SMS message"
 msgstr "SMS-Nachricht eingeben"
 
-#: src/sms.js:610
+#: src/sms.js:703
 msgid "MConnect SMS"
 msgstr "MConnect SMS"
 
