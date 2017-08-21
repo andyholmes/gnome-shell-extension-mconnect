@@ -179,6 +179,21 @@ const FindMyPhoneNode = new Gio.DBusNodeInfo.new_for_xml('\
 ');
 FindMyPhoneNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
 
+const NotificationNode = new Gio.DBusNodeInfo.new_for_xml('\
+<node> \
+  <interface name="org.kde.kdeconnect.notifications.notification"> \
+    <method name="dismiss"> \
+    </method> \
+    <property name="dismissable" type="b" access="read"/> \
+    <property name="appName" type="s" access="read"/> \
+    <property name="iconPath" type="s" access="read"/> \
+    <property name="internalId" type="s" access="read"/> \
+    <property name="ticker" type="s" access="read"/> \
+  </interface> \
+</node> \
+');
+NotificationNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
+
 const PingNode = new Gio.DBusNodeInfo.new_for_xml('\
 <node> \
   <interface name="org.kde.kdeconnect.device.ping"> \
@@ -413,6 +428,112 @@ const Battery = new Lang.Class({
     get level () { return this._call("charge"); }
 });
 
+
+const Notification = new Lang.Class({
+    Name: "KNotification",
+    Extends: ProxyBase,
+    Properties: {
+        "content": GObject.ParamSpec.string(
+            "content",
+            "NotificationContent",
+            "The content of the notification",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "dismissable": GObject.ParamSpec.boolean(
+            "dismissable",
+            "NotificationDismissable",
+            "Whether the notification can be dismissed",
+            GObject.ParamFlags.READABLE,
+            false
+        ),
+        "icon": GObject.ParamSpec.string(
+            "icon",
+            "ApplicationIcon",
+            "A path to the icon for the application this notification is for",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "id": GObject.ParamSpec.string(
+            "id",
+            "ApplicationId",
+            "The internal Id of the application this notification is for",
+            GObject.ParamFlags.READABLE,
+            ""
+        ),
+        "name": GObject.ParamSpec.string(
+            "name",
+            "ApplicationName",
+            "The name of the application this notification is for",
+            GObject.ParamFlags.READABLE,
+            ""
+        )
+    },
+    
+    _init: function (dbusPath) {
+        this.parent(NotificationNode.interfaces[0], dbusPath);
+    },
+    
+    get content () { return this._get("ticker"); },
+    get dismissable () { return (this._get("dismissable") === true); },
+    get icon () { return this._get("iconPath"); },
+    get id () { return this._get("internalId"); },
+    get name () { return this._get("appName"); },
+    
+    dismiss: function () {
+        this._call("dismiss");
+        this.destroy();
+    }
+});
+
+
+/** A base class for backend Notification implementations */
+const Notifications = new Lang.Class({
+    Name: "KNotifications",
+    Extends: ProxyBase,
+    Properties: {
+        // FIXME: need to choose a param type to do this properly
+        "notifications": GObject.ParamSpec.string(
+            "notifications",
+            "ActiveNotifications",
+            "A list of Ids of active notifications",
+            GObject.ParamFlags.READABLE,
+            ""
+        )
+    },
+    Signals: {
+        "notification": {
+            flags: GObject.SignalFlags.RUN_FIRST | GObject.SignalFlags.DETAILED,
+            param_types: [ GObject.TYPE_STRING ]
+        }
+    },
+    
+    _init: function (dbusPath) {
+        this.parent(DeviceNode.interfaces[3], dbusPath);
+        
+        //
+        this.connect("g-signal", (proxy, sender, name, parameters) => {
+            parameters = parameters.deep_unpack();
+            
+            if (name === "allNotificationsRemoved") {
+                this.notify("notifications");
+            } else if (name === "notificationPosted") {
+                this.emit("notification::posted", parameters[0]);
+                this.notify("notifications");
+            } else if (name === "notificationRemoved") {
+                this.emit("notification::removed", parameters[0]);
+                this.notify("notifications");
+            }
+        });
+    },
+    
+    // FIXME: need to choose a param type to do this properly
+    get notifications () {
+        return this._call("activeNotifications");
+    }
+});
+
+
 /** A base class for backend Device implementations */
 const Device = new Lang.Class({
     Name: "KDevice",
@@ -587,16 +708,6 @@ const Device = new Lang.Class({
             delete this.battery;
         }
         
-        if (supported.indexOf("kdeconnect_ping") > -1) {
-            this.ping = new ProxyBase(
-                PingNode.interfaces[0],
-                this.gObjectPath
-            );
-        } else if (this.hasOwnProperty("ping")) {
-            this.ping.destroy();
-            delete this.ping;
-        }
-        
         if (supported.indexOf("kdeconnect_findmyphone") > -1) {
             this.findmyphone = new ProxyBase(
                 FindMyPhoneNode.interfaces[0],
@@ -605,6 +716,25 @@ const Device = new Lang.Class({
         } else if (this.hasOwnProperty("findmyphone")) {
             this.findmyphone.destroy();
             delete this.findmyphone;
+        }
+        
+        if (supported.indexOf("kdeconnect_notifications") > -1) {
+            this.notifications = new Notifications(this.gObjectPath);
+            
+            
+        } else if (this.hasOwnProperty("notifications")) {
+            this.notifications.destroy();
+            delete this.notifications;
+        }
+        
+        if (supported.indexOf("kdeconnect_ping") > -1) {
+            this.ping = new ProxyBase(
+                PingNode.interfaces[0],
+                this.gObjectPath
+            );
+        } else if (this.hasOwnProperty("ping")) {
+            this.ping.destroy();
+            delete this.ping;
         }
         
         if (supported.indexOf("kdeconnect_sftp") > -1) {
@@ -652,6 +782,7 @@ const Device = new Lang.Class({
     
         ["battery",
         "findmyphone",
+        "notifications",
         "ping",
         "sftp",
         "share",
