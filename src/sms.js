@@ -534,46 +534,143 @@ const ApplicationWindow = new Lang.Class({
             }
         });
         
+        // Connect to notifications
+        if (this.device.hasOwnProperty("notifications")) {
+            this.device.notifications.connect(
+                "notification::posted",
+                Lang.bind(this, this._catch_notification)
+            );
+        }
+        
         // Finish initing
         this.show_all();
         this.has_focus = true;
     },
     
-    /** Return a list of phone numbers that the SMS will be sent to */
-    send: function (entry, signal_id, event) {
+    _catch_notification: function (plugin, notificationId) {
+        let note;
+        
+        if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
+            // TODO: two-way sms not supported for MConnect, yet
+            return;
+        } else {
+            note = new KDEConnect.Notification(
+                this.device.gObjectPath + "/notifications/" + notificationId
+            );
+        }
+        
+        if (note.id.indexOf(":sms") > -1) { // FIXME: sketchy
+            let recipients = this._get_recipients();
+            // string between sender and message:
+            //    bin: 00100000 10000000010000 00100000
+            //    hex: 20201020
+            //    url: %20%E2%80%90%20
+            let [sender, message] = note.content.split(" ‐ ");
+            
+            // Check for a verbatim match
+            if (recipients.has(sender)) {
+                this._log_message(sender, message);
+            // Might be just a number, strip both and check
+            } else {
+                for (let [name, number] of recipients.entries()) {
+                    let local_num = number.replace(/\D/g, "");
+                    
+                    if (local_num === sender.replace(/\D/g, "")) {
+                        this._log_message(name, message);
+                    }
+                }
+            }
+        }
+        
+        note.destroy();
+    },
+    
+    _get_recipients: function () {
         let contactItems = this.contactEntry.text.split(";").filter((s) => {
             return /\S/.test(s);
         });
-        let contactNumbers = [];
-        let styleContext = this.contactEntry.get_style_context();
+        let recipients = new Map();
         let model = this.contactEntry.get_completion().get_model();
         
         for (let item of contactItems) {
             item = item.trim();
-            let contactNumber = false;
+            let contact = false;
             
-            // Search the completion (if present) for an exact contact match
-            model.foreach((model, path, iter) => {
-                if (item === model.get_value(iter, 0)) {
-                    contactNumber = model.get_value(iter, 1);
+            // Search the completion for a matching 
+            model.foreach((model, path, tree_iter) => {
+                if (item === model.get_value(tree_iter, 0)) {
+                    contact = [
+                        model.get_value(tree_iter, 1),
+                        model.get_value(tree_iter, 2)
+                    ];
                     return true;
                 }
                 
-                contactNumber = false;
+                contact = false;
             });
             
-            // Found a matching Contact
-            if (contactNumber) {
-                contactNumbers.push(contactNumber);
-            // Anything else can be handled by the device (libphonenumber)
+            if (contact) {
+                recipients.set(contact[0], contact[1]);
             } else {
-                contactNumbers.push(item);
+                recipients.set(item, item);
             }
         }
         
-        if (!contactNumbers.length) {
+        return recipients;
+    },
+    
+    _get_numbers: function () {
+        let contactItems = this.contactEntry.text.split(";").filter((s) => {
+            return /\S/.test(s);
+        });
+        let numbers = [];
+        let model = this.contactEntry.get_completion().get_model();
+        
+        for (let item of contactItems) {
+            item = item.trim();
+            let number = false;
+            
+            // Search the completion for an exact contact match
+            model.foreach((model, path, tree_iter) => {
+                if (item === model.get_value(tree_iter, 0)) {
+                    number = model.get_value(tree_iter, 2);
+                    return true;
+                }
+                
+                number = false;
+            });
+            
+            // Found a matching Contact
+            if (number) {
+                numbers.push(number);
+            // Anything else can be handled by the device (libphonenumber)
+            } else {
+                numbers.push(item);
+            }
+        }
+        
+        return numbers;
+    },
+    
+    _log_message: function (name, message) {
+        let item = "<b>" + name + ":</b> " + message + "\n";
+        
+        this.conversationBuffer.insert_markup(
+            this.conversationBuffer.get_end_iter(),
+            item,
+            item.length
+        );
+    },
+    
+    /** Return a list of phone numbers that the SMS will be sent to */
+    send: function (entry, signal_id, event) {
+        let numbers = this._get_numbers();
+        
+        // Check a number/contact has been provided
+        if (!numbers.length) {
             this.contactEntry.has_focus = true;
             this.contactEntry.secondary_icon_name = "dialog-error-symbolic";
+            let styleContext = this.contactEntry.get_style_context();
             
             if (!styleContext.has_class("error")) {
                 styleContext.add_class("error");
@@ -582,18 +679,13 @@ const ApplicationWindow = new Lang.Class({
             return false;
         }
         
-        // Send to each contactNumber
-        for (let number of contactNumbers) {
+        // Send to each number
+        for (let number of numbers) {
             this.device.sms(number, entry.text);
         }
         
         // Log the sent message in the Conversation View and clear the entry
-        let message = "<b>" + this.user_name + ":</b> " + entry.text + "\n";
-        this.conversationBuffer.insert_markup(
-            this.conversationBuffer.get_end_iter(),
-            message,
-            message.length
-        );
+        this._log_message(this.user_name, entry.text);
         entry.text = "";
     }
 });
