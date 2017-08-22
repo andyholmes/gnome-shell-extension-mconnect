@@ -37,6 +37,7 @@ const ShareDialog = new Lang.Class({
         this.parent({
             title: _("Send file..."),
             action: Gtk.FileChooserAction.OPEN,
+            select_multiple: true,
             icon_name: "document-send",
             modal: true
         });
@@ -66,7 +67,7 @@ const Application = new Lang.Class({
         
         //
         this._cmd = null;
-        this._path = null;
+        this._uris = null;
         this._id = null;
         
         // Options
@@ -83,9 +84,9 @@ const Application = new Lang.Class({
             "share",
             "s".charCodeAt(0),
             GLib.OptionFlags.NONE,
-            GLib.OptionArg.FILENAME,
-            "Send a file to <device-id>",
-            "<path>"
+            GLib.OptionArg.FILENAME_ARRAY,
+            "Share a local (eg. file:///...) or remote uri with <device-id>",
+            "<uri>"
         );
         
         this.add_main_option(
@@ -93,11 +94,39 @@ const Application = new Lang.Class({
             "l".charCodeAt(0),
             GLib.OptionFlags.NONE,
             GLib.OptionArg.NONE,
-            "List all devices that are reachable and trusted",
+            "List all devices",
+            null
+        );
+        
+        this.add_main_option(
+            "list-available",
+            "a".charCodeAt(0),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.NONE,
+            "List available (paired and reachable) devices",
             null
         );
         
         this.register(null);
+    },
+    
+    share: function () {
+        if (!this._uris.length) { return; }
+        
+        let found = false;
+        
+        for (let dbusPath in this.manager.devices) {
+            let device = this.manager.devices[dbusPath];
+            
+            if (device.id === this._id && device.hasOwnProperty("share")) {
+                for (let uri of this._uris) {
+                    device.shareURI(uri.toString());
+                    found = true;
+                }
+            }
+        }
+        
+        if (!found) { throw Error("no device or share not supported"); }
     },
 
     vfunc_startup: function() {
@@ -118,45 +147,43 @@ const Application = new Lang.Class({
         }
         
         if (this._cmd === "list-devices") {
+            this.manager.scan("list-devices");
+            GLib.usleep(2000000) // 2 seconds
+            this.manager.scan("list-devices");
+            
+            let status;
+            
             for (let device of devices) {
-                if (device.trusted) {
+                if (device.reachable && device.trusted) {
+                    status = " (paired and reachable)";
+                } else if (device.reachable) {
+                    status = " (reachable)";
+                } else if (device.trusted) {
+                    status = " (paired)";
+                }
+                
+                print(device.name + ": " + device.id + status);
+            }
+        } else if (this._cmd === "list-available") {
+            for (let device of devices) {
+                if (device.reachable && device.trusted) {
                     print(device.name + ": " + device.id);
                 }
             }
         } else if (this._cmd === "share" && this._id) {
-            let found = false;
-            
-            for (let device of devices) {
-                if (device.id === this._id && device.hasOwnProperty("share")) {
-                    device.shareURI(this._path.toString());
-                    found = true;
-                }
-            }
-            
-            if (!found) { throw Error("no device or share not supported"); }
+            this.share();
         } else if (this._id) {
             Gtk.init(null);
             
             let dialog = new ShareDialog(this);
             
             if (dialog.run() === Gtk.ResponseType.OK) {
-                this._path = dialog.get_filename();
+                this._uris = dialog.get_uris();
             }
             
             dialog.destroy();
             
-            if (!this._path) { return; }
-            
-            let found = false;
-            
-            for (let device of devices) {
-                if (device.id === this._id && device.hasOwnProperty("share")) {
-                    device.shareURI(this._path.toString());
-                    found = true;
-                }
-            }
-            
-            if (!found) { throw Error("no device or share not supported"); }
+            this.share();
         } else {
             throw Error("no command given");
         }
@@ -176,9 +203,11 @@ const Application = new Lang.Class({
         
         if (options.contains("list-devices")) {
             this._cmd = "list-devices";
+        } else if (options.contains("list-available")) {
+            this._cmd = "list-available";
         } else if (options.contains("share")) {
             this._cmd = "share";
-            this._path = options.lookup_value("share", null).deep_unpack();
+            this._uris = options.lookup_value("share", null).deep_unpack();
         }
         
         return -1;

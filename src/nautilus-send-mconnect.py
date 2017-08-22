@@ -47,8 +47,8 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
     def get_reachable_devices(self):
         """Return a list of reachable, trusted devices"""
         
-        cli_prog = ['gjs', CLI_PATH, '-l']
-        out = subprocess.Popen(cli_prog, stdout=subprocess.PIPE).stdout.read()
+        args = ['gjs', CLI_PATH, '--list-available']
+        out = subprocess.Popen(args, stdout=subprocess.PIPE).stdout.read()
         
         devices = []
         
@@ -61,15 +61,12 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
     def send_files(self, menu, files, device):
         """Send *files* to *device_id*"""
         
+        args = ['gjs', CLI_PATH, '--device=' + device['id']]
+        
         for file in files:
-            subprocess.Popen([
-                'gjs',
-                CLI_PATH,
-                '--device',
-                device['id'],
-                '--share',
-                urllib.url2pathname(file.get_uri()[7:])
-            ])
+            args.append('--share=' + file.get_uri())
+        
+        subprocess.Popen(args)
 
         self.init_gettext()
         

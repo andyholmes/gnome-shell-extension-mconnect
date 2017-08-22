@@ -662,22 +662,12 @@ const Device = new Lang.Class({
     // Methods
     mount: function () { return this.sftp._call("mountAndWait"); },
     pair: function () { this._call("requestPair", null, true); },
-    ping: function () {
-        if (this.hasOwnProperty("ping")) {
-            this.ping._call("sendPing", true);
-        }
-    },
+    ping: function () { this.ping._call("sendPing", true); },
     ring: function () { this.findmyphone._call("ring", true); },
     sms: function (number, message) {
         this.telephony._call("sendSms", true, number, message);
     },
-    shareURI: function (filePath) {
-        this.share._call(
-            "shareUrl",
-            true,
-            GLib.filename_to_uri(filePath, null)
-        );
-    },
+    shareURI: function (uri) { this.share._call("shareUrl", true, uri); },
     unpair: function () { this._call("unpair", null, true); },
     
     //
