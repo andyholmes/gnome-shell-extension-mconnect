@@ -417,12 +417,6 @@ const ApplicationWindow = new Lang.Class({
         
         this.device = device;
         
-        // User name
-        this.user_name = GLib.get_real_name();
-        if (this.user_name === "Unknown") {
-            this.user_name = GLib.get_user_name();
-        }
-        
         // Contact Entry
         this.contactEntry = new ContactEntry();
         this.device.bind_property(
@@ -685,7 +679,7 @@ const ApplicationWindow = new Lang.Class({
         }
         
         // Log the sent message in the Conversation View and clear the entry
-        this._log_message(this.user_name, entry.text);
+        this._log_message(_("You"), entry.text);
         entry.text = "";
     }
 });
