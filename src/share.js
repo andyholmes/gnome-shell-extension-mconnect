@@ -1,5 +1,6 @@
 /** share.js - A simple FileChooserDialog for sending files */
 
+const Format = imports.format;
 const Lang = imports.lang;
 const System = imports.system;
 const Gettext = imports.gettext.domain('gnome-shell-extension-mconnect');
@@ -8,6 +9,7 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
+const Notify = imports.gi.Notify;
 
 // Local Imports
 function getPath() {
@@ -27,8 +29,12 @@ const ServiceProvider = {
     KDECONNECT: 1
 };
 
+// Gettext
 initTranslations();
+String.prototype.format = Format.format;
 
+
+/** A simple FileChooserDialog for sharing files */
 const ShareDialog = new Lang.Class({
     Name: "ShareDialog",
     Extends: Gtk.FileChooserDialog,
@@ -123,10 +129,24 @@ const Application = new Lang.Class({
                     device.shareURI(uri.toString());
                     found = true;
                 }
+                
+                this._notifyShare(device.name, this._uris.length)
             }
         }
         
         if (!found) { throw Error("no device or share not supported"); }
+    },
+    
+    _notifyShare: function (deviceName, num) {
+        Notify.init("gnome-shell-extension-mconnect");
+        
+        let note = new Notify.Notification({
+            summary: deviceName,
+            body: Gettext.ngettext("Sending %d file", "Sending %d files", num).format(num),
+            icon_name: "send-to-symbolic"
+        });
+        
+        note.show()
     },
 
     vfunc_startup: function() {

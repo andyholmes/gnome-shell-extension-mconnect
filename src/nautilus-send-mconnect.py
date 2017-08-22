@@ -68,15 +68,6 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
         
         subprocess.Popen(args)
 
-        self.init_gettext()
-        
-        Notify.init('gnome-shell-extension-mconnect')
-        Notify.Notification.new(
-            device['name'],
-            gettext.ngettext('Sending {num} file', 'Sending {num} files', len(files)).format(num=len(files)),
-            'send-to-symbolic'
-        ).show()
-
     def get_background_items(provider, window, current_folder):
         pass
 
