@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-20 23:26-0700\n"
+"POT-Creation-Date: 2017-08-22 02:34-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,59 +18,83 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: src/extension.js:33
+#: src/extension.js:35
 msgid "OFFLINE"
 msgstr ""
 
-#: src/extension.js:34
+#: src/extension.js:36
 msgid "UNPAIRED"
 msgstr ""
 
-#: src/extension.js:272
+#: src/extension.js:240
+msgid "Send SMS"
+msgstr ""
+
+#: src/extension.js:247
+msgid "Locate Device"
+msgstr ""
+
+#: src/extension.js:255
+msgid "Browse Files"
+msgstr ""
+
+#: src/extension.js:262
+msgid "Send Files"
+msgstr ""
+
+#: src/extension.js:421
+msgid "Request Pair"
+msgstr ""
+
+#: src/extension.js:422
 msgid "Device is unpaired"
 msgstr ""
 
-#: src/extension.js:275 src/sms.js:459
-msgid "Device is offline"
+#: src/extension.js:425
+msgid "Attempt Reconnection"
 msgstr ""
 
-#: src/extension.js:313
-msgid "Failed to mount device filesystem"
+#: src/extension.js:428
+msgid "Attempting to reconnect..."
 msgstr ""
 
-#: src/extension.js:453
-msgid "Mobile Devices"
-msgstr ""
-
-#: src/extension.js:471
-msgid "Enable"
+#: src/extension.js:434
+msgid "Device is disconnected"
 msgstr ""
 
 #: src/extension.js:477
-msgid "Mobile Settings"
+msgid "Failed to mount device filesystem"
 msgstr ""
 
-#: src/extension.js:518
-msgid "Stop scanning for Devices"
-msgstr ""
-
-#: src/extension.js:520
-msgid "Scan for Devices"
-msgstr ""
-
-#: src/extension.js:575 src/extension.js:600
-msgid "Scanning for device..."
-msgstr ""
-
-#: src/extension.js:646
-msgid "Nautilus extensions changed"
+#: src/extension.js:629
+msgid "Mobile Devices"
 msgstr ""
 
 #: src/extension.js:647
+msgid "Enable"
+msgstr ""
+
+#: src/extension.js:653
+msgid "Mobile Settings"
+msgstr ""
+
+#: src/extension.js:694
+msgid "Stop Discovering Devices"
+msgstr ""
+
+#: src/extension.js:696
+msgid "Discover Devices"
+msgstr ""
+
+#: src/extension.js:792
+msgid "Nautilus extensions changed"
+msgstr ""
+
+#: src/extension.js:793
 msgid "Restart Nautilus to apply changes"
 msgstr ""
 
-#: src/extension.js:652
+#: src/extension.js:798
 msgid "Restart"
 msgstr ""
 
@@ -110,15 +134,15 @@ msgstr ""
 msgid "Send file..."
 msgstr ""
 
-#: src/share.js:44
+#: src/share.js:45
 msgid "Cancel"
 msgstr ""
 
-#: src/share.js:45
+#: src/share.js:46
 msgid "Send"
 msgstr ""
 
-#: src/share.js:62
+#: src/share.js:63
 msgid "MConnect File Share"
 msgstr ""
 
@@ -130,22 +154,31 @@ msgstr ""
 msgid "Type a phone number or name"
 msgstr ""
 
-#: src/sms.js:496
+#: src/sms.js:453
+msgid "Device is offline"
+msgstr ""
+
+#: src/sms.js:490
 msgid "Type an SMS message"
 msgstr ""
 
-#: src/sms.js:703
+#. Log the sent message in the Conversation View and clear the entry
+#: src/sms.js:691
+msgid "You"
+msgstr ""
+
+#: src/sms.js:706
 msgid "MConnect SMS"
 msgstr ""
 
-#: src/nautilus-send-mconnect.py:79
+#: src/nautilus-send-mconnect.py:76
 #, python-brace-format
 msgid "Sending {num} file"
 msgid_plural "Sending {num} files"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/nautilus-send-mconnect.py:109
+#: src/nautilus-send-mconnect.py:106
 msgid "Send To Mobile Device"
 msgstr ""
 

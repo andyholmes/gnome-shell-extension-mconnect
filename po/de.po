@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-20 23:26-0700\n"
+"POT-Creation-Date: 2017-08-22 02:34-0700\n"
 "PO-Revision-Date: 2017-08-20 10:56+0200\n"
 "Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
 "Language-Team: Jonatan Hatakeyama Zeidler\n"
@@ -18,59 +18,89 @@ msgstr ""
 "X-Generator: Poedit 2.0.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/extension.js:33
+#: src/extension.js:35
 msgid "OFFLINE"
 msgstr "Nicht verbunden"
 
-#: src/extension.js:34
+#: src/extension.js:36
 msgid "UNPAIRED"
 msgstr "Nicht gekoppelt"
 
-#: src/extension.js:272
+#: src/extension.js:240
+#, fuzzy
+msgid "Send SMS"
+msgstr "Senden"
+
+#: src/extension.js:247
+#, fuzzy
+msgid "Locate Device"
+msgstr "Mobile Geräte"
+
+#: src/extension.js:255
+msgid "Browse Files"
+msgstr ""
+
+#: src/extension.js:262
+#, fuzzy
+msgid "Send Files"
+msgstr "Datei senden …"
+
+#: src/extension.js:421
+msgid "Request Pair"
+msgstr ""
+
+#: src/extension.js:422
 msgid "Device is unpaired"
 msgstr "Gerät ist nicht gekoppelt"
 
-#: src/extension.js:275 src/sms.js:459
-msgid "Device is offline"
+#: src/extension.js:425
+msgid "Attempt Reconnection"
+msgstr ""
+
+#: src/extension.js:428
+msgid "Attempting to reconnect..."
+msgstr ""
+
+#: src/extension.js:434
+#, fuzzy
+msgid "Device is disconnected"
 msgstr "Gerät ist nicht verbunden"
 
-#: src/extension.js:313
+#: src/extension.js:477
 msgid "Failed to mount device filesystem"
 msgstr "Einhängen des Gerätedateisystems fehlgeschlagen"
 
-#: src/extension.js:453
+#: src/extension.js:629
 msgid "Mobile Devices"
 msgstr "Mobile Geräte"
 
-#: src/extension.js:471
+#: src/extension.js:647
 msgid "Enable"
 msgstr "Aktivieren"
 
-#: src/extension.js:477
+#: src/extension.js:653
 msgid "Mobile Settings"
 msgstr "Einstellungen Mobile Geräte"
 
-#: src/extension.js:518
-msgid "Stop scanning for Devices"
+#: src/extension.js:694
+#, fuzzy
+msgid "Stop Discovering Devices"
 msgstr "Suche nach Geräten abbrechen"
 
-#: src/extension.js:520
-msgid "Scan for Devices"
+#: src/extension.js:696
+#, fuzzy
+msgid "Discover Devices"
 msgstr "Geräte suchen"
 
-#: src/extension.js:575 src/extension.js:600
-msgid "Scanning for device..."
-msgstr "Gerät werden gesucht …"
-
-#: src/extension.js:646
+#: src/extension.js:792
 msgid "Nautilus extensions changed"
 msgstr "Nautilus-Erweiterungen wurden geändert"
 
-#: src/extension.js:647
+#: src/extension.js:793
 msgid "Restart Nautilus to apply changes"
 msgstr "Nautilus neustarten, um Änderungen zu übernehmen"
 
-#: src/extension.js:652
+#: src/extension.js:798
 msgid "Restart"
 msgstr "Neustart"
 
@@ -110,15 +140,15 @@ msgstr "Entwicklung"
 msgid "Send file..."
 msgstr "Datei senden …"
 
-#: src/share.js:44
+#: src/share.js:45
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: src/share.js:45
+#: src/share.js:46
 msgid "Send"
 msgstr "Senden"
 
-#: src/share.js:62
+#: src/share.js:63
 msgid "MConnect File Share"
 msgstr "MConnect Dateitransfer"
 
@@ -130,22 +160,31 @@ msgstr "Telefonnummer eingeben"
 msgid "Type a phone number or name"
 msgstr "Telefonnummer oder Name eingeben"
 
-#: src/sms.js:496
+#: src/sms.js:453
+msgid "Device is offline"
+msgstr "Gerät ist nicht verbunden"
+
+#: src/sms.js:490
 msgid "Type an SMS message"
 msgstr "SMS-Nachricht eingeben"
 
-#: src/sms.js:703
+#. Log the sent message in the Conversation View and clear the entry
+#: src/sms.js:691
+msgid "You"
+msgstr ""
+
+#: src/sms.js:706
 msgid "MConnect SMS"
 msgstr "MConnect SMS"
 
-#: src/nautilus-send-mconnect.py:79
+#: src/nautilus-send-mconnect.py:76
 #, python-brace-format
 msgid "Sending {num} file"
 msgid_plural "Sending {num} files"
 msgstr[0] "{num} Datei wird gesendet"
 msgstr[1] "{num} Dateien werden gesendet"
 
-#: src/nautilus-send-mconnect.py:109
+#: src/nautilus-send-mconnect.py:106
 msgid "Send To Mobile Device"
 msgstr "An mobiles Gerät senden"
 
@@ -204,6 +243,9 @@ msgstr "Dienst"
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
 msgid "The service providing devices."
 msgstr "Der Hintergrunddienst, der Geräteverbindungen bereitstellt."
+
+#~ msgid "Scanning for device..."
+#~ msgstr "Gerät werden gesucht …"
 
 #, fuzzy
 #~ msgid "Sending %d file"
