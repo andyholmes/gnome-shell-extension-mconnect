@@ -68,7 +68,7 @@ const ActionTooltip = new Lang.Class({
     show: function () {
         if (!this.bin) {
             this.label = new St.Label({
-                style: "font-weight: normal; margin: 0;",
+                style: "font-weight: normal;",
                 text: this.title
             });
             this.label.clutter_text.line_wrap = true;
@@ -88,7 +88,7 @@ const ActionTooltip = new Lang.Class({
         }
         
         let [x, y] = this._parent.get_transformed_position();
-        y = y + 30;
+        y = y + 12;
         x = x - Math.round(this.bin.get_width()/2.5);
         
         if (this._showing) {
@@ -138,7 +138,7 @@ const ActionTooltip = new Lang.Class({
                 if (this._showing) {
                     this.show();
                 } else {
-                    this._labelTimeout = Mainloop.timeout_add(300, () => {
+                    this._labelTimeout = Mainloop.timeout_add(500, () => {
                         this.show();
                         this._labelTimeout = 0;
                         return false;
@@ -182,7 +182,8 @@ const ActionButton = new Lang.Class({
         params = Object.assign({
             icon_name: null,
             callback: () => {},
-            toggle_mode: false
+            toggle_mode: false,
+            tooltip_text: false
         }, params);
     
         this.parent({
@@ -192,18 +193,24 @@ const ActionButton = new Lang.Class({
             toggle_mode: params.toggle_mode
         });
         this.connect("clicked", params.callback);
+        
+        if (typeof params.tooltip_text === "string") {
+            this.tooltip = new ActionTooltip(params.tooltip_text, this);
+        }
     }
 });
+
 
 /** A PopupMenu used as an information and control center for a device */
 const DeviceMenu = new Lang.Class({
     Name: "DeviceMenu",
     Extends: PopupMenu.PopupMenuSection,
 
-    _init: function (device) {
+    _init: function (device, manager) {
         this.parent();
 
         this.device = device;
+        this.manager = manager;
         
         // Info Bar
         this.infoBar = new PopupMenu.PopupSeparatorMenuItem(device.name);
@@ -229,26 +236,30 @@ const DeviceMenu = new Lang.Class({
         
         this.smsButton = new ActionButton({
             icon_name: "user-available-symbolic",
-            callback: Lang.bind(this, this._smsAction)
+            callback: Lang.bind(this, this._smsAction),
+            tooltip_text: _("Send SMS")
         });
         this.pluginBar.actor.add(this.smsButton, { expand: true, x_fill: false });
         
         this.findButton = new ActionButton({
             icon_name: "find-location-symbolic",
-            callback: Lang.bind(this, this._findAction)
+            callback: Lang.bind(this, this._findAction),
+            tooltip_text: _("Locate Device")
         });
         this.pluginBar.actor.add(this.findButton, { expand: true, x_fill: false });
         
         this.browseButton = new ActionButton({
             icon_name: "folder-remote-symbolic",
             callback: Lang.bind(this, this._browseAction),
-            toggle_mode: true
+            toggle_mode: true,
+            tooltip_text: _("Browse Files")
         });
         this.pluginBar.actor.add(this.browseButton, { expand: true, x_fill: false });
         
         this.shareButton = new ActionButton({
             icon_name: "send-to-symbolic",
-            callback: Lang.bind(this, this._shareAction)
+            callback: Lang.bind(this, this._shareAction),
+            tooltip_text: _("Send Files")
         });
         this.pluginBar.actor.add(this.shareButton, { expand: true, x_fill: false });
         
@@ -276,9 +287,8 @@ const DeviceMenu = new Lang.Class({
         
         this.statusButton = new ActionButton({
             icon_name: "channel-insecure-symbolic",
-            callback: () => {
-                (device.trusted) ? this.emit("scan") : device.pair();
-            }
+            callback: Lang.bind(this, this._statusAction),
+            tooltip_text: "" // placeholder, strings in this._statusChanged()
         });
         this.statusBar.actor.add(this.statusButton, { x_fill: false });
         
@@ -309,6 +319,11 @@ const DeviceMenu = new Lang.Class({
         );
         device.connect(
             "notify::trusted",
+            Lang.bind(this, this._statusChanged)
+        );
+        
+        manager.connect(
+            "notify::scanning",
             Lang.bind(this, this._statusChanged)
         );
         
@@ -403,10 +418,25 @@ const DeviceMenu = new Lang.Class({
         
         if (!trusted) {
             this.statusButton.child.icon_name = "channel-insecure-symbolic";
+            this.statusButton.tooltip.title = _("Request Pair");
             this.statusLabel.text = _("Device is unpaired");
         } else if (!reachable) {
             this.statusButton.child.icon_name = "system-search-symbolic";
-            this.statusLabel.text = _("Device is offline");
+            this.statusButton.tooltip.title = _("Attempt Reconnection");
+        
+            if (this.manager._scans.has(this.device.id)) {
+                this.statusLabel.text = _("Attempting to reconnect...");
+                this.statusButton.can_focus = false;
+                this.statusButton.reactive = false;
+                this.statusButton.track_hover = false;
+                this.statusButton.opacity = 128;
+            } else {
+                this.statusLabel.text = _("Device is disconnected");
+                this.statusButton.can_focus = true;
+                this.statusButton.reactive = true;
+                this.statusButton.track_hover = true;
+                this.statusButton.opacity = 255;
+            }
         }
         
         this._pluginsChanged(this.device);
@@ -472,6 +502,17 @@ const DeviceMenu = new Lang.Class({
         GLib.spawn_command_line_async(
             "gjs " + Me.path + "/sms.js --device=" + this.device.id
         );
+    },
+    
+    //
+    _statusAction: function (button) {
+        debug("extension.DeviceMenu._statusAction()");
+        
+        if (this.device.trusted) {
+            this.manager.scan(this.device.id, 2);
+        } else {
+            this.device.pair();
+        }
     }
 });
 
@@ -480,10 +521,11 @@ const DeviceIndicator = new Lang.Class({
     Name: "DeviceIndicator",
     Extends: PanelMenu.Button,
     
-    _init: function (device) {
+    _init: function (device, manager) {
         this.parent(null, device.name + " Indicator", false);
         
         this.device = device;
+        this.manager = manager;
         
         // Device Icon
         this.icon = new St.Icon({
@@ -492,7 +534,7 @@ const DeviceIndicator = new Lang.Class({
         });
         this.actor.add_actor(this.icon);
         
-        this.deviceMenu = new DeviceMenu(device);
+        this.deviceMenu = new DeviceMenu(device, manager);
         this.menu.addMenuItem(this.deviceMenu);
         
         // Signals
@@ -648,10 +690,10 @@ const SystemIndicator = new Lang.Class({
         );
         this.extensionMenu.menu.box.set_child_at_index(this.scanItem.actor, 1);
         this.manager.connect("notify::scanning", () => {
-            if (this.manager._scans.indexOf("manager") > -1) {
-                this.scanItem.label.text = _("Stop scanning for Devices");
+            if (this.manager._scans.has("manager")) {
+                this.scanItem.label.text = _("Stop Discovering Devices");
             } else {
-                this.scanItem.label.text = _("Scan for Devices");
+                this.scanItem.label.text = _("Discover Devices");
             }
         });
         this.manager.notify("scanning");
@@ -700,43 +742,13 @@ const SystemIndicator = new Lang.Class({
         let device = this.manager.devices[dbusPath];
         
         // Status Area -> [ Device Indicator ]
-        let indicator = new DeviceIndicator(device);
-        
-        indicator.deviceMenu.connect("scan", (menu) => {
-            this.manager.scan(menu.device.id);
-        
-            if (this.manager._scans.indexOf(menu.device.id) > -1) {
-                menu.statusLabel.text = _("Scanning for device...");
-                menu.statusButton.child.icon_name = "process-stop-symbolic"
-            } else {
-                menu._statusChanged(menu.device);
-            }
-        });
-        
-        device.connect("notify::reachable", (device) => {
-            let { id, reachable } = device;
-            
-            if (reachable && this.manager._scans.indexOf(id) > -1) {
-                this.manager.scan(id);
-            }
-        });
+        let indicator = new DeviceIndicator(device, manager);
         
         this._indicators[dbusPath] = indicator;
         Main.panel.addToStatusArea(dbusPath, indicator);
         
         // Extension Menu -> [ Devices Section ] -> Device Menu
-        this._menus[dbusPath] = new DeviceMenu(device);
-        
-        this._menus[dbusPath].connect("scan", (menu) => {
-            this.manager.scan(menu.device.id);
-        
-            if (this.manager._scans.indexOf(menu.device.id) > -1) {
-                menu.statusLabel.text = _("Scanning for device...");
-                menu.statusButton.child.icon_name = "process-stop-symbolic"
-            } else {
-                menu._statusChanged(menu.device);
-            }
-        });
+        this._menus[dbusPath] = new DeviceMenu(device, manager);
         
         device.connect("notify::reachable", () => {
             this._deviceMenuVisibility(this._menus[dbusPath]);

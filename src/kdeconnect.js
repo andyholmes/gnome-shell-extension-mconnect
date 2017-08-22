@@ -2,6 +2,7 @@
 
 // Imports
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
@@ -821,7 +822,7 @@ const DeviceManager = new Lang.Class({
         
         // Track scan request ID's, ensure we don't have an active manager scan
         this._call("releaseDiscoveryMode", true, "manager");
-        this._scans = [];
+        this._scans = new Map();
         
         // Signals
         this.connect("g-signal", (proxy, sender, name, parameters) => {
@@ -868,19 +869,27 @@ const DeviceManager = new Lang.Class({
     },
     
     // Public Methods
-    scan: function (requestId="manager") {
-        let index = this._scans.indexOf(requestId)
-        
-        if (index > -1) {
+    scan: function (requestId="manager", timeout=15) {
+        if (this._scans.has(requestId)) {
             this._call("releaseDiscoveryMode", false, requestId);
-            this._scans.splice(index, 1);
+            GLib.source_remove(this._scans.get(requestId));
+            this._scans.delete(requestId)
+            this.notify("scanning");
+            return false;
         } else {
             this._call("acquireDiscoveryMode", false, requestId);
             this._call("forceOnNetworkChange", false);
-            this._scans.push(requestId);
+            this._scans.set(
+                requestId,
+                Mainloop.timeout_add_seconds(
+                    timeout, 
+                    Lang.bind(this, this.scan, requestId),
+                    GLib.PRIORITY_DEFAULT
+                )
+            );
+            this.notify("scanning");
+            return true;
         }
-        
-        this.notify("scanning");
     },
     
     destroy: function () {
@@ -890,9 +899,8 @@ const DeviceManager = new Lang.Class({
             this._deviceRemoved(this, dbusPath);
         }
         
-        for (let requestId of this._scans) {
-            this._call("releaseDiscoveryMode", false, requestId);
-            this._scans.splice(requestId, 1);
+        for (let requestId of this._scans.keys()) {
+            this.scan(requestId);
         }
     }
 });
