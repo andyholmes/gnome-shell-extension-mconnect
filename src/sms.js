@@ -553,7 +553,7 @@ const ApplicationWindow = new Lang.Class({
             );
         }
         
-        if (note.id.indexOf(":sms") > -1) { // FIXME: sketchy
+        if (note.id.indexOf(":sms:" + notificatonId) > -1) {
             let recipients = this._get_recipients();
             // string between sender and message:
             //    bin: 00100000 10000000010000 00100000
@@ -561,15 +561,22 @@ const ApplicationWindow = new Lang.Class({
             //    url: %20%E2%80%90%20
             let [sender, message] = note.content.split(" ‐ ");
             
+            log("incoming sender name: \"" + sender + "\"");
+            
             // Check for a verbatim match
             if (recipients.has(sender)) {
+                log("verbatim match to incoming sender name");
                 this._log_message(sender, message);
             // Might be just a number, strip both and check
             } else {
                 for (let [name, number] of recipients.entries()) {
                     let local_num = number.replace(/\D/g, "");
+                    log("local_num: \"" + local_num + "\"");
+                    let remote_num = sender.replace(/\D/g, "");
+                    log("remote_num: \"" + remote_num + "\"");
                     
-                    if (local_num === sender.replace(/\D/g, "")) {
+                    if (local_num === remote_num) {
+                        log("matched incoming number");
                         this._log_message(name, message);
                     }
                 }
@@ -597,6 +604,8 @@ const ApplicationWindow = new Lang.Class({
                         model.get_value(tree_iter, 1),
                         model.get_value(tree_iter, 2)
                     ];
+                    log("found recipient (name): \"" + contact[0] + "\"");
+                    log("found recipient (num): \"" + contact[1] + "\"");
                     return true;
                 }
                 
