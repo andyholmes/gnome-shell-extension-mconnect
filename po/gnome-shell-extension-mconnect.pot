@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-22 02:34-0700\n"
+"POT-Creation-Date: 2017-08-22 16:02-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -130,21 +130,28 @@ msgstr ""
 msgid "Development"
 msgstr ""
 
-#: src/share.js:38
+#: src/share.js:44
 msgid "Send file..."
 msgstr ""
 
-#: src/share.js:45
+#: src/share.js:51
 msgid "Cancel"
 msgstr ""
 
-#: src/share.js:46
+#: src/share.js:52
 msgid "Send"
 msgstr ""
 
-#: src/share.js:63
+#: src/share.js:69
 msgid "MConnect File Share"
 msgstr ""
+
+#: src/share.js:145
+#, javascript-format
+msgid "Sending %d file"
+msgid_plural "Sending %d files"
+msgstr[0] ""
+msgstr[1] ""
 
 #: src/sms.js:349
 msgid "Type a phone number"
@@ -171,14 +178,7 @@ msgstr ""
 msgid "MConnect SMS"
 msgstr ""
 
-#: src/nautilus-send-mconnect.py:76
-#, python-brace-format
-msgid "Sending {num} file"
-msgid_plural "Sending {num} files"
-msgstr[0] ""
-msgstr[1] ""
-
-#: src/nautilus-send-mconnect.py:106
+#: src/nautilus-send-mconnect.py:97
 msgid "Send To Mobile Device"
 msgstr ""
 
