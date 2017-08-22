@@ -286,6 +286,9 @@ advice and code I frequently reference.
 Folks support is based on a Python shim for libgee written by
 [@hugosenari][hugosenari], who graciously donated his time helping out.
 
+The code for tooltips is adapted from [@RaphaelRochet][RaphaelRochet]'s
+[application-overview-tooltip][tooltips] extension.
+
 This extension includes icons from the [Numix][numix] project and Google's
 [Material Design][material] project.
 
@@ -318,6 +321,8 @@ Gnome Shell theme with the [Numix Circle][numix] icon theme.
 [albertvaka]: https://github.com/albertvaka
 [bboozzoo]: https://github.com/bboozzoo
 [hugosenari]: https://github.com/hugosenari
+[RaphaelRochet]: https://github.com/RaphaelRochet
+[tooltips]: https://github.com/RaphaelRochet/applications-overview-tooltip
 [Bajoja]: https://github.com/Bajoja
 [bazaar]: https://wikipedia.org/wiki/The_Cathedral_and_the_Bazaar
 [ptomato]: https://github.com/ptomato
