@@ -4,6 +4,7 @@
 const Gettext = imports.gettext.domain("gnome-shell-extension-mconnect");
 const _ = Gettext.gettext;
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -16,6 +17,7 @@ const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Tweener = imports.ui.tweener;
 
 // Local Imports
 const Me = imports.misc.extensionUtils.getCurrentExtension();
@@ -38,6 +40,138 @@ var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
+
+/** 
+ * A Tooltip for ActionButton
+ * 
+ * Adapted from: https://github.com/RaphaelRochet/applications-overview-tooltip
+ */
+const ActionTooltip = new Lang.Class({
+    Name: "ActionTooltip",
+    
+    _init: function (title, parent) {
+        this._parent = parent;
+        
+        this._hoverTimeout = 0;
+        this._labelTimeout = 0;
+        this._showing = false;
+        
+        this.bin = null;
+        this.label = null;
+        this.title = title;
+        
+        this._parent.connect("notify::hover", Lang.bind(this, this.hover));
+        this._parent.connect("clicked", Lang.bind(this, this.hover));
+        this._parent.connect("destroy", Lang.bind(this, this.destroy));
+    },
+    
+    show: function () {
+        if (!this.bin) {
+            this.label = new St.Label({
+                style: "font-weight: normal; margin: 0;",
+                text: this.title
+            });
+            this.label.clutter_text.line_wrap = true;
+            this.label.clutter_text.line_wrap_mode = Pango.WrapMode.WORD;
+            this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+            
+            this.bin = new St.Bin({
+                style_class: "osd-window",
+                style: "min-width: 0; min-height: 0; padding: 6px;"
+            });
+            this.bin.child = this.label;
+            
+            Main.layoutManager.uiGroup.add_actor(this.bin);
+            Main.layoutManager.uiGroup.set_child_above_sibling(this.bin, null);
+        } else {
+            this.label.text = this.title;
+        }
+        
+        let [x, y] = this._parent.get_transformed_position();
+        y = y + 30;
+        x = x - Math.round(this.bin.get_width()/2.5);
+        
+        if (this._showing) {
+            Tweener.addTween(this.bin, {
+                x: x,
+                y: y,
+                time: 15/100,
+                transition: "easeOutQuad",
+            });
+        } else {
+            this.bin.set_position(x, y);
+            Tweener.addTween(this.bin, {
+                opacity: 255,
+                time: 15/100,
+                transition: "easeOutQuad",
+            });
+            
+            this._showing = true;
+        }
+        
+        if (this._hoverTimeout > 0) {
+            Mainloop.source_remove(this._hoverTimeout);
+            this._hoverTimeout = 0;
+        }
+    },
+    
+    hide: function () {
+        if (this.bin) {
+            Tweener.addTween(this.bin, {
+                opacity: 0,
+                time: 10/100,
+                transition: 'easeOutQuad',
+                onComplete: () => {
+                    Main.layoutManager.uiGroup.remove_actor(this.bin);
+                    this.bin.destroy();
+                    this.bin = null;
+                    this.label.destroy();
+                    this.label = null;
+                }
+            });
+        }
+    },
+    
+    hover: function () {
+        if (this._parent.get_hover()) {
+            if (this._labelTimeout === 0) {
+                if (this._showing) {
+                    this.show();
+                } else {
+                    this._labelTimeout = Mainloop.timeout_add(300, () => {
+                        this.show();
+                        this._labelTimeout = 0;
+                        return false;
+                    });
+                }
+            }
+        } else {
+            this.leave();
+        }
+    },
+    
+    leave: function () {
+        if (this._labelTimeout > 0){
+            Mainloop.source_remove(this._labelTimeout);
+            this._labelTimeout = 0;
+        }
+        
+        if (this._showing) {
+            this._hoverTimeout = Mainloop.timeout_add(500, () => {
+                    this.hide();
+                    this._showing = false;
+                    this._hoverTimeout = 0;
+                    return false;
+            });
+        }
+    },
+    
+    destroy: function () {
+        log("destroy() called");
+        this.leave();
+    }
+});
+
 
 /** An St.Button subclass for buttons with an image and an action */
 const ActionButton = new Lang.Class({
