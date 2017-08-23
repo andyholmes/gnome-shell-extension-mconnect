@@ -10,8 +10,7 @@ https://github.com/Bajoja/indicator-kdeconnect/blob/master/data/extensions/kdeco
 
 import gi
 gi.require_version('Nautilus', '3.0')
-gi.require_version('Notify', '0.7')
-from gi.repository import Nautilus, GObject, Notify
+from gi.repository import Nautilus, GObject
 
 import gettext
 import locale
@@ -88,7 +87,8 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
         for uri in files:
             if uri.get_uri_scheme() != 'file' or uri.is_directory():
                 return
-
+        
+        # Do this elsewhere?
         self.init_gettext()
         
         # Context Menu Item

@@ -70,6 +70,7 @@ const Application = new Lang.Class({
 
         GLib.set_prgname(application_name);
         GLib.set_application_name(application_name);
+        Notify.init("gnome-shell-extension-mconnect");
         
         //
         this._cmd = null;
@@ -138,8 +139,7 @@ const Application = new Lang.Class({
     },
     
     _notifyShare: function (deviceName, num) {
-        Notify.init("gnome-shell-extension-mconnect");
-        
+        // FIXME: this closes immediately after opening in the extension
         let note = new Notify.Notification({
             summary: deviceName,
             body: Gettext.ngettext("Sending %d file", "Sending %d files", num).format(num),
