@@ -235,7 +235,7 @@ const DeviceMenu = new Lang.Class({
         this.addMenuItem(this.pluginBar);
         
         this.smsButton = new ActionButton({
-            icon_name: "user-available-symbolic",
+            icon_name: "mail-send-symbolic",
             callback: Lang.bind(this, this._smsAction),
             tooltip_text: _("Send SMS")
         });
@@ -421,7 +421,7 @@ const DeviceMenu = new Lang.Class({
             this.statusButton.tooltip.title = _("Request Pair");
             this.statusLabel.text = _("Device is unpaired");
         } else if (!reachable) {
-            this.statusButton.child.icon_name = "system-search-symbolic";
+            this.statusButton.child.icon_name = "view-refresh-symbolic";
             this.statusButton.tooltip.title = _("Attempt Reconnection");
         
             if (this.manager._scans.has(this.device.id)) {
