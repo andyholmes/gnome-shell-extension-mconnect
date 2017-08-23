@@ -73,6 +73,12 @@ const ManagerNode = new Gio.DBusNodeInfo.new_for_xml('\
     <method name="ListDevices"> \
       <arg type="ao" name="result" direction="out"/> \
     </method> \
+    <signal name="DeviceAdded"> \
+      <arg type="s" name="path" direction="out"/> \
+    </signal> \
+    <signal name="DeviceRemoved"> \
+      <arg type="s" name="path" direction="out"/> \
+    </signal> \
   </interface> \
 </node> \
 ');
@@ -451,6 +457,16 @@ const DeviceManager = new Lang.Class({
         
         // Track scan request ID's
         this._scans = new Map();
+        
+        this.connect("g-signal", (proxy, sender, name, parameters) => {
+            parameters = parameters.deep_unpack();
+            
+            if (name === "DeviceAdded") {
+                this._deviceAdded(this, parameters[0]);
+            } else if (name === "DeviceRemoved") {
+                this._deviceRemoved(this, parameters[0]);
+            }
+        });
         
         // Add currently managed devices
         this._call("ListDevices", false).forEach((dbusPath) => {
