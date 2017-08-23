@@ -2,6 +2,7 @@
 
 // Imports
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
@@ -449,7 +450,7 @@ const DeviceManager = new Lang.Class({
         this.devices = {};
         
         // Track scan request ID's
-        this._scans = [];
+        this._scans = new Map();
         
         // Add currently managed devices
         this._call("ListDevices", false).forEach((dbusPath) => {
@@ -478,18 +479,26 @@ const DeviceManager = new Lang.Class({
     },
     
     // Public Methods
-    scan: function (requestId="manager") {
-        let index = this._scans.indexOf(requestId)
-        
-        if (index > -1) {
+    scan: function (requestId="manager", timeout=15) {
+        if (this._scans.has(requestId)) {
             log("Not implemented");
-            this._scans.splice(index, 1);
+            GLib.source_remove(this._scans.get(requestId));
+            this._scans.delete(requestId)
+            this.notify("scanning");
+            return false;
         } else {
             log("Not implemented");
-            this._scans.push(requestId);
+            this._scans.set(
+                requestId,
+                Mainloop.timeout_add_seconds(
+                    timeout, 
+                    Lang.bind(this, this.scan, requestId),
+                    GLib.PRIORITY_DEFAULT
+                )
+            );
+            this.notify("scanning");
+            return true;
         }
-        
-        this.notify("scanning");
     },
     
     destroy: function () {
@@ -497,6 +506,10 @@ const DeviceManager = new Lang.Class({
         
         for (let dbusPath in this.devices) {
             this._deviceRemoved(this, dbusPath);
+        }
+        
+        for (let requestId of this._scans.keys()) {
+            this.scan(requestId);
         }
     }
 });
