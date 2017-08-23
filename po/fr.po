@@ -1,0 +1,238 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-shell-extension-mconnect package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-shell-extension-mconnect\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-23 10:02-0700\n"
+"PO-Revision-Date: 2017-08-23 10:02-0700\n"
+"Last-Translator: Simon MELLERIN <simon.mellerin@ntymail.com>\n"
+"Language-Team: - Simon MELLERIN <simon.mellerin@ntymail.com>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: src/extension.js:35
+msgid "OFFLINE"
+msgstr "Déconnecté"
+
+#: src/extension.js:36
+msgid "UNPAIRED"
+msgstr "Non-appairé"
+
+#: src/extension.js:240
+msgid "Send SMS"
+msgstr "Envoyer un SMS"
+
+#: src/extension.js:247
+msgid "Locate Device"
+msgstr "Localiser l'appareil"
+
+#: src/extension.js:255
+msgid "Browse Files"
+msgstr "Naviguer dans les fichiers"
+
+#: src/extension.js:262
+msgid "Send Files"
+msgstr "Envoyer des fichiers"
+
+#: src/extension.js:421
+msgid "Request Pair"
+msgstr "Demander à s'appairer"
+
+#: src/extension.js:422
+msgid "Device is unpaired"
+msgstr "L'appareil n'est pas appairé"
+
+#: src/extension.js:425
+msgid "Attempt Reconnexion"
+msgstr "Reconnexion en cours"
+
+#: src/extension.js:428
+msgid "Attempting to reconnect..."
+msgstr "Tentative de reconnexion"
+
+#: src/extension.js:434
+msgid "Device is disconnected"
+msgstr "Le périphérique est déconnecté"
+
+#: src/extension.js:477
+msgid "Failed to mount device filesystem"
+msgstr "Echec lors du montage du système de fichier de l'appareil"
+
+#: src/extension.js:629
+msgid "Mobile Devices"
+msgstr "Téléphones"
+
+#: src/extension.js:647
+msgid "Enable"
+msgstr "Activer"
+
+#: src/extension.js:653
+msgid "Mobile Settings"
+msgstr "Paramètres du téléphone"
+
+#: src/extension.js:694
+msgid "Stop Discovering Devices"
+msgstr "Arrêter la recherche d'appareils"
+
+#: src/extension.js:696
+msgid "Discover Devices"
+msgstr "Chercher des appareils"
+
+#: src/extension.js:792
+msgid "Nautilus extensions changed"
+msgstr "Changement de l'extension Nautilus"
+
+#: src/extension.js:793
+msgid "Restart Nautilus to apply changes"
+msgstr "Redémarrer Nautilus pour appliquer les changements"
+
+#: src/extension.js:798
+msgid "Restart"
+msgstr "Redémarrer"
+
+#: src/prefs.js:154
+msgid "Nothing"
+msgstr "Rien"
+
+#: src/prefs.js:167
+msgid "True"
+msgstr "Vrai"
+
+#: src/prefs.js:180
+msgid "False"
+msgstr "Faux"
+
+#: src/prefs.js:531
+msgid "Preferences"
+msgstr "Préférences"
+
+#: src/prefs.js:537
+msgid "Service"
+msgstr "Service"
+
+#: src/prefs.js:560
+msgid "Service Settings"
+msgstr "Paramètres du service"
+
+#: src/prefs.js:561
+msgid "Open the settings for the current service"
+msgstr "Ouvrir les paramètres du service sélectionné"
+
+#: src/prefs.js:565
+msgid "Development"
+msgstr "Développement"
+
+#: src/share.js:44
+msgid "Send file..."
+msgstr "Envoie du fichier..."
+
+#: src/share.js:51
+msgid "Cancel"
+msgstr "Annuler"
+
+#: src/share.js:52
+msgid "Send"
+msgstr "Envoyer"
+
+#: src/share.js:69
+msgid "MConnect File Share"
+msgstr "Partage de fichier MConnect"
+
+#: src/share.js:145
+#, javascript-format
+msgid "Sending %d file"
+msgid_plural "Sending %d files"
+msgstr[0] "Envoi d'%d fichier"
+msgstr[1] "Envoi de %d fichiers"
+
+#: src/sms.js:349
+msgid "Type a phone number"
+msgstr "Entrez un numéro de téléphone"
+
+#: src/sms.js:358
+msgid "Type a phone number or name"
+msgstr "Entrez un numéro de téléphone ou un nom"
+
+#: src/sms.js:453
+msgid "Device is offline"
+msgstr "L'appareil est hors-ligne"
+
+#: src/sms.js:490
+msgid "Type an SMS message"
+msgstr "Redigez un SMS"
+
+#. Log the sent message in the Conversation View and clear the entry
+#: src/sms.js:691
+msgid "You"
+msgstr "Vous"
+
+#: src/sms.js:706
+msgid "MConnect SMS"
+msgstr "Mconnect SMS"
+
+#: src/nautilus-send-mconnect.py:97
+msgid "Send To Mobile Device"
+msgstr "Envoyer au téléphone"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:14
+msgid "Debug mode"
+msgstr "Mode débug"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:15
+msgid "Enable debug features and logging"
+msgstr "Activer le débug et le logging"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:19
+msgid "Device Auto-Mount"
+msgstr "Montage automatique du téléphone"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:20
+msgid "Automatically mount devices that support it"
+msgstr "Monter automatiquement les appareils qui le peuvent"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:24
+msgid "Device Indicators"
+msgstr "Indicateur d'appareils"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
+msgid "Controls available via Indicators or the User Menu"
+msgstr "Contrôles disponibles par l'Indicateur ou par le Menu d'Utilisateur"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:29
+msgid "Device Visibility"
+msgstr "Visibilité de l'appareil"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:30
+msgid "Display devices in offline and unpaired states"
+msgstr "Faire apparaitre les appareils déconnectés ou non-appairés"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
+msgid "Nautilus Integration"
+msgstr "Intégration de Nautilus"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
+msgid "Send files from the file browser context menu"
+msgstr "Envoyer des fichiers par le menu contextuel du navigateur de fichiers"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
+msgid "Service Auto-Start"
+msgstr "Démarrage automatique du service"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
+msgid "Start the service automatically and restart if stopped"
+msgstr "Démarrer le service automatiquement et le redémarrer s'il est arrété"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
+msgid "Service Provider"
+msgstr "Service"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
+msgid "The service providing devices."
+msgstr "Le service fournissant les appareils."
