@@ -167,7 +167,7 @@ const ActionTooltip = new Lang.Class({
     },
     
     destroy: function () {
-        log("destroy() called");
+        // TODO check this is done proper & signal handlers
         this.leave();
     }
 });
