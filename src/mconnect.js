@@ -362,7 +362,7 @@ const Device = new Lang.Class({
         let incoming = this._get("IncomingCapabilities");
         let outgoing = this._get("OutgoingCapabilities");
         
-        if (outgoing.indexOf("kdeconnect.battery") > -1 ) {
+        if (outgoing.indexOf("kdeconnect.battery") > -1 && this.trusted) {
             this.battery = new Battery(this.gObjectPath);
             
             this.battery.connect("notify", (battery) => {
@@ -386,7 +386,7 @@ const Device = new Lang.Class({
             delete this.battery;
         }
         
-        if (outgoing.indexOf("kdeconnect.ping") > -1 ) {
+        if (outgoing.indexOf("kdeconnect.ping") > -1 && this.trusted) {
             this.ping = new ProxyBase(
                 DeviceNode.interfaces[3],
                 this.gObjectPath
