@@ -317,7 +317,7 @@ const Device = new Lang.Class({
                     this.notify("name");
                 } else if (name === "IsActive" || name === "IsConnected") {
                     this.notify("reachable");
-                } else if (name === "Allowed") {
+                } else if (name === "Allowed" || name === "IsPaired") {
                     this.notify("trusted");
                 } else if (name === "DeviceType") {
                     this.notify("type");
@@ -353,7 +353,7 @@ const Device = new Lang.Class({
     ping: function () { throw Error("Not Implemented"); },
     ring: function () { throw Error("Not Implemented"); },
     sms: function (number, message) { throw Error("Not Implemented"); },
-    shareURI: function (filePath) { throw Error("Not Implemented"); },
+    shareURI: function (uri) { throw Error("Not Implemented"); },
     unpair: function () {
         this._manager._call(
             "DisallowDevice",
