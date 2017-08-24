@@ -182,7 +182,7 @@ FindMyPhoneNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
 
 const NotificationNode = new Gio.DBusNodeInfo.new_for_xml('\
 <node> \
-  <interface name="org.kde.kdeconnect.notifications.notification"> \
+  <interface name="org.kde.kdeconnect.device.notifications.notification"> \
     <method name="dismiss"> \
     </method> \
     <property name="dismissable" type="b" access="read"/> \
