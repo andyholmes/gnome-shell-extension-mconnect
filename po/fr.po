@@ -7,13 +7,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-23 10:02-0700\n"
+"POT-Creation-Date: 2017-08-24 02:40-0700\n"
 "PO-Revision-Date: 2017-08-23 10:02-0700\n"
 "Last-Translator: Simon MELLERIN <simon.mellerin@ntymail.com>\n"
 "Language-Team: - Simon MELLERIN <simon.mellerin@ntymail.com>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
@@ -50,7 +50,8 @@ msgid "Device is unpaired"
 msgstr "L'appareil n'est pas appairé"
 
 #: src/extension.js:425
-msgid "Attempt Reconnexion"
+#, fuzzy
+msgid "Attempt Reconnection"
 msgstr "Reconnexion en cours"
 
 #: src/extension.js:428
@@ -169,11 +170,11 @@ msgid "Type an SMS message"
 msgstr "Redigez un SMS"
 
 #. Log the sent message in the Conversation View and clear the entry
-#: src/sms.js:691
+#: src/sms.js:697
 msgid "You"
 msgstr "Vous"
 
-#: src/sms.js:706
+#: src/sms.js:712
 msgid "MConnect SMS"
 msgstr "Mconnect SMS"
 
