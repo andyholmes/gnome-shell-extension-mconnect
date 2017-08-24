@@ -25,28 +25,28 @@ The extension is now available on the [official extension website][ego]! The
 
 For instructions on how to build from Git, details about KDE Connect vs
 MConnect and dependencies for optional features, please see the
-[Installation Page](wiki/Installation) in the Wiki.
+[Installation Page](../../wiki/Installation) in the Wiki.
 
 
 ### Features
 
 * Send SMS messages
-  * [Two-Way Conversations](wiki/SMS#two-way-conversations) (***simulated***)
-  * [Contacts Auto-complete](wiki/SMS#contacts-auto-complete) (***optional***)
+  * [Two-Way Conversations](../../wiki/SMS#two-way-conversations) (***simulated***)
+  * [Contacts Auto-complete](../../wiki/SMS#contacts-auto-complete) (***optional***)
   
 * Find devices by causing them to ring until found
 
 * Mount and browse folders on your devices
-  * [Auto-Mount](wiki/Preferences#device-auto-mount) (***optional***)
+  * [Auto-Mount](../../wiki/Preferences#device-auto-mount) (***optional***)
 
 * Send files to devices
-  * [Nautilus Integration](wiki#Nautilus-Integration) (***optional***)
+  * [Nautilus Integration](../../wiki#Nautilus-Integration) (***optional***)
 
 * Monitor battery level and charging state
 
 * Supports multiple backends
-  * [KDE Connect](wiki/Installation#kde-connect)
-  * [MConnect](wiki/Installation#mconnect)
+  * [KDE Connect](../../wiki/Installation#kde-connect)
+  * [MConnect](../../wiki/Installation#mconnect)
 
     
 ## Credits and Acknowledgements
