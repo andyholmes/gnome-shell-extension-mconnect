@@ -541,7 +541,7 @@ const ApplicationWindow = new Lang.Class({
         this.has_focus = true;
     },
     
-    _catch_notification: function (plugin, notificationId) {
+    _catch_notification: function (plugin, nid) {
         let note;
         
         if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
@@ -549,11 +549,14 @@ const ApplicationWindow = new Lang.Class({
             return;
         } else {
             note = new KDEConnect.Notification(
-                this.device.gObjectPath + "/notifications/" + notificationId
+                this.device.gObjectPath + "/notifications/" + nid
             );
         }
-        
-        if (note.id.indexOf(":sms:" + notificatonId) > -1) {
+        log("DBus Notification ID: " + nid);
+        log("Notification App Name: \"" + note.name + "\"");
+        log("Notification ID: \"" + note.id + "\"");
+        log("Notification: \"" + note.content + "\"");
+        if (note.id.indexOf(":sms:") > -1) {
             let recipients = this._get_recipients();
             // string between sender and message:
             //    bin: 00100000 10000000010000 00100000
@@ -561,23 +564,26 @@ const ApplicationWindow = new Lang.Class({
             //    url: %20%E2%80%90%20
             let [sender, message] = note.content.split(" ‐ ");
             
-            log("incoming sender name: \"" + sender + "\"");
+            log("SMS Sender: \"" + sender + "\"");
+            log("SMS Message: \"" + message + "\"");
             
             // Check for a verbatim match
             if (recipients.has(sender)) {
-                log("verbatim match to incoming sender name");
+                log("Matched incoming sender");
                 this._log_message(sender, message);
+                note.dismiss();
             // Might be just a number, strip both and check
             } else {
                 for (let [name, number] of recipients.entries()) {
                     let local_num = number.replace(/\D/g, "");
-                    log("local_num: \"" + local_num + "\"");
                     let remote_num = sender.replace(/\D/g, "");
-                    log("remote_num: \"" + remote_num + "\"");
+                    log("Local Number: \"" + local_num + "\"");
+                    log("Incoming Number: \"" + remote_num + "\"");
                     
                     if (local_num === remote_num) {
-                        log("matched incoming number");
+                        log("Matched incoming number");
                         this._log_message(name, message);
+                        note.dismiss();
                     }
                 }
             }
