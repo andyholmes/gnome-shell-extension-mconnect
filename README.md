@@ -31,16 +31,16 @@ MConnect and dependencies for optional features, please see the
 ### Features
 
 * Send SMS messages
-  * [Two-Way Conversations](../../wiki/SMS#two-way-conversations) (***simulated***)
-  * [Contacts Auto-complete](../../wiki/SMS#contacts-auto-complete) (***optional***)
+  * [Two-Way Conversations](../../wiki/SMS#two-way-conversations) (***Simulated***)
+  * [Contacts Auto-complete](../../wiki/SMS#contacts-auto-complete) (***Optional***)
   
 * Find devices by causing them to ring until found
 
 * Mount and browse folders on your devices
-  * [Auto-Mount](../../wiki/Preferences#device-auto-mount) (***optional***)
+  * [Auto-Mount](../../wiki/Preferences#device-auto-mount) (***Preference***)
 
 * Send files to devices
-  * [Nautilus Integration](../../wiki#Nautilus-Integration) (***optional***)
+  * [Nautilus Integration](../../wiki#Nautilus-Integration) (***Optional***)
 
 * Monitor battery level and charging state
 
@@ -66,17 +66,20 @@ that was adapted to provide tooltips.
 The [Numix][numix] project and Google's [Material Design][material] project,
 some of whose icons are included in this extension.
 
-Last, but not least, anyone who has submitted a Pull Request or translation,
-opened an issue, helped to debug, offered their opinion or expertise - thank
-you for visiting my little stand at the [bazaar][bazaar].
+And to anyone who has submitted a Pull Request or translation, opened an issue,
+helped to debug, offered their opinion or expertise - thank you for visiting my
+little stand at the [bazaar][bazaar].
 
 ### Special Mention
+
+[Joey Sneddon][d0od88], who was the first to star this project, wrote a great
+[article on OMG! Ubuntu][omg-article] and helped raise awareness of MConnect.
 
 [@ptomato][ptomato] for the work and the [bright future][gjs-future] he has
 contributed to GJS, as well as help on StackOverflow.
 
-[Joey Sneddon][d0od88], who was the first to star this project, wrote a great
-[article on OMG! Ubuntu][omg-article] and helped raise awareness of MConnect.
+[@pwithnall][pwithnall] and [@nielsdg][nielsdg] for helping me out and
+tolerating my harassment on the Gnome Bugzilla.
 
 The screenshot of the extension features the [Vimix Dark Laptop][vimix] Gtk &
 Gnome Shell theme with the [Numix Circle][numix] icon theme.
@@ -95,9 +98,11 @@ Gnome Shell theme with the [Numix Circle][numix] icon theme.
 [tooltips]: https://github.com/RaphaelRochet/applications-overview-tooltip
 [Bajoja]: https://github.com/Bajoja
 [bazaar]: https://wikipedia.org/wiki/The_Cathedral_and_the_Bazaar
-[ptomato]: https://github.com/ptomato
 [d0od88]: https://github.com/d0od88
 [omg-article]: http://www.omgubuntu.co.uk/2017/08/kde-connect-gnome-extension
+[ptomato]: https://github.com/ptomato
+[pwithnall]: https://github.com/pwithnall
+[nielsdg]: https://github.com/nielsdg
 [gjs-future]: https://ptomato.wordpress.com/2017/07/30/modern-javascript-in-gnome-guadec-2017-talk/
 [vimix]: https://github.com/vinceliuice/vimix-gtk-themes
 [numix]: https://numixproject.org/
