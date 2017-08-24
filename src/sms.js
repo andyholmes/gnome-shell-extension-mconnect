@@ -552,7 +552,7 @@ const ApplicationWindow = new Lang.Class({
                 this.device.gObjectPath + "/notifications/" + nid
             );
         }
-        log("DBus Notification ID: " + nid);
+        log("Notification DBus ID: " + nid);
         log("Notification App Name: \"" + note.name + "\"");
         log("Notification ID: \"" + note.id + "\"");
         log("Notification: \"" + note.content + "\"");
