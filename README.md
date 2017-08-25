@@ -21,7 +21,7 @@ file managers and should work on any desktop with Gtk.
 ### Installation
 
 The extension is now available on the [official extension website][ego]! The
-*latest* stable release can always be found in the [releases page][releases].
+***latest stable release*** can always be found in the [releases page][releases].
 
 For instructions on how to build from Git, details about KDE Connect vs
 MConnect and dependencies for optional features, please see the
