@@ -407,8 +407,6 @@ const Device = new Lang.Class({
     
     // Override Methods
     destroy: function () {
-        ProxyBase.prototype.destroy.call(this);
-        
         ["battery",
         "findmyphone",
         "ping",
@@ -418,6 +416,8 @@ const Device = new Lang.Class({
                 delete this[plugin];
             }
         });
+        
+        ProxyBase.prototype.destroy.call(this);
     }
 });
 
@@ -518,8 +518,6 @@ const DeviceManager = new Lang.Class({
     },
     
     destroy: function () {
-        ProxyBase.prototype.destroy.call(this);
-        
         for (let dbusPath in this.devices) {
             this._deviceRemoved(this, dbusPath);
         }
@@ -527,6 +525,8 @@ const DeviceManager = new Lang.Class({
         for (let requestId of this._scans.keys()) {
             this.scan(requestId);
         }
+        
+        ProxyBase.prototype.destroy.call(this);
     }
 });
 
