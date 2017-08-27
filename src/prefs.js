@@ -1,6 +1,7 @@
 "use strict";
 
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 const Gettext = imports.gettext.domain('gnome-shell-extension-mconnect');
 const _ = Gettext.gettext;
 const Gio = imports.gi.Gio;
@@ -18,6 +19,60 @@ const ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
+
+
+const AboutWidget = new Lang.Class({
+    Name: "AboutWidget",
+    Extends: Gtk.Box,
+    
+    _init: function (setting) {
+        this.parent({
+            visible: true,
+            can_focus: true,
+            orientation: Gtk.Orientation.VERTICAL,
+            valign: Gtk.Align.CENTER,
+            halign: Gtk.Align.CENTER,
+            spacing: 6
+        });
+        
+        this.add(new Gtk.Image({ icon_name: "phone", pixel_size: 128 }));
+        
+        this.add(
+            new Gtk.Label({
+                use_markup: true,
+                label: "<b>" + Me.metadata.name + "</b>"
+            })
+        );
+        
+        this.add(
+            new Gtk.Label({ label: Me.metadata.version.toString() })
+        );
+        
+        this.add(new Gtk.Label({ label: Me.metadata.description }));
+        
+        this.add(
+            Gtk.LinkButton.new_with_label(
+                Me.metadata.url.toString(),
+                _("Website")
+            )
+        );
+        
+        this.add(
+            new Gtk.Label({
+                use_markup: true,
+                label: "<span size=\"small\">" + _("© 2017 Andy Holmes") + "</span>"
+            })
+        );
+        
+        this.add(
+            new Gtk.Label({
+                justify: Gtk.Justification.CENTER,
+                use_markup: true,
+                label: "<span size=\"small\">This program comes with ABSOLUTELY NO WARRANTY.\nSee the <a href=\"https://www.gnu.org/licenses/old-licenses/gpl-2.0.html\">GNU General Public License, version 2 or later</a> for details.</span>"
+            })
+        );
+    }
+});
 
 
 /** A Gtk.Switch subclass for boolean GSettings. */
@@ -520,23 +575,54 @@ const SettingsWidget = new Lang.Class({
 });
 
 
+/** A GtkStack subclass with a pre-attached GtkStackSwitcher */
+const PrefsWidget = new Lang.Class({
+    Name: "PrefsWidget",
+    Extends: Gtk.Stack,
+    
+    _init: function (params={}) {
+        params = Object.assign({
+            transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT
+        }, params);
+        
+        this.parent(params);
+        
+        this.switcher = new Gtk.StackSwitcher({
+            halign: Gtk.Align.CENTER
+        });
+        this.switcher.set_stack(this);
+        this.switcher.show_all();
+    }
+});
+
+
 function init() {
     initTranslations();
 }
 
 // Extension Preferences
 function buildPrefsWidget() {
-    let widget = new SettingsWidget();
+    let prefsWidget = new PrefsWidget();
+
+    // Preferences Page
+    let preferencesPage = new SettingsWidget();
     
-    let preferencesSection = widget.add_section(_("Preferences"));
-    widget.add_setting(preferencesSection, "device-indicators");
-    widget.add_setting(preferencesSection, "device-automount");
-    widget.add_setting(preferencesSection, "device-visibility");
-    widget.add_setting(preferencesSection, "nautilus-integration");
+    let appearanceSection = preferencesPage.add_section(_("Appearance"));
+    preferencesPage.add_setting(appearanceSection, "device-indicators");
+    preferencesPage.add_setting(appearanceSection, "device-visibility");
     
-    let serviceSection = widget.add_section(_("Service"));
-    widget.add_setting(serviceSection, "service-provider");
-    widget.add_setting(serviceSection, "service-autostart");
+    let behaviourSection = preferencesPage.add_section(_("Behaviour"));
+    preferencesPage.add_setting(behaviourSection, "device-automount");
+    preferencesPage.add_setting(behaviourSection, "nautilus-integration");
+    
+    prefsWidget.add_titled(preferencesPage, "preferences", _("Preferences"));
+    
+    // Service Page
+    let servicePage = new SettingsWidget();
+    
+    let serviceSection = servicePage.add_section(_("Service"));
+    servicePage.add_setting(serviceSection, "service-provider");
+    servicePage.add_setting(serviceSection, "service-autostart");
     let button = new Gtk.Button({
         image: Gtk.Image.new_from_icon_name(
             "preferences-system-symbolic",
@@ -555,18 +641,33 @@ function buildPrefsWidget() {
             Me.imports.kdeconnect.startSettings();
         }
     });
-    widget.add_item(
+    servicePage.add_item(
         serviceSection,
         _("Service Settings"),
         _("Open the settings for the current service"),
         button
     );
     
-    let develSection = widget.add_section(_("Development"));
-    widget.add_setting(develSection, "debug");
-    //TODO: about pane
+    prefsWidget.add_titled(servicePage, "service", _("Service"));
     
-    widget.show_all();
-    return widget;
+    // About Page
+    let aboutPage = new SettingsWidget();
+    
+    aboutPage.box.add(new AboutWidget());
+    
+    let develSection = aboutPage.add_section();
+    aboutPage.add_setting(develSection, "debug");
+    
+    prefsWidget.add_titled(aboutPage, "about", _("About"));
+    
+    // :P
+    Mainloop.timeout_add(0, () => {
+        let headerBar = prefsWidget.get_toplevel().get_titlebar();
+        headerBar.custom_title = prefsWidget.switcher;
+        return false;
+    });
+    
+    prefsWidget.show_all();
+    return prefsWidget;
 }
 
