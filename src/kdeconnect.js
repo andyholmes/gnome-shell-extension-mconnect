@@ -669,7 +669,10 @@ const Device = new Lang.Class({
         this.telephony._call("sendSms", true, number, message);
     },
     shareURI: function (uri) { this.share._call("shareUrl", true, uri); },
-    unpair: function () { this._call("unpair", null, true); },
+    unpair: function () {
+        this._call("unpair", null);
+        this._manager._call("forceOnNetworkChange", true);
+    },
     
     //
     _reloadPlugins: function () {
@@ -857,6 +860,7 @@ const DeviceManager = new Lang.Class({
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
         this.devices[dbusPath] = new Device(dbusPath);
+        this.devices[dbusPath]._manager = this;
         // Ensure an active scan for this device isn't in progress
         this._call("releaseDiscoveryMode", true, this.devices[dbusPath].id);
         this.emit("device::added", dbusPath);
