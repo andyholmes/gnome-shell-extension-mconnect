@@ -671,7 +671,7 @@ const SystemIndicator = new Lang.Class({
         
         // Watch "service-autostart" setting
         Settings.connect("changed::service-autostart", (settings, key) => {
-            if (Settings.get_boolean(key) && this.manager === null) {
+            if (Settings.get_boolean(key) && !this.manager) {
                 this._backend.startService();
             }
         });
@@ -698,7 +698,7 @@ const SystemIndicator = new Lang.Class({
         });
         this.manager.notify("scanning");
         
-        for (let dbusPath in this.manager.devices) {
+        for (let dbusPath of this.manager.devices.keys()) {
             this._deviceAdded(this.manager, dbusPath);
         }
         
@@ -739,7 +739,7 @@ const SystemIndicator = new Lang.Class({
     _deviceAdded: function (manager, dbusPath) {
         debug("extension.SystemIndicator._deviceAdded(" + dbusPath + ")");
         
-        let device = this.manager.devices[dbusPath];
+        let device = this.manager.devices.get(dbusPath);
         
         // Status Area -> [ Device Indicator ]
         let indicator = new DeviceIndicator(device, manager);
@@ -829,14 +829,11 @@ const SystemIndicator = new Lang.Class({
     destroy: function () {
         if (this.manager) {
             this.manager.destroy();
-            delete this.manager;
+            this.manager = false;
         }
         
         for (let dbusPath in this._indicators) {
-            Main.panel.statusArea[dbusPath].destroy();
-            delete this._indicators[dbusPath];
-            this._menus[dbusPath].destroy();
-            delete this._menus[dbusPath];
+            this._deviceRemoved(this.manager, dbusPath);
         }
         
         // Destroy the UI

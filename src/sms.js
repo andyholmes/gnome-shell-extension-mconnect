@@ -742,9 +742,7 @@ const Application = new Lang.Class({
     vfunc_activate: function() {
         let device;
         
-        for (let dbusPath in this.manager.devices) {
-            let dev = this.manager.devices[dbusPath];
-            
+        for (let dev of this.manager.devices.values()) {
             if (dev.id === this._id && dev.hasOwnProperty("telephony")) {
                 device = dev;
             }

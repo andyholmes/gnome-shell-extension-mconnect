@@ -584,8 +584,10 @@ const Device = new Lang.Class({
         )
     },
     
-    _init: function (dbusPath) {
+    _init: function (manager, dbusPath) {
         this.parent(DeviceNode.interfaces[1], dbusPath);
+        
+        this._manager = manager;
         
         // Connect to PropertiesChanged
         this.connect("g-properties-changed", (proxy, properties) => {
@@ -821,7 +823,7 @@ const DeviceManager = new Lang.Class({
         this.parent(ManagerNode.interfaces[0], "/modules/kdeconnect");
         
         // Track our device proxies, DBus path as key
-        this.devices = {};
+        this.devices = new Map();
         
         // Track scan request ID's, ensure we don't have an active manager scan
         this._call("releaseDiscoveryMode", true, "manager");
@@ -843,7 +845,7 @@ const DeviceManager = new Lang.Class({
             } else if (name === "deviceVisibilityChanged") {
                 let [id, reachable] = parameters;
                 let dbusPath = "/modules/kdeconnect/devices/" + id;
-                this.devices[dbusPath].notify("reachable");
+                this.devices.get(dbusPath).notify("reachable");
             }
         });
         
@@ -859,16 +861,15 @@ const DeviceManager = new Lang.Class({
     
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
-        this.devices[dbusPath] = new Device(dbusPath);
-        this.devices[dbusPath]._manager = this;
+        this.devices.set(dbusPath, new Device(this, dbusPath));
         // Ensure an active scan for this device isn't in progress
-        this._call("releaseDiscoveryMode", true, this.devices[dbusPath].id);
+        this._call("releaseDiscoveryMode", true, this.devices.get(dbusPath).id);
         this.emit("device::added", dbusPath);
     },
     
     _deviceRemoved: function (manager, dbusPath) {
-        this.devices[dbusPath].destroy();
-        delete this.devices[dbusPath];
+        this.devices.get(dbusPath).destroy();
+        this.devices.delete(dbusPath);
         this.emit("device::removed", dbusPath);
     },
     
@@ -897,7 +898,7 @@ const DeviceManager = new Lang.Class({
     },
     
     destroy: function () {
-        for (let dbusPath in this.devices) {
+        for (let dbusPath of this.devices.keys()) {
             this._deviceRemoved(this, dbusPath);
         }
         

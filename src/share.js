@@ -160,12 +160,6 @@ const Application = new Lang.Class({
     },
 
     vfunc_activate: function() {
-        let devices = [];
-        
-        for (let dbusPath in this.manager.devices) {
-            devices.push(this.manager.devices[dbusPath]);
-        }
-        
         if (this._cmd === "list-devices") {
             this.manager.scan("list-devices");
             GLib.usleep(2000000) // 2 seconds
@@ -173,7 +167,7 @@ const Application = new Lang.Class({
             
             let status;
             
-            for (let device of devices) {
+            for (let device of this.manager.devices.values()) {
                 if (device.reachable && device.trusted) {
                     status = " (paired and reachable)";
                 } else if (device.reachable) {
@@ -185,7 +179,7 @@ const Application = new Lang.Class({
                 print(device.name + ": " + device.id + status);
             }
         } else if (this._cmd === "list-available") {
-            for (let device of devices) {
+            for (let device of this.manager.devices.values()) {
                 if (device.reachable && device.trusted) {
                     print(device.name + ": " + device.id);
                 }

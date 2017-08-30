@@ -303,8 +303,10 @@ const Device = new Lang.Class({
         )
     },
     
-    _init: function (dbusPath) {
+    _init: function (manager, dbusPath) {
         this.parent(DeviceNode.interfaces[1], dbusPath);
+        
+        this._manager = manager;
         
         // Connect to PropertiesChanged
         this.connect("g-properties-changed", (proxy, properties) => {
@@ -453,7 +455,7 @@ const DeviceManager = new Lang.Class({
         this.parent(ManagerNode.interfaces[0], "/org/mconnect/manager");
         
         // Track our device proxies, DBus path as key
-        this.devices = {};
+        this.devices = new Map();
         
         // Track scan request ID's
         this._scans = new Map();
@@ -482,15 +484,14 @@ const DeviceManager = new Lang.Class({
     // Callbacks
     _deviceAdded: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
-        this.devices[dbusPath] = new Device(dbusPath);
-        this.devices[dbusPath]._manager = this;
+        this.devices.set(dbusPath, new Device(this, dbusPath));
         this.emit("device::added", dbusPath);
     },
     
     _deviceRemoved: function (manager, dbusPath) {
         // NOTE: not actually a signal yet
-        this.devices[dbusPath].destroy();
-        delete this.devices[dbusPath];
+        this.devices.get(dbusPath).destroy();
+        this.devices.delete(dbusPath);
         this.emit("device::removed", dbusPath);
     },
     
@@ -518,7 +519,7 @@ const DeviceManager = new Lang.Class({
     },
     
     destroy: function () {
-        for (let dbusPath in this.devices) {
+        for (let dbusPath of this.devices.keys()) {
             this._deviceRemoved(this, dbusPath);
         }
         
