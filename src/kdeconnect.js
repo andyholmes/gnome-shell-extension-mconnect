@@ -614,7 +614,7 @@ const Device = new Lang.Class({
             // Cached properties are updated before notifying
             if (name === "nameChanged") {
                 this.set_cached_property("name",
-                    new GLib.Variant("b", parameters[0])
+                    new GLib.Variant("s", parameters[0])
                 );
                 this.notify("name");
             } else if (name === "pluginsChanged") {
