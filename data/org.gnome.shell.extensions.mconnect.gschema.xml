@@ -29,6 +29,11 @@
       <summary>Device Visibility</summary>
       <description>Display devices in offline and unpaired states</description>
     </key>
+    <key name="device-keybindings" type="a{sv}">
+      <default><![CDATA[{"": <{"name": <"">, "bindings": <['','','','','']>}>}]]></default>
+      <summary>Keyboard Shortcuts</summary>
+      <description>Select a device to configure shortcuts</description>
+    </key>
     <key name="nautilus-integration" type="b">
       <default>false</default>
       <summary>Nautilus Integration</summary>

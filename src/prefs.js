@@ -413,9 +413,321 @@ const OtherSetting = new Lang.Class({
     }
 });
 
-/** A composite widget for GSettings resampling Gnome Control Center panels. */
-const SettingsWidget = new Lang.Class({
-    Name: "SettingsWidget",
+
+/** Gtk.Button subclass for launching dialogs or external programs */
+const ButtonSetting = new Lang.Class({
+    Name: "ButtonSetting",
+    Extends: Gtk.Button,
+    
+    _init: function (params={}) {
+        params = Object.assign({
+            icon_name: "system-run-symbolic",
+            callback: () => {}
+        }, params);
+        
+        this.parent({
+            image: Gtk.Image.new_from_icon_name(
+                params.icon_name,
+                Gtk.IconSize.BUTTON
+            ),
+            visible: true,
+            can_focus: true,
+            halign: Gtk.Align.END,
+            valign: Gtk.Align.CENTER
+        });
+        
+        this.get_style_context().add_class("circular");
+        this.connect("clicked", params.callback);
+    }
+});
+
+
+/**
+ * A custom Gtk.ComboBox for selecting and initializing keybinding profiles for
+ * devices.
+ */
+const KeybindingProfileBox = new Lang.Class({
+    Name: "KeybindingProfileBox",
+    Extends: Gtk.ComboBox,
+    
+    _init: function () {
+        this.parent();
+        
+        this.profiles = {};
+        
+        let model = new Gtk.ListStore();
+        model.set_column_types([
+            GObject.TYPE_STRING,    // Device ID (hostname)
+            GObject.TYPE_STRING     // Device Name
+        ]);
+        this.model = model;
+        
+        this.set_id_column(0);
+        
+        let nameCell = new Gtk.CellRendererText
+        this.pack_start(nameCell, false);
+        this.add_attribute(nameCell, "text", 1);
+        
+        // FIXME: move this, make it transient
+        if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
+            this.manager = new Me.imports.mconnect.DeviceManager();
+        } else {
+            this.manager = new Me.imports.kdeconnect.DeviceManager();
+        }
+        
+        this._refresh();
+    },
+    
+    _get_profiles: function () {
+        this.profiles = Settings.get_value("device-keybindings").deep_unpack();
+        
+        for (let deviceId in this.profiles) {
+            this.profiles[deviceId] = this.profiles[deviceId].deep_unpack();
+            
+            for (let field in this.profiles[deviceId]) {
+                this.profiles[deviceId][field] = this.profiles[deviceId][field].deep_unpack();
+            }
+        }
+        
+        // Create an empty keybinding profile for any device that doesn't have one
+        for (let device of this.manager.devices.values()) {
+            if (!this.profiles.hasOwnProperty(device.id)) {
+                this.profiles[device.id] = {
+                    name: device.name,
+                    bindings: ["", "", "", "", ""]
+                };
+            }
+        }
+        
+        this._set_profiles();
+    },
+    
+    _set_profiles: function () {
+        let profiles = JSON.parse(JSON.stringify(this.profiles));
+    
+        for (let profile in profiles) {
+            profiles[profile].name = new GLib.Variant(
+                "s", profiles[profile].name
+            );
+            profiles[profile].bindings = new GLib.Variant(
+                "as", profiles[profile].bindings
+            );
+            profiles[profile] = new GLib.Variant("a{sv}", profiles[profile]);
+        }
+        
+        Settings.set_value(
+            "device-keybindings",
+            new GLib.Variant("a{sv}", profiles)
+        );
+    },
+    
+    _refresh: function () {
+        this.model.clear();
+    
+        this.model.set(
+            this.model.append(),
+            [0, 1],
+            ["0", _("Select a device")]
+        );
+        
+        this._get_profiles();
+        
+        for (let profile in this.profiles) {
+            if (profile.length) {
+                this.model.set(
+                    this.model.append(),
+                    [0, 1],
+                    [profile, this.profiles[profile].name]
+                );
+            }
+        }
+    }
+});
+
+
+/**
+ * A Custom Gtk.TreeView for displaying and modifying keybinding profiles
+ */
+const KeybindingView = new Lang.Class({
+    Name: "KeybindingView",
+    Extends: Gtk.TreeView,
+    
+    _init: function () {
+        this.parent({
+            headers_visible: false,
+            hexpand: true
+        });
+        
+        let listStore = new Gtk.ListStore();
+        listStore.set_column_types([
+            GObject.TYPE_INT,       // Index
+            GObject.TYPE_STRING,    // Action
+            GObject.TYPE_INT,       // Key
+            GObject.TYPE_INT        // Modifiers
+        ]);
+        this.model = listStore;
+
+        // Description column.
+        let descCell = new Gtk.CellRendererText({ xpad: 6, ypad: 6 });
+        let descCol = new Gtk.TreeViewColumn({ expand: true, clickable: false });
+        descCol.pack_start(descCell, true);
+        descCol.add_attribute(descCell, "text", 1);
+        this.append_column(descCol);
+
+        // Key binding column.
+        this.accelCell = new Gtk.CellRendererAccel({
+            accel_mode: Gtk.CellRendererAccelMode.GTK,
+            editable: true,
+            xalign: 1,
+            xpad: 6,
+            ypad: 6
+        });
+
+        let accelCol = new Gtk.TreeViewColumn();
+        accelCol.pack_end(this.accelCell, false);
+        accelCol.add_attribute(this.accelCell, "accel-key", 2);
+        accelCol.add_attribute(this.accelCell, "accel-mods", 3);
+        this.append_column(accelCol);
+        
+        // Add a row for the keybinding.
+        this.add_accel(0, _("Open device menu"), 0, 0);
+        this.add_accel(1, _("Send SMS"), 0, 0);
+        this.add_accel(2, _("Locate Device"), 0, 0);
+        this.add_accel(3, _("Browse Files"), 0, 0);
+        this.add_accel(4, _("Send Files"), 0, 0);
+    },
+    
+    load_profile: function (profile) {
+        if (profile === undefined) {
+            this.model.foreach((model, path, iter, user_data) => {
+                model.set(iter, [2, 3], [0, 0]);
+            });
+        } else {
+            this.model.foreach((model, path, iter, user_data) => {
+                let index = model.get_value(iter, 0);
+                model.set(iter, [2, 3], Gtk.accelerator_parse(profile[index]));
+            });
+        }
+    },
+    
+    add_accel: function (index, description, key, mods) {
+        this.model.set(
+            this.model.append(),
+            [0, 1, 2, 3],
+            [index, description, key, mods]
+        );
+    }
+});
+
+
+/** 
+ * A composite widget that combines KeybindingProfileBox and KeybindingView
+ * into a single settings panel for managing device keybinding profiles.
+ */
+const KeybindingWidget = new Lang.Class({
+    Name: "KeybindingWidget",
+    Extends: Gtk.ListBoxRow,
+    
+    _init: function () {
+        this.parent({
+            visible: true,
+            can_focus: true,
+            activatable: false,
+            selectable: false
+        });
+        
+        this.grid = new Gtk.Grid({
+            visible: true,
+            can_focus: false,
+            column_spacing: 16,
+            row_spacing: 6,
+            margin_left: 12,
+            margin_top: 6,
+            margin_bottom: 6,
+            margin_right: 12
+        });
+        this.add(this.grid);
+        
+        let key = Schema.get_key("device-keybindings");
+        let summary = new Gtk.Label({
+            visible: true,
+            can_focus: false,
+            xalign: 0,
+            hexpand: true,
+            label: key.get_summary()
+        });
+        this.grid.attach(summary, 0, 0, 1, 1);
+        
+        let description = new Gtk.Label({
+            visible: true,
+            can_focus: false,
+            xalign: 0,
+            hexpand: true,
+            label: key.get_description(),
+            wrap: true
+        });
+        description.get_style_context().add_class("dim-label");
+        this.grid.attach(description, 0, 1, 1, 1);
+        
+        this.keyBox = new KeybindingProfileBox();
+        this.grid.attach(this.keyBox, 1, 0, 1, 2);
+        
+        this.keyView = new KeybindingView();
+        this.grid.attach(this.keyView, 0, 2, 2, 1);
+        
+        //
+        this.keyView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
+            let [success, iter] = this.keyView.model.get_iter_from_string(path);
+            
+            if (success && mods > 0) {
+                let index = this.keyView.model.get_value(iter, 0);
+                let binding = Gtk.accelerator_name(key, mods);
+                
+                // Check for duplicates
+                for (let prof in this.keyBox.profiles) {
+                    let bindex = this.keyBox.profiles[prof].bindings.indexOf(binding);
+                
+                    if (bindex > -1) {
+                        this.keyBox.profiles[prof].bindings[bindex] = "";
+                    }
+                }
+                
+                this._profile.bindings[index] = binding;
+                this.keyBox._set_profiles();
+                this.keyView.load_profile(this._profile.bindings);
+            }
+        });
+
+        this.keyView.accelCell.connect("accel-cleared", (renderer, path) => {
+            let [success, iter] = this.keyView.model.get_iter_from_string(path);
+            
+            if (success) {
+                let index = this.keyView.model.get_value(iter, 0);
+                this.keyView.model.set(iter, [2, 3], [0, 0]);
+                this._profile.bindings[index] = "";
+                this.keyBox._set_profiles();
+            }
+        });
+        
+        this.keyBox.connect("changed", (combobox, user_data) => {
+            if (this.keyBox.active === 0) {
+                this.keyView.load_profile(undefined);
+                this.keyView.sensitive = false;
+            } else {
+                this._profile = this.keyBox.profiles[this.keyBox.active_id];
+                this.keyView.load_profile(this._profile.bindings);
+                this.keyView.sensitive = true;
+            }
+        });
+        
+        this.keyBox.active = 0;
+    }
+});
+
+
+/** A composite widget for resembling A Gnome Control Center panel. */
+const PrefsPage = new Lang.Class({
+    Name: "PrefsPage",
     Extends: Gtk.ScrolledWindow,
     
     _init: function (params={}) {
@@ -439,8 +751,9 @@ const SettingsWidget = new Lang.Class({
     },
     
     /**
-     * Add and return a new section widget. If {@param title} is given, a bold
-     * title will be placed above the section.
+     * Add and return a new section widget. If @title is given, a bold title
+     * will be placed above the section.
+     *
      * @param {String} title - Optional bold label placed above the section
      * @return {Gtk.Frame} section - The new Section object.
      */
@@ -476,23 +789,27 @@ const SettingsWidget = new Lang.Class({
         });
         section.add(section.list);
         
-        //
         return section;
     },
     
-    /** Add @widget to @section with @label. */
-    add_item: function (section, summary, description, widget) {
+    /**
+     * Add and return new row with a Gtk.Grid child
+     *
+     * @param {Gtk.Frame} section - The section widget to attach to
+     * @return {Gtk.ListBoxRow} row - The new row
+     */
+    add_row: function (section) {
         // Row
-        let itemRow = new Gtk.ListBoxRow({
+        let row = new Gtk.ListBoxRow({
             visible: true,
             can_focus: true,
             activatable: false,
             selectable: false
         });
-        section.list.add(itemRow);
+        section.list.add(row);
         
         // Row Layout
-        let itemGrid = new Gtk.Grid({
+        row.grid = new Gtk.Grid({
             visible: true,
             can_focus: false,
             column_spacing: 16,
@@ -502,21 +819,37 @@ const SettingsWidget = new Lang.Class({
             margin_bottom: 6,
             margin_right: 12
         });
-        itemRow.add(itemGrid);
+        row.add(row.grid);
+        
+        return row;
+    },
+    
+    /**
+     * Add a new row to @section and return the row. @summary will be placed on
+     * top of @description (dimmed) on the left, @widget to the right of them. 
+     *
+     * @param {Gtk.Frame} section - The section widget to attach to
+     * @param {String} summary - A short summary for the item
+     * @param {String} description - A short description for the item
+     * @return {Gtk.ListBoxRow} row - The new row
+     */
+    add_item: function (section, summary, description, widget) {
+        
+        let row = this.add_row(section);
         
         // Setting Summary
-        let itemSummary = new Gtk.Label({
+        let summaryLabel = new Gtk.Label({
             visible: true,
             can_focus: false,
             xalign: 0,
             hexpand: true,
             label: summary
         });
-        itemGrid.attach(itemSummary, 0, 0, 1, 1);
+        row.grid.attach(summaryLabel, 0, 0, 1, 1);
         
         // Setting Description
         if (description !== undefined) {
-            let itemDescription = new Gtk.Label({
+            let descriptionLabel = new Gtk.Label({
                 visible: true,
                 can_focus: false,
                 xalign: 0,
@@ -524,30 +857,35 @@ const SettingsWidget = new Lang.Class({
                 label: description,
                 wrap: true
             });
-            itemDescription.get_style_context().add_class("dim-label");
-            itemGrid.attach(itemDescription, 0, 1, 1, 1);
+            descriptionLabel.get_style_context().add_class("dim-label");
+            row.grid.attach(descriptionLabel, 0, 1, 1, 1);
         }
         
         let widgetHeight = (description !== null) ? 2 : 1;
-        itemGrid.attach(widget, 1, 0, 1, widgetHeight);
+        row.grid.attach(widget, 1, 0, 1, widgetHeight);
         
-        return itemRow;
+        return row;
     },
     
     /**
-     * Add a new widget to @section for @setting.
+     * Add a new row to @section, populated from the Schema for @setting. An
+     * Gtk.Widget will be chosen for @setting based on it's type, unless
+     * @widget is given which will have @setting passed to it's constructor.
      *
      * @param {Gtk.Frame} section - The section widget to attach to
-     * @param {string} setting - GSetting key name
+     * @param {String} setting - A short summary for the item
+     * @param {Gtk.Widget} widget - A short description for the item
+     * @return {Gtk.ListBoxRow} row - The new row
      */
-    add_setting: function (section, setting) {
-        let widget;
+    add_setting: function (section, setting, widget) {
         let key = Schema.get_key(setting);
         let range = key.get_range().deep_unpack()[0];
         let type = key.get_value_type().dup_string();
         type = (range !== "type") ? range : type;
         
-        if (type === "b") {
+        if (widget !== undefined) {
+            widget = new widget(setting);
+        } else if (type === "b") {
             widget = new BoolSetting(setting);
         } else if (type === "enum") {
             widget = new EnumSetting(setting);
@@ -592,6 +930,16 @@ const PrefsWidget = new Lang.Class({
         });
         this.switcher.set_stack(this);
         this.switcher.show_all();
+    },
+    
+    add_page: function (id, title) {
+        let page = new PrefsPage();
+        this.add_titled(page, id, title);
+        return page;
+    },
+    
+    remove_page: function (id) {
+        throw Error("Not implemented, use PrefsWidget.remove(" + id + ")")
     }
 });
 
@@ -605,7 +953,7 @@ function buildPrefsWidget() {
     let prefsWidget = new PrefsWidget();
 
     // Preferences Page
-    let preferencesPage = new SettingsWidget();
+    let preferencesPage = prefsWidget.add_page("prefs", _("Preferences"));
     
     let appearanceSection = preferencesPage.add_section(_("Appearance"));
     preferencesPage.add_setting(appearanceSection, "device-indicators");
@@ -615,50 +963,44 @@ function buildPrefsWidget() {
     preferencesPage.add_setting(behaviourSection, "device-automount");
     preferencesPage.add_setting(behaviourSection, "nautilus-integration");
     
-    prefsWidget.add_titled(preferencesPage, "preferences", _("Preferences"));
-    
     // Service Page
-    let servicePage = new SettingsWidget();
+    let servicePage = prefsWidget.add_page("service", _("Service"));
     
-    let serviceSection = servicePage.add_section(_("Service"));
+    let serviceSection = servicePage.add_section();
     servicePage.add_setting(serviceSection, "service-provider");
     servicePage.add_setting(serviceSection, "service-autostart");
-    let button = new Gtk.Button({
-        image: Gtk.Image.new_from_icon_name(
-            "preferences-system-symbolic",
-            Gtk.IconSize.BUTTON
-        ),
-        visible: true,
-        can_focus: true,
-        halign: Gtk.Align.END,
-        valign: Gtk.Align.CENTER
-    });
-    button.get_style_context().add_class("circular");
-    button.connect("clicked", (button) => {
-        if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
-            Me.imports.mconnect.startSettings();
-        } else {
-            Me.imports.kdeconnect.startSettings();
+    let serviceSettings = new ButtonSetting({
+        icon_name: "preferences-system-symbolic",
+        callback: (button) => {
+            if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
+                Me.imports.mconnect.startSettings();
+            } else {
+                Me.imports.kdeconnect.startSettings();
+            }
         }
     });
     servicePage.add_item(
         serviceSection,
         _("Service Settings"),
         _("Open the settings for the current service"),
-        button
+        serviceSettings
     );
     
-    prefsWidget.add_titled(servicePage, "service", _("Service"));
+    // Keyboard Shortcuts Page
+    let keyPage = prefsWidget.add_page("kb", _("Shortcuts"));
+    
+    let keySection = keyPage.add_section();
+    
+    let keyRow = new KeybindingWidget();
+    keySection.list.add(keyRow);
     
     // About Page
-    let aboutPage = new SettingsWidget();
+    let aboutPage = prefsWidget.add_page("about", _("About"));
     
     aboutPage.box.add(new AboutWidget());
     
     let develSection = aboutPage.add_section();
     aboutPage.add_setting(develSection, "debug");
-    
-    prefsWidget.add_titled(aboutPage, "about", _("About"));
     
     // :P
     Mainloop.timeout_add(0, () => {
