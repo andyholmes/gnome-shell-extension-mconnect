@@ -494,7 +494,7 @@ const KeybindingProfileBox = new Lang.Class({
             if (!this.profiles.hasOwnProperty(device.id)) {
                 this.profiles[device.id] = {
                     name: device.name,
-                    bindings: ["", "", "", "", ""]
+                    bindings: ["", "", "", "", "", ""]
                 };
             }
         }
@@ -554,8 +554,10 @@ const KeybindingView = new Lang.Class({
     
     _init: function () {
         this.parent({
+            enable_grid_lines: true,
             headers_visible: false,
-            hexpand: true
+            hexpand: true,
+            margin_top: 6
         });
         
         let listStore = new Gtk.ListStore();
@@ -568,7 +570,7 @@ const KeybindingView = new Lang.Class({
         this.model = listStore;
 
         // Description column.
-        let descCell = new Gtk.CellRendererText({ xpad: 6, ypad: 6 });
+        let descCell = new Gtk.CellRendererText({ xpad: 6, ypad: 12 });
         let descCol = new Gtk.TreeViewColumn({ expand: true, clickable: false });
         descCol.pack_start(descCell, true);
         descCol.add_attribute(descCell, "text", 1);
@@ -580,7 +582,7 @@ const KeybindingView = new Lang.Class({
             editable: true,
             xalign: 1,
             xpad: 6,
-            ypad: 6
+            ypad: 12
         });
 
         let accelCol = new Gtk.TreeViewColumn();
@@ -588,13 +590,6 @@ const KeybindingView = new Lang.Class({
         accelCol.add_attribute(this.accelCell, "accel-key", 2);
         accelCol.add_attribute(this.accelCell, "accel-mods", 3);
         this.append_column(accelCol);
-        
-        // Add a row for the keybinding.
-        this.add_accel(0, _("Open device menu"), 0, 0);
-        this.add_accel(1, _("Send SMS"), 0, 0);
-        this.add_accel(2, _("Locate Device"), 0, 0);
-        this.add_accel(3, _("Browse Files"), 0, 0);
-        this.add_accel(4, _("Send Files"), 0, 0);
     },
     
     load_profile: function (profile) {
@@ -648,79 +643,170 @@ const KeybindingWidget = new Lang.Class({
         });
         this.add(this.grid);
         
-        let key = Schema.get_key("device-keybindings");
-        let summary = new Gtk.Label({
+        // Extension Keybindings
+        let extSchema = Schema.get_key("extension-keybindings");
+        let extSummary = new Gtk.Label({
             visible: true,
             can_focus: false,
             xalign: 0,
             hexpand: true,
-            label: key.get_summary()
+            label: extSchema.get_summary()
         });
-        this.grid.attach(summary, 0, 0, 1, 1);
+        this.grid.attach(extSummary, 0, 0, 1, 1);
         
-        let description = new Gtk.Label({
+        let extDesc = new Gtk.Label({
             visible: true,
             can_focus: false,
             xalign: 0,
             hexpand: true,
-            label: key.get_description(),
+            label: extSchema.get_description(),
             wrap: true
         });
-        description.get_style_context().add_class("dim-label");
-        this.grid.attach(description, 0, 1, 1, 1);
+        extDesc.get_style_context().add_class("dim-label");
+        this.grid.attach(extDesc, 0, 1, 1, 1);
         
-        this.keyBox = new KeybindingProfileBox();
-        this.grid.attach(this.keyBox, 1, 0, 1, 2);
-        
-        this.keyView = new KeybindingView();
-        this.grid.attach(this.keyView, 0, 2, 2, 1);
+        this.extView = new KeybindingView();
+        this.extView.margin_bottom = 12;
+        this.extView.add_accel(0, _("Open extension menu"), 0, 0);
+        this.extView.add_accel(1, _("Discover Devices"), 0, 0);
+        this.extView.add_accel(2, _("Open extension preferences"), 0, 0);
+        this.grid.attach(this.extView, 0, 2, 2, 1);
         
         //
-        this.keyView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
-            let [success, iter] = this.keyView.model.get_iter_from_string(path);
+        this.extView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
+            let [success, iter] = this.extView.model.get_iter_from_string(path);
             
             if (success && mods > 0) {
-                let index = this.keyView.model.get_value(iter, 0);
+                let index = this.extView.model.get_value(iter, 0);
                 let binding = Gtk.accelerator_name(key, mods);
                 
-                // Check for duplicates
-                for (let prof in this.keyBox.profiles) {
-                    let bindex = this.keyBox.profiles[prof].bindings.indexOf(binding);
+                // Check for existing instance of binding
+                this._check(binding);
                 
-                    if (bindex > -1) {
-                        this.keyBox.profiles[prof].bindings[bindex] = "";
-                    }
-                }
-                
-                this._profile.bindings[index] = binding;
-                this.keyBox._set_profiles();
-                this.keyView.load_profile(this._profile.bindings);
+                this._extKeys[index] = binding;
+                Settings.set_strv("extension-keybindings", this._extKeys);
+                this.extView.load_profile(this._extKeys);
             }
         });
 
-        this.keyView.accelCell.connect("accel-cleared", (renderer, path) => {
-            let [success, iter] = this.keyView.model.get_iter_from_string(path);
+        this.extView.accelCell.connect("accel-cleared", (renderer, path) => {
+            let [success, iter] = this.extView.model.get_iter_from_string(path);
             
             if (success) {
-                let index = this.keyView.model.get_value(iter, 0);
-                this.keyView.model.set(iter, [2, 3], [0, 0]);
-                this._profile.bindings[index] = "";
+                let index = this.devView.model.get_value(iter, 0);
+                this.extView.model.set(iter, [2, 3], [0, 0]);
+                this._extKeys[index] = "";
+                Settings.set_strv("extension-keybindings", this._extKeys);
+            }
+        });
+        
+        this._extKeys = Settings.get_strv("extension-keybindings");
+        
+        // Device Keybindings
+        let devSchema = Schema.get_key("device-keybindings");
+        let devSummary = new Gtk.Label({
+            visible: true,
+            can_focus: false,
+            xalign: 0,
+            hexpand: true,
+            label: devSchema.get_summary()
+        });
+        this.grid.attach(devSummary, 0, 3, 1, 1);
+        
+        let devDesc = new Gtk.Label({
+            visible: true,
+            can_focus: false,
+            xalign: 0,
+            hexpand: true,
+            label: devSchema.get_description(),
+            wrap: true
+        });
+        devDesc.get_style_context().add_class("dim-label");
+        this.grid.attach(devDesc, 0, 4, 1, 1);
+        
+        this.keyBox = new KeybindingProfileBox();
+        this.grid.attach(this.keyBox, 1, 3, 1, 2);
+        
+        this.devView = new KeybindingView();
+        this.devView.add_accel(0, _("Open device menu"), 0, 0);
+        this.devView.add_accel(1, _("Send SMS"), 0, 0);
+        this.devView.add_accel(2, _("Locate Device"), 0, 0);
+        this.devView.add_accel(3, _("Browse Files"), 0, 0);
+        this.devView.add_accel(4, _("Send Files"), 0, 0);
+        this.devView.add_accel(5, _("Pair/Reconnect"), 0, 0);
+        this.grid.attach(this.devView, 0, 5, 2, 1);
+        
+        this.deleteButton = new Gtk.Button({
+            label: _("Remove"),
+            tooltip_text: _("If the device no longer available the keybindings will be deleted, otherwise reset."),
+            halign: Gtk.Align.END
+        });
+        this.deleteButton.connect("clicked", () => {
+            log("FIXME");
+        });
+        this.deleteButton.get_style_context().add_class("destructive-action");
+        this.grid.attach(this.deleteButton, 1, 6, 1, 1);
+        
+        //
+        this.devView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
+            let [success, iter] = this.devView.model.get_iter_from_string(path);
+            
+            if (success && mods > 0) {
+                let index = this.devView.model.get_value(iter, 0);
+                let binding = Gtk.accelerator_name(key, mods);
+                
+                // Check for existing instance of binding
+                this._check(binding);
+                
+                this._devKeys.bindings[index] = binding;
+                this.keyBox._set_profiles();
+                this.devView.load_profile(this._devKeys.bindings);
+            }
+        });
+
+        this.devView.accelCell.connect("accel-cleared", (renderer, path) => {
+            let [success, iter] = this.devView.model.get_iter_from_string(path);
+            
+            if (success) {
+                let index = this.devView.model.get_value(iter, 0);
+                this.devView.model.set(iter, [2, 3], [0, 0]);
+                this._devKeys.bindings[index] = "";
                 this.keyBox._set_profiles();
             }
         });
         
         this.keyBox.connect("changed", (combobox, user_data) => {
             if (this.keyBox.active === 0) {
-                this.keyView.load_profile(undefined);
-                this.keyView.sensitive = false;
+                this.devView.load_profile(undefined);
+                this.devView.sensitive = false;
+                this.deleteButton.sensitive = false;
             } else {
-                this._profile = this.keyBox.profiles[this.keyBox.active_id];
-                this.keyView.load_profile(this._profile.bindings);
-                this.keyView.sensitive = true;
+                this._devKeys = this.keyBox.profiles[this.keyBox.active_id];
+                this.devView.load_profile(this._devKeys.bindings);
+                this.devView.sensitive = true;
+                this.deleteButton.sensitive = true;
             }
         });
         
         this.keyBox.active = 0;
+    },
+    
+    _check: function (binding) {
+        for (let prof in this.keyBox.profiles) {
+            let bindex = this.keyBox.profiles[prof].bindings.indexOf(binding);
+        
+            if (bindex > -1) {
+                this.keyBox.profiles[prof].bindings[bindex] = "";
+                this.keyBox._set_profiles();
+                this.devView.load_profile(this._devKeys.bindings);
+            }
+        }
+        
+        if (this._extKeys.indexOf(binding) > -1) {
+            this._extKeys[this._extKeys.indexOf(binding)] = "";
+            Settings.set_strv("extension-keybindings", this._extKeys);
+            this.extView.load_profile(this._extKeys);
+        }
     }
 });
 
