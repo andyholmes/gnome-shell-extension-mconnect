@@ -1,0 +1,295 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-shell-extension-mconnect package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-shell-extension-mconnect\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-09-03 11:45+0200\n"
+"PO-Revision-Date: 2017-09-03 12:30+0200\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.8.7.1\n"
+"Last-Translator: Andreas Cattelan <ilmondodiwit@gmail.com>\n"
+"Language: it_IT\n"
+
+#: src/extension.js:37
+msgid "OFFLINE"
+msgstr "NON IN LINEA"
+
+#: src/extension.js:38
+msgid "UNPAIRED"
+msgstr "NON COLLEGATO"
+
+#: src/extension.js:359 src/prefs.js:672
+msgid "Send SMS"
+msgstr "Invia SMS"
+
+#: src/extension.js:366 src/prefs.js:673
+msgid "Locate Device"
+msgstr "Cerca dispositivo"
+
+#: src/extension.js:374 src/prefs.js:674
+msgid "Browse Files"
+msgstr "Cerca file"
+
+#: src/extension.js:381 src/prefs.js:675
+msgid "Send Files"
+msgstr "Invia file"
+
+#: src/extension.js:540
+msgid "Request Pair"
+msgstr "Richiedi accoppiamento"
+
+#: src/extension.js:541
+msgid "Device is unpaired"
+msgstr "Dispositivo non é collegato"
+
+#: src/extension.js:544
+msgid "Attempt Reconnection"
+msgstr "Prova ricollegamento"
+
+#: src/extension.js:547
+msgid "Attempting to reconnect..."
+msgstr "Provo ricollegamento..."
+
+#: src/extension.js:553
+msgid "Device is disconnected"
+msgstr "Dispositivo e disconnesso"
+
+#: src/extension.js:596
+msgid "Failed to mount device filesystem"
+msgstr "Impossibile collegare "
+
+#: src/extension.js:749
+msgid "Mobile Devices"
+msgstr "Dispositivi mobili"
+
+#: src/extension.js:767
+msgid "Enable"
+msgstr "Attiva"
+
+#: src/extension.js:773
+msgid "Mobile Settings"
+msgstr "impostazioni mobili"
+
+#: src/extension.js:820
+msgid "Stop Discovering Devices"
+msgstr "interrompi ricerca dispositivi"
+
+#: src/extension.js:822
+msgid "Discover Devices"
+msgstr "ricerca dispositivi"
+
+#: src/extension.js:938
+msgid "Nautilus extensions changed"
+msgstr "estensioni Nautilus cambiati"
+
+#: src/extension.js:939
+msgid "Restart Nautilus to apply changes"
+msgstr "Riavvia Nautilus per la applicazione dei cambiamenti"
+
+#: src/extension.js:944
+msgid "Restart"
+msgstr "Riavvio"
+
+#: src/prefs.js:56
+msgid "Website"
+msgstr "Pagina web"
+
+#: src/prefs.js:63
+msgid "© 2017 Andy Holmes"
+msgstr "© 2017 Andy Holmes"
+
+#: src/prefs.js:209
+msgid "Nothing"
+msgstr "Niente"
+
+#: src/prefs.js:222
+msgid "True"
+msgstr "Vero"
+
+#: src/prefs.js:235
+msgid "False"
+msgstr "Falso"
+
+#: src/prefs.js:530
+msgid "Select a device"
+msgstr "Seleziona un dispositivo"
+
+#: src/prefs.js:671
+msgid "Open device menu"
+msgstr "Apri menu del dispositivo"
+
+#: src/prefs.js:676
+msgid "Pair/Reconnect"
+msgstr "Accoppiamento/ricollegamento"
+
+#: src/prefs.js:680
+msgid "Remove"
+msgstr "Rimuovi"
+
+#: src/prefs.js:681
+msgid ""
+"If the device no longer available the keybindings will be deleted, otherwise "
+"reset."
+msgstr ""
+"Se il dispositivo non e più disponibile le associazioni dei tasti verranno "
+"cancellati, altrimenti riavvia"
+
+#. Preferences Page
+#: src/prefs.js:970
+msgid "Preferences"
+msgstr "Preferenze"
+
+#: src/prefs.js:972
+msgid "Appearance"
+msgstr "Aspetto"
+
+#: src/prefs.js:976
+msgid "Behaviour"
+msgstr "Comportamento"
+
+#. Service Page
+#: src/prefs.js:981
+msgid "Service"
+msgstr "Servizi"
+
+#: src/prefs.js:998
+msgid "Service Settings"
+msgstr "Impostazioni servizi"
+
+#: src/prefs.js:999
+msgid "Open the settings for the current service"
+msgstr "Apri le impostazioni per il servizio attuale"
+
+#. Keyboard Shortcuts Page
+#: src/prefs.js:1004
+msgid "Shortcuts"
+msgstr "Scorciatoie"
+
+#. About Page
+#: src/prefs.js:1012
+msgid "About"
+msgstr "Informazioni su mconnect"
+
+#: src/share.js:44
+msgid "Send file..."
+msgstr "Invia file"
+
+#: src/share.js:51
+msgid "Cancel"
+msgstr "Cancella"
+
+#: src/share.js:52
+msgid "Send"
+msgstr "Invia"
+
+#: src/share.js:69
+msgid "MConnect File Share"
+msgstr "MConnect condivisione file"
+
+#: src/share.js:145
+#, javascript-format
+msgid "Sending %d file"
+msgid_plural "Sending %d files"
+msgstr[0] "Invio %d file"
+msgstr[1] "Invio %d files"
+
+#: src/sms.js:349
+msgid "Type a phone number"
+msgstr "Digita un numero telefonico"
+
+#: src/sms.js:358
+msgid "Type a phone number or name"
+msgstr "Digita un numero telefonico o nome"
+
+#: src/sms.js:453
+msgid "Device is offline"
+msgstr "Dispositivo non é in linea"
+
+#: src/sms.js:490
+msgid "Type an SMS message"
+msgstr "Scrivi un messaggio SMS"
+
+#. Log the sent message in the Conversation View and clear the entry
+#: src/sms.js:697
+msgid "You"
+msgstr "Tu"
+
+#: src/sms.js:712
+msgid "MConnect SMS"
+msgstr "MConnect SMS"
+
+#: src/nautilus-send-mconnect.py:97
+msgid "Send To Mobile Device"
+msgstr "Invia a dispositivo"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:14
+msgid "Debug mode"
+msgstr "Modalità debug"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:15
+msgid "Enable debug features and logging"
+msgstr "Attiva le modalità e la registrazione debug"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:19
+msgid "Device Auto-Mount"
+msgstr "Auto-mount dipsoitivo"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:20
+msgid "Automatically mount devices that support it"
+msgstr "Monta automaticamente dispositivi  che supportano il servizio"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:24
+msgid "Device Indicators"
+msgstr "Indicatore dispositivi"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
+msgid "Controls available via Indicators or the User Menu"
+msgstr "Controlla la disponibilità via Indicators o il menu utente"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:29
+msgid "Device Visibility"
+msgstr "Visibilità dispositivi"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:30
+msgid "Display devices in offline and unpaired states"
+msgstr "Visualizza dispositivi non collegati o non in linea"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
+msgid "Device Shortcuts"
+msgstr "Scorciatoie dispositivi"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
+msgid "Configure shortcuts for device functions"
+msgstr "Configura scorciatoie per dispositivi"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
+msgid "Nautilus Integration"
+msgstr "Integrazione Nautilus"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
+msgid "Send files from the file browser context menu"
+msgstr "Invia file direttamente dal menu di contesto di Nautilus"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
+msgid "Service Auto-Start"
+msgstr "Servizion Auto-Start"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
+msgid "Start the service automatically and restart if stopped"
+msgstr "Avvia il servizio automaticamente e riavvia se fermato "
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
+msgid "Service Provider"
+msgstr "Dispositivi in servizio"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
+msgid "The service providing devices."
+msgstr "Dispositivi attivi che forniscono il servizio"
