@@ -10,7 +10,9 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
+const Meta = imports.gi.Meta;
 const Pango = imports.gi.Pango;
+const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 
 const Main = imports.ui.main;
@@ -40,6 +42,72 @@ var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
+
+
+/**
+ * Keyboard shortcuts
+ *
+ * References:
+ *     https://developer.gnome.org/meta/stable/MetaDisplay.html
+ *     https://developer.gnome.org/meta/stable/meta-MetaKeybinding.html
+ *
+ */
+const KeybindingManager = new Lang.Class({
+    Name: "KeybindingManager",
+
+    _init: function (devices) {
+        this.bindings = new Map();
+        
+        this._handler = global.display.connect(
+            'accelerator-activated',
+            Lang.bind(this, (display, action, deviceId, timestamp) => {
+                if (this.bindings.has(action)) {
+                    this.bindings.get(action).callback()
+                }
+            })
+        );
+    },
+
+    add: function(accelerator, callback){
+        debug("KeybindingManager.add(" + accelerator + ")");
+        
+        let action = global.display.grab_accelerator(accelerator);
+
+        if (action !== Meta.KeyBindingAction.NONE) {
+            let name = Meta.external_binding_name_for_action(action);
+
+            Main.wm.allowKeybinding(name, Shell.ActionMode.ALL)
+
+            this.bindings.set(action, {
+                name: name,
+                accelerator: accelerator,
+                callback: callback
+            });
+        }
+        
+        return action;
+    },
+
+    remove: function (action) {
+        let binding = this.bindings.get(action);
+        
+        global.display.ungrab_accelerator(action);
+        Main.wm.allowKeybinding(binding.name, Shell.ActionMode.NONE);
+        this.bindings.delete(action);
+    },
+    
+    removeAll: function () {
+        for (let action of this.bindings.keys()) {
+            this.remove(action);
+        }
+    },
+    
+    destroy: function () {
+        this.removeAll();
+        global.display.disconnect(this._handler);
+    }
+});
+
 
 /** 
  * A Tooltip for ActionButton
@@ -77,7 +145,7 @@ const ActionTooltip = new Lang.Class({
             
             this.bin = new St.Bin({
                 style_class: "osd-window",
-                style: "min-width: 0; min-height: 0; padding: 6px;"
+                style: "min-width: 0; min-height: 0; padding: 6px; border-radius: 2px;"
             });
             this.bin.child = this.label;
             
@@ -211,6 +279,7 @@ const DeviceMenu = new Lang.Class({
 
         this.device = device;
         this.manager = manager;
+        this._keybindings = [];
         
         // Info Bar
         this.infoBar = new PopupMenu.PopupSeparatorMenuItem(device.name);
@@ -504,7 +573,6 @@ const DeviceMenu = new Lang.Class({
         );
     },
     
-    //
     _statusAction: function (button) {
         debug("extension.DeviceMenu._statusAction()");
         
@@ -515,6 +583,7 @@ const DeviceMenu = new Lang.Class({
         }
     }
 });
+
 
 /** An indicator representing a Device in the Status Area */
 const DeviceIndicator = new Lang.Class({
@@ -604,6 +673,8 @@ const SystemIndicator = new Lang.Class({
         this.manager = false;
         this._indicators = {};
         this._menus = {};
+        this.keybindingManager = new KeybindingManager();
+        this._keybindings = [];
         
         // Notifications
         this._integrateNautilus();
@@ -650,11 +721,8 @@ const SystemIndicator = new Lang.Class({
         
         // Extension Menu -> Mobile Settings Item
         this.extensionMenu.menu.addAction(
-            _("Mobile Settings"), () => {
-                GLib.spawn_command_line_async(
-                    "gnome-shell-extension-prefs mconnect@andyholmes.github.io"
-                );
-            }
+            _("Mobile Settings"), 
+            this._openPrefs
         );
         
         //
@@ -675,6 +743,19 @@ const SystemIndicator = new Lang.Class({
                 this._backend.startService();
             }
         });
+        
+        // Keybindings
+        this._extensionKeybindings();
+        
+        Settings.connect("changed::device-keybindings", () => {
+            for (let dbusPath in this._indicators) {
+                this._deviceKeybindings(this._indicators[dbusPath]);
+            }
+        });
+        
+        Settings.connect("changed::extension-keybindings", () => {
+            this._extensionKeybindings();
+        });
     },
     
     // The DBus interface has appeared
@@ -685,6 +766,7 @@ const SystemIndicator = new Lang.Class({
         this.enableItem.actor.visible = !(this.manager);
         this.extensionIndicator.visible = (this.manager);
         
+        // Extension Menu -> (Stop) Discover Devices Item
         this.scanItem = this.extensionMenu.menu.addAction(
             "", () => { this.manager.scan(); }
         );
@@ -698,6 +780,7 @@ const SystemIndicator = new Lang.Class({
         });
         this.manager.notify("scanning");
         
+        // Add currently managed devices
         for (let dbusPath of this.manager.devices.keys()) {
             this._deviceAdded(this.manager, dbusPath);
         }
@@ -736,6 +819,142 @@ const SystemIndicator = new Lang.Class({
         }
     },
     
+    _extensionKeybindings: function () {
+        for (let binding of this._keybindings) {
+            this.keybindingManager.remove(binding);
+        }
+        this._keybindings = [];
+    
+        let bindings = Settings.get_strv("extension-keybindings");
+        
+        if (bindings[0].length) {
+            this._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[0],
+                    Lang.bind(this, this._openMenu)
+                )
+            );
+        }
+        
+        if (bindings[1].length) {
+            this._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[1],
+                    Lang.bind(this, this._discoverDevices)
+                )
+            );
+        }
+        
+        if (bindings[2].length) {
+            this._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[2],
+                    Lang.bind(this, this._openPrefs)
+                )
+            );
+        }
+    },
+    
+    _deviceKeybindings: function (indicator) {
+        let menu = indicator.deviceMenu;
+        
+        for (let binding of menu._keybindings) {
+            this.keybindingManager.remove(binding);
+        }
+        menu._keybindings = [];
+    
+        let profiles = Settings.get_value("device-keybindings").deep_unpack();
+        let bindings, profile;
+        
+        if (profiles.hasOwnProperty(menu.device.id)) {
+            profile = profiles[menu.device.id].deep_unpack();
+            bindings = profile.bindings.deep_unpack();
+        }
+        
+        if (bindings[0].length) {
+            menu._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[0], 
+                    Lang.bind(this, this._openDeviceMenu, indicator)
+                )
+            );
+        }
+        
+        if (bindings[1].length) {
+            menu._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[1], 
+                    Lang.bind(menu, menu._smsAction)
+                )
+            );
+        }
+        
+        if (bindings[2].length) {
+            menu._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[2], 
+                    Lang.bind(menu, menu._findAction)
+                )
+            );
+        }
+        
+        if (bindings[3].length) {
+            menu._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[3],
+                    Lang.bind(menu, menu._browseAction, menu.browseButton)
+                )
+            );
+        }
+        
+        if (bindings[4].length) {
+            menu._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[4],
+                    Lang.bind(menu, menu._shareAction)
+                )
+            );
+        }
+        
+        if (bindings[5].length) {
+            menu._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[5],
+                    Lang.bind(menu, menu._statusAction)
+                )
+            );
+        }
+    },
+    
+    _discoverDevices: function () {
+        if (this.manager) {
+            this.manager.scan();
+        }
+    },
+    
+    _openDeviceMenu: function (indicator) {
+        if (Settings.get_boolean("device-indicators")) {
+            indicator.menu.toggle();
+        } else {
+            this._openMenu();
+//            Main.panel._toggleMenu(Main.panel.statusArea.aggregateMenu);
+//            this.extensionMenu.menu.toggle();
+//            indicator.deviceMenu.actor.grab_key_focus();
+        }
+    },
+    
+    _openMenu: function () {
+        Main.panel._toggleMenu(Main.panel.statusArea.aggregateMenu);
+        this.extensionMenu.menu.toggle();
+        this.extensionMenu.actor.grab_key_focus();
+    },
+    
+    _openPrefs: function () {
+        GLib.spawn_command_line_async(
+            "gnome-shell-extension-prefs mconnect@andyholmes.github.io"
+        );
+    },
+    
     _deviceAdded: function (manager, dbusPath) {
         debug("extension.SystemIndicator._deviceAdded(" + dbusPath + ")");
         
@@ -743,29 +962,38 @@ const SystemIndicator = new Lang.Class({
         
         // Status Area -> [ Device Indicator ]
         let indicator = new DeviceIndicator(device, manager);
-        
         this._indicators[dbusPath] = indicator;
         Main.panel.addToStatusArea(dbusPath, indicator);
         
         // Extension Menu -> [ Devices Section ] -> Device Menu
-        this._menus[dbusPath] = new DeviceMenu(device, manager);
+        let menu = new DeviceMenu(device, manager);
+        this._menus[dbusPath] = menu;
         
         device.connect("notify::reachable", () => {
-            this._deviceMenuVisibility(this._menus[dbusPath]);
+            this._deviceMenuVisibility(menu);
         });
         device.connect("notify::trusted", () => {
-            this._deviceMenuVisibility(this._menus[dbusPath]);
+            this._deviceMenuVisibility(menu);
         });
         
-        this.devicesSection.addMenuItem(this._menus[dbusPath]);
-        this._deviceMenuVisibility(this._menus[dbusPath]);
+        this.devicesSection.addMenuItem(menu);
+        this._deviceMenuVisibility(menu);
+        
+        // Keybindings
+        this._deviceKeybindings(indicator);
     },
     
     _deviceRemoved: function (manager, dbusPath) {
         debug("extension.SystemIndicator._deviceRemoved(" + dbusPath + ")");
         
+        for (let binding of this._indicators[dbusPath].deviceMenu._keybindings) {
+            this.keybindingManager.remove(binding);
+        }
+        this._indicators[dbusPath].deviceMenu._keybindings = [];
+        
         Main.panel.statusArea[dbusPath].destroy();
         delete this._indicators[dbusPath];
+        
         this._menus[dbusPath].destroy();
         delete this._menus[dbusPath];
     },
@@ -835,6 +1063,8 @@ const SystemIndicator = new Lang.Class({
         for (let dbusPath in this._indicators) {
             this._deviceRemoved(this.manager, dbusPath);
         }
+        
+        this.keybindingManager.destroy();
         
         // Destroy the UI
         this.extensionMenu.destroy();

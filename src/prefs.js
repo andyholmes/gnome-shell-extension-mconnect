@@ -631,6 +631,14 @@ const KeybindingWidget = new Lang.Class({
             selectable: false
         });
         
+        this.shellBus = new Gio.DBusProxy({
+            gConnection: Gio.DBus.session,
+            //gInterfaceInfo: iface,
+            gName: "org.gnome.Shell",
+            gObjectPath: "/org/gnome/Shell",
+            gInterfaceName: "org.gnome.Shell"
+        });
+        
         this.grid = new Gtk.Grid({
             visible: true,
             can_focus: false,
@@ -672,7 +680,6 @@ const KeybindingWidget = new Lang.Class({
         this.extView.add_accel(2, _("Open extension preferences"), 0, 0);
         this.grid.attach(this.extView, 0, 2, 2, 1);
         
-        //
         this.extView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
             let [success, iter] = this.extView.model.get_iter_from_string(path);
             
@@ -681,11 +688,11 @@ const KeybindingWidget = new Lang.Class({
                 let binding = Gtk.accelerator_name(key, mods);
                 
                 // Check for existing instance of binding
-                this._check(binding);
-                
-                this._extKeys[index] = binding;
-                Settings.set_strv("extension-keybindings", this._extKeys);
-                this.extView.load_profile(this._extKeys);
+                if (this._check(binding)) {
+                    this._extKeys[index] = binding;
+                    Settings.set_strv("extension-keybindings", this._extKeys);
+                    this.extView.load_profile(this._extKeys);
+                }
             }
         });
 
@@ -701,6 +708,7 @@ const KeybindingWidget = new Lang.Class({
         });
         
         this._extKeys = Settings.get_strv("extension-keybindings");
+        this.extView.load_profile(this._extKeys);
         
         // Device Keybindings
         let devSchema = Schema.get_key("device-keybindings");
@@ -747,7 +755,6 @@ const KeybindingWidget = new Lang.Class({
         this.deleteButton.get_style_context().add_class("destructive-action");
         this.grid.attach(this.deleteButton, 1, 6, 1, 1);
         
-        //
         this.devView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
             let [success, iter] = this.devView.model.get_iter_from_string(path);
             
@@ -756,11 +763,11 @@ const KeybindingWidget = new Lang.Class({
                 let binding = Gtk.accelerator_name(key, mods);
                 
                 // Check for existing instance of binding
-                this._check(binding);
-                
-                this._devKeys.bindings[index] = binding;
-                this.keyBox._set_profiles();
-                this.devView.load_profile(this._devKeys.bindings);
+                if (this._check(binding)) {
+                    this._devKeys.bindings[index] = binding;
+                    this.keyBox._set_profiles();
+                    this.devView.load_profile(this._devKeys.bindings);
+                }
             }
         });
 
@@ -792,6 +799,7 @@ const KeybindingWidget = new Lang.Class({
     },
     
     _check: function (binding) {
+        // Check we aren't already using the binding
         for (let prof in this.keyBox.profiles) {
             let bindex = this.keyBox.profiles[prof].bindings.indexOf(binding);
         
@@ -799,6 +807,7 @@ const KeybindingWidget = new Lang.Class({
                 this.keyBox.profiles[prof].bindings[bindex] = "";
                 this.keyBox._set_profiles();
                 this.devView.load_profile(this._devKeys.bindings);
+                return true;
             }
         }
         
@@ -806,6 +815,39 @@ const KeybindingWidget = new Lang.Class({
             this._extKeys[this._extKeys.indexOf(binding)] = "";
             Settings.set_strv("extension-keybindings", this._extKeys);
             this.extView.load_profile(this._extKeys);
+            return true;
+        }
+        
+        // Check someone else isn't already using the binding
+        let action = this.shellBus.call_sync(
+            "GrabAccelerator",
+            new GLib.Variant("(su)", [binding, 0]),
+            0,
+            -1,
+            null
+        ).deep_unpack()[0];
+        
+        if (action === 0) {
+            let dialog = new Gtk.MessageDialog({
+                message_type: Gtk.MessageType.WARNING,
+                buttons: Gtk.ButtonsType.CLOSE,
+                transient_for: this.get_toplevel(),
+                text: _("Keyboard Shortcut in use"),
+                secondary_text: _("This keyboard shortcut is in use by another application.")
+            });
+            
+            dialog.run();
+            dialog.close();
+            return false;
+        } else {
+            this.shellBus.call_sync(
+                "UngrabAccelerator",
+                new GLib.Variant("(u)", [action]),
+                0,
+                -1,
+                null
+            );
+            return true;
         }
     }
 });
@@ -1039,15 +1081,23 @@ function buildPrefsWidget() {
     let prefsWidget = new PrefsWidget();
 
     // Preferences Page
-    let preferencesPage = prefsWidget.add_page("prefs", _("Preferences"));
+    let generalPage = prefsWidget.add_page("prefs", _("General"));
     
-    let appearanceSection = preferencesPage.add_section(_("Appearance"));
-    preferencesPage.add_setting(appearanceSection, "device-indicators");
-    preferencesPage.add_setting(appearanceSection, "device-visibility");
+    let appearanceSection = generalPage.add_section(_("Appearance"));
+    generalPage.add_setting(appearanceSection, "device-indicators");
+    generalPage.add_setting(appearanceSection, "device-visibility");
     
-    let behaviourSection = preferencesPage.add_section(_("Behaviour"));
-    preferencesPage.add_setting(behaviourSection, "device-automount");
-    preferencesPage.add_setting(behaviourSection, "nautilus-integration");
+    let behaviourSection = generalPage.add_section(_("Behaviour"));
+    generalPage.add_setting(behaviourSection, "device-automount");
+    generalPage.add_setting(behaviourSection, "nautilus-integration");
+    
+    // Keyboard Shortcuts Page
+    let keyPage = prefsWidget.add_page("kb", _("Shortcuts"));
+    
+    let keySection = keyPage.add_section();
+    
+    let keyRow = new KeybindingWidget();
+    keySection.list.add(keyRow);
     
     // Service Page
     let servicePage = prefsWidget.add_page("service", _("Service"));
@@ -1071,14 +1121,6 @@ function buildPrefsWidget() {
         _("Open the settings for the current service"),
         serviceSettings
     );
-    
-    // Keyboard Shortcuts Page
-    let keyPage = prefsWidget.add_page("kb", _("Shortcuts"));
-    
-    let keySection = keyPage.add_section();
-    
-    let keyRow = new KeybindingWidget();
-    keySection.list.add(keyRow);
     
     // About Page
     let aboutPage = prefsWidget.add_page("about", _("About"));
