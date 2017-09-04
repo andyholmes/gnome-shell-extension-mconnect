@@ -448,25 +448,12 @@ const ButtonSetting = new Lang.Class({
  */
 const KeybindingProfileBox = new Lang.Class({
     Name: "KeybindingProfileBox",
-    Extends: Gtk.ComboBox,
+    Extends: Gtk.ComboBoxText,
     
     _init: function () {
         this.parent();
         
         this.profiles = {};
-        
-        let model = new Gtk.ListStore();
-        model.set_column_types([
-            GObject.TYPE_STRING,    // Device ID (hostname)
-            GObject.TYPE_STRING     // Device Name
-        ]);
-        this.model = model;
-        
-        this.set_id_column(0);
-        
-        let nameCell = new Gtk.CellRendererText
-        this.pack_start(nameCell, false);
-        this.add_attribute(nameCell, "text", 1);
         
         // FIXME: move this, make it transient
         if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
@@ -475,27 +462,33 @@ const KeybindingProfileBox = new Lang.Class({
             this.manager = new Me.imports.kdeconnect.DeviceManager();
         }
         
+        this.manager.connect("device::added", (manager, dbusPath) => {
+            this._refresh();
+        });
+        
+        this.append("0", _("Select a device"));
         this._refresh();
     },
     
     _get_profiles: function () {
         this.profiles = Settings.get_value("device-keybindings").deep_unpack();
         
-        for (let deviceId in this.profiles) {
-            this.profiles[deviceId] = this.profiles[deviceId].deep_unpack();
-            
-            for (let field in this.profiles[deviceId]) {
-                this.profiles[deviceId][field] = this.profiles[deviceId][field].deep_unpack();
-            }
+        for (let id in this.profiles) {
+            this.profiles[id] = this.profiles[id].deep_unpack();
+            this.profiles[id].name = this.profiles[id].name.deep_unpack();
+            this.profiles[id].bindings = this.profiles[id].bindings.deep_unpack();
         }
         
-        // Create an empty keybinding profile for any device that doesn't have one
         for (let device of this.manager.devices.values()) {
+            // Add an empty keybinding profile for devices that don't have one
             if (!this.profiles.hasOwnProperty(device.id)) {
                 this.profiles[device.id] = {
                     name: device.name,
                     bindings: ["", "", "", "", "", ""]
                 };
+            // Update device names for existing profiles
+            } else {
+                this.profiles[device.id].name = device.name;
             }
         }
         
@@ -505,14 +498,10 @@ const KeybindingProfileBox = new Lang.Class({
     _set_profiles: function () {
         let profiles = JSON.parse(JSON.stringify(this.profiles));
     
-        for (let profile in profiles) {
-            profiles[profile].name = new GLib.Variant(
-                "s", profiles[profile].name
-            );
-            profiles[profile].bindings = new GLib.Variant(
-                "as", profiles[profile].bindings
-            );
-            profiles[profile] = new GLib.Variant("a{sv}", profiles[profile]);
+        for (let id in profiles) {
+            profiles[id].name = new GLib.Variant("s", profiles[id].name);
+            profiles[id].bindings = new GLib.Variant("as", profiles[id].bindings);
+            profiles[id] = new GLib.Variant("a{sv}", profiles[id]);
         }
         
         Settings.set_value(
@@ -522,23 +511,20 @@ const KeybindingProfileBox = new Lang.Class({
     },
     
     _refresh: function () {
-        this.model.clear();
-    
-        this.model.set(
-            this.model.append(),
-            [0, 1],
-            ["0", _("Select a device")]
-        );
-        
         this._get_profiles();
         
-        for (let profile in this.profiles) {
-            if (profile.length) {
-                this.model.set(
-                    this.model.append(),
-                    [0, 1],
-                    [profile, this.profiles[profile].name]
-                );
+        for (let id in this.profiles) {
+            let found = false;
+            
+            if (id.length) {
+                this.model.foreach((model, path, iter) => {
+                    found = (model.get_value(iter, this.id_column) === id);
+                    return found;
+                });
+                
+                if (!found) {
+                    this.append(id, this.profiles[id].name);
+                }
             }
         }
     }
@@ -633,7 +619,6 @@ const KeybindingWidget = new Lang.Class({
         
         this.shellBus = new Gio.DBusProxy({
             gConnection: Gio.DBus.session,
-            //gInterfaceInfo: iface,
             gName: "org.gnome.Shell",
             gObjectPath: "/org/gnome/Shell",
             gInterfaceName: "org.gnome.Shell"
@@ -744,16 +729,22 @@ const KeybindingWidget = new Lang.Class({
         this.devView.add_accel(5, _("Pair/Reconnect"), 0, 0);
         this.grid.attach(this.devView, 0, 5, 2, 1);
         
-        this.deleteButton = new Gtk.Button({
+        this.removeButton = new Gtk.Button({
             label: _("Remove"),
-            tooltip_text: _("If the device no longer available the keybindings will be deleted, otherwise reset."),
+            tooltip_text: _("Remove the shortcuts for a defunct device."),
             halign: Gtk.Align.END
         });
-        this.deleteButton.connect("clicked", () => {
-            log("FIXME");
+        this.removeButton.get_style_context().add_class("destructive-action");
+        this.removeButton.connect("clicked", () => {
+            let old_id = new Number(this.keyBox.active.valueOf());
+            delete this.keyBox.profiles[this.keyBox.active_id];
+            this._devKeys = {};
+            this.keyBox.active = 0;
+            this.keyBox.remove(old_id);
+            this.keyBox._set_profiles();
+            this.keyBox._refresh();
         });
-        this.deleteButton.get_style_context().add_class("destructive-action");
-        this.grid.attach(this.deleteButton, 1, 6, 1, 1);
+        this.grid.attach(this.removeButton, 1, 6, 1, 1);
         
         this.devView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
             let [success, iter] = this.devView.model.get_iter_from_string(path);
@@ -786,12 +777,12 @@ const KeybindingWidget = new Lang.Class({
             if (this.keyBox.active === 0) {
                 this.devView.load_profile(undefined);
                 this.devView.sensitive = false;
-                this.deleteButton.sensitive = false;
+                this.removeButton.sensitive = false;
             } else {
                 this._devKeys = this.keyBox.profiles[this.keyBox.active_id];
                 this.devView.load_profile(this._devKeys.bindings);
                 this.devView.sensitive = true;
-                this.deleteButton.sensitive = true;
+                this.removeButton.sensitive = true;
             }
         });
         
@@ -800,11 +791,11 @@ const KeybindingWidget = new Lang.Class({
     
     _check: function (binding) {
         // Check we aren't already using the binding
-        for (let prof in this.keyBox.profiles) {
+        for (let id in this.keyBox.profiles) {
             let bindex = this.keyBox.profiles[prof].bindings.indexOf(binding);
         
             if (bindex > -1) {
-                this.keyBox.profiles[prof].bindings[bindex] = "";
+                this.keyBox.profiles[id].bindings[bindex] = "";
                 this.keyBox._set_profiles();
                 this.devView.load_profile(this._devKeys.bindings);
                 return true;
@@ -1054,9 +1045,9 @@ const PrefsWidget = new Lang.Class({
         this.parent(params);
         
         this.switcher = new Gtk.StackSwitcher({
-            halign: Gtk.Align.CENTER
+            halign: Gtk.Align.CENTER,
+            stack: this
         });
-        this.switcher.set_stack(this);
         this.switcher.show_all();
     },
     
@@ -1087,24 +1078,24 @@ function buildPrefsWidget() {
     generalPage.add_setting(appearanceSection, "device-indicators");
     generalPage.add_setting(appearanceSection, "device-visibility");
     
-    let behaviourSection = generalPage.add_section(_("Behaviour"));
-    generalPage.add_setting(behaviourSection, "device-automount");
-    generalPage.add_setting(behaviourSection, "nautilus-integration");
+    let filesSection = generalPage.add_section(_("Files"));
+    generalPage.add_setting(filesSection, "device-automount");
+    generalPage.add_setting(filesSection, "nautilus-integration");
     
     // Keyboard Shortcuts Page
-    let keyPage = prefsWidget.add_page("kb", _("Shortcuts"));
+    let keyPage = prefsWidget.add_page("kb", _("Keyboard"));
     
-    let keySection = keyPage.add_section();
+    let keySection = keyPage.add_section(_("Keyboard Shortcuts"));
     
     let keyRow = new KeybindingWidget();
     keySection.list.add(keyRow);
     
-    // Service Page
-    let servicePage = prefsWidget.add_page("service", _("Service"));
+    // Advanced Page
+    let advancedPage = prefsWidget.add_page("advanced", _("Advanced"));
     
-    let serviceSection = servicePage.add_section();
-    servicePage.add_setting(serviceSection, "service-provider");
-    servicePage.add_setting(serviceSection, "service-autostart");
+    let serviceSection = advancedPage.add_section(_("Service"));
+    advancedPage.add_setting(serviceSection, "service-provider");
+    advancedPage.add_setting(serviceSection, "service-autostart");
     let serviceSettings = new ButtonSetting({
         icon_name: "preferences-system-symbolic",
         callback: (button) => {
@@ -1115,20 +1106,29 @@ function buildPrefsWidget() {
             }
         }
     });
-    servicePage.add_item(
+    advancedPage.add_item(
         serviceSection,
         _("Service Settings"),
         _("Open the settings for the current service"),
         serviceSettings
     );
     
-    // About Page
-    let aboutPage = prefsWidget.add_page("about", _("About"));
+    let develSection = advancedPage.add_section(_("Development"));
+    advancedPage.add_setting(develSection, "debug");
     
-    aboutPage.box.add(new AboutWidget());
-    
-    let develSection = aboutPage.add_section();
-    aboutPage.add_setting(develSection, "debug");
+    let aboutRow = advancedPage.add_row(develSection);
+    let aboutIcon = new Gtk.Image({ icon_name: "phone", pixel_size: 32 });
+    aboutRow.grid.attach(aboutIcon, 0, 0, 1, 2);
+    let aboutTitle = new Gtk.Label({
+        label: "MConnect (v" + Me.metadata.version.toString() + ")",
+        xalign: 0
+    });
+    aboutRow.grid.attach(aboutTitle, 1, 0, 1, 1);
+    let aboutDesc = new Gtk.Label({
+        label: Me.metadata.description,
+        xalign: 0
+    });
+    aboutRow.grid.attach(aboutDesc, 1, 1, 1, 1);
     
     // :P
     Mainloop.timeout_add(0, () => {

@@ -31,12 +31,12 @@
     </key>
     <key name="device-keybindings" type="a{sv}">
       <default><![CDATA[{"": <{"name": <"">, "bindings": <['','','','','','']>}>}]]></default>
-      <summary>Device Shortcuts</summary>
+      <summary>Device Actions</summary>
       <description>Configure shortcuts for device functions</description>
     </key>
     <key name="extension-keybindings" type="as">
       <default><![CDATA[['','','']]]></default>
-      <summary>Extension Shortcuts</summary>
+      <summary>Extension Actions</summary>
       <description>Configure shortcuts for extension functions</description>
     </key>
     <key name="nautilus-integration" type="b">
