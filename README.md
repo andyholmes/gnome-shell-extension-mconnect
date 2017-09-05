@@ -25,7 +25,7 @@ The extension is now available on the [official extension website][ego]! The
 
 For instructions on how to build from Git, details about KDE Connect vs
 MConnect and dependencies for optional features, please see the
-[Installation Page](../../wiki/Installation) in the Wiki.
+[Installation Page](../../wiki/Installation) in the [Wiki](../../wiki).
 
 
 ### Features
@@ -47,6 +47,8 @@ MConnect and dependencies for optional features, please see the
 * Supports multiple backends
   * [KDE Connect](../../wiki/Installation#kde-connect)
   * [MConnect](../../wiki/Installation#mconnect)
+  
+* [Keyboard Shortcuts](../../wiki/Preferences#keyboard-shortcuts)
 
     
 ## Credits and Acknowledgements
