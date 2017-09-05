@@ -21,60 +21,6 @@ const ServiceProvider = {
 };
 
 
-const AboutWidget = new Lang.Class({
-    Name: "AboutWidget",
-    Extends: Gtk.Box,
-    
-    _init: function (setting) {
-        this.parent({
-            visible: true,
-            can_focus: true,
-            orientation: Gtk.Orientation.VERTICAL,
-            valign: Gtk.Align.CENTER,
-            halign: Gtk.Align.CENTER,
-            spacing: 6
-        });
-        
-        this.add(new Gtk.Image({ icon_name: "phone", pixel_size: 128 }));
-        
-        this.add(
-            new Gtk.Label({
-                use_markup: true,
-                label: "<b>" + Me.metadata.name + "</b>"
-            })
-        );
-        
-        this.add(
-            new Gtk.Label({ label: Me.metadata.version.toString() })
-        );
-        
-        this.add(new Gtk.Label({ label: Me.metadata.description }));
-        
-        this.add(
-            Gtk.LinkButton.new_with_label(
-                Me.metadata.url.toString(),
-                _("Website")
-            )
-        );
-        
-        this.add(
-            new Gtk.Label({
-                use_markup: true,
-                label: "<span size=\"small\">" + _("© 2017 Andy Holmes") + "</span>"
-            })
-        );
-        
-        this.add(
-            new Gtk.Label({
-                justify: Gtk.Justification.CENTER,
-                use_markup: true,
-                label: "<span size=\"small\">This program comes with ABSOLUTELY NO WARRANTY.\nSee the <a href=\"https://www.gnu.org/licenses/old-licenses/gpl-2.0.html\">GNU General Public License, version 2 or later</a> for details.</span>"
-            })
-        );
-    }
-});
-
-
 /** A Gtk.Switch subclass for boolean GSettings. */
 const BoolSetting = new Lang.Class({
     Name: "BoolSetting",
@@ -1117,21 +1063,7 @@ function buildPrefsWidget() {
     let develSection = advancedPage.add_section(_("Development"));
     advancedPage.add_setting(develSection, "debug");
     
-    let aboutRow = advancedPage.add_row(develSection);
-    let aboutIcon = new Gtk.Image({ icon_name: "phone", pixel_size: 32 });
-    aboutRow.grid.attach(aboutIcon, 0, 0, 1, 2);
-    let aboutTitle = new Gtk.Label({
-        label: "MConnect (v" + Me.metadata.version.toString() + ")",
-        xalign: 0
-    });
-    aboutRow.grid.attach(aboutTitle, 1, 0, 1, 1);
-    let aboutDesc = new Gtk.Label({
-        label: Me.metadata.description,
-        xalign: 0
-    });
-    aboutRow.grid.attach(aboutDesc, 1, 1, 1, 1);
-    
-    // :P
+    // HeaderBar
     Mainloop.timeout_add(0, () => {
         let headerBar = prefsWidget.get_toplevel().get_titlebar();
         headerBar.custom_title = prefsWidget.switcher;
