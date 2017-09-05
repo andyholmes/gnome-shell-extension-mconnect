@@ -39,9 +39,9 @@ const ShareDialog = new Lang.Class({
     Name: "ShareDialog",
     Extends: Gtk.FileChooserDialog,
     
-    _init: function (application) {
+    _init: function (application, name) {
         this.parent({
-            title: _("Send file..."),
+            title: _("Send files to %s").format(name),
             action: Gtk.FileChooserAction.OPEN,
             select_multiple: true,
             icon_name: "document-send",
@@ -122,9 +122,7 @@ const Application = new Lang.Class({
         
         let found = false;
         
-        for (let dbusPath in this.manager.devices) {
-            let device = this.manager.devices[dbusPath];
-            
+        for (let device of this.manager.devices.values()) {
             if (device.id === this._id && device.hasOwnProperty("share")) {
                 for (let uri of this._uris) {
                     device.shareURI(uri.toString());
@@ -189,7 +187,15 @@ const Application = new Lang.Class({
         } else if (this._id) {
             Gtk.init(null);
             
-            let dialog = new ShareDialog(this);
+            let name;
+            
+            for (device of this.manager.devices.values()) {
+                if (device.id === this._id) {
+                    name = device.name;
+                }
+            }
+            
+            let dialog = new ShareDialog(this, name);
             
             if (dialog.run() === Gtk.ResponseType.OK) {
                 this._uris = dialog.get_uris();
