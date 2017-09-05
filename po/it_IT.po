@@ -7,10 +7,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-04 23:07-0700\n"
-"PO-Revision-Date: 2017-09-03 12:30+0200\n"
+"POT-Creation-Date: 2017-09-05 13:56+0200\n"
+"PO-Revision-Date: 2017-09-05 14:01+0200\n"
 "Last-Translator: Andreas Cattelan <ilmondodiwit@gmail.com>\n"
-"Language-Team: \n"
+"Language-Team: Andreas Cattelan\n"
 "Language: it_IT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -115,18 +115,16 @@ msgid "Select a device"
 msgstr "Seleziona un dispositivo"
 
 #: src/prefs.js:609
-#, fuzzy
 msgid "Open extension menu"
-msgstr "Apri menu del dispositivo"
+msgstr "Apri menu estensioni"
 
 #: src/prefs.js:611
 msgid "Open extension preferences"
-msgstr ""
+msgstr "Apri preferenze estensioni"
 
 #: src/prefs.js:612
-#, fuzzy
 msgid "Open service settings"
-msgstr "Impostazioni servizi"
+msgstr "Apri impostazioni servizi"
 
 #: src/prefs.js:671
 msgid "Open device menu"
@@ -141,48 +139,47 @@ msgid "Remove"
 msgstr "Rimuovi"
 
 #: src/prefs.js:681
-#, fuzzy
 msgid "Remove the shortcuts for a defunct device."
-msgstr "Configura scorciatoie per dispositivi"
+msgstr "Rimuovi scorciatoie per dispositivi inutilizzati"
 
 #: src/prefs.js:773
 msgid "Keyboard Shortcut Unavailable"
-msgstr ""
+msgstr "Scorciatoia non disponibile"
 
 #: src/prefs.js:774
 msgid ""
 "The requested keyboard shortcut is in use by another application and can't "
 "be overridden."
 msgstr ""
+"La scorciatoia richiesta e utilizzato da un altra applicazione e non può "
+"essere soprascritta."
 
 #. Preferences Page
 #: src/prefs.js:1022
 msgid "General"
-msgstr ""
+msgstr "Generale"
 
 #: src/prefs.js:1024
 msgid "Appearance"
 msgstr "Aspetto"
 
 #: src/prefs.js:1028
-#, fuzzy
 msgid "Files"
-msgstr "Invia file"
+msgstr "File"
 
 #. Keyboard Shortcuts Page
 #: src/prefs.js:1033
 msgid "Keyboard"
-msgstr ""
+msgstr "Tastiera"
 
 #: src/prefs.js:1035
-#, fuzzy
 msgid "Keyboard Shortcuts"
-msgstr "Scorciatoie"
+msgstr "Scorciatoie tastiera"
 
 #. Advanced Page
 #: src/prefs.js:1041
 msgid "Advanced"
-msgstr ""
+msgstr "avanzati"
 
 #: src/prefs.js:1043
 msgid "Service"
@@ -198,12 +195,12 @@ msgstr "Apri le impostazioni per il servizio attuale"
 
 #: src/prefs.js:1063
 msgid "Development"
-msgstr ""
+msgstr "Sviluppo"
 
 #: src/share.js:44
-#, fuzzy, javascript-format
+#, javascript-format
 msgid "Send files to %s"
-msgstr "Invia file"
+msgstr "Invia file a %s"
 
 #: src/share.js:51
 msgid "Cancel"
@@ -286,23 +283,20 @@ msgid "Display devices in offline and unpaired states"
 msgstr "Visualizza dispositivi non collegati o non in linea"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
-#, fuzzy
 msgid "Device Actions"
-msgstr "Auto-mount dipsoitivo"
+msgstr "Azioni dispositivo"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
 msgid "Configure shortcuts for device functions"
 msgstr "Configura scorciatoie per dispositivi"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
-#, fuzzy
 msgid "Extension Actions"
-msgstr "Scorciatoie dispositivi"
+msgstr "Azioni estensione"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
-#, fuzzy
 msgid "Configure shortcuts for extension functions"
-msgstr "Configura scorciatoie per dispositivi"
+msgstr "Configura scorciatoie per funzioni della estensione"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
 msgid "Nautilus Integration"
@@ -341,18 +335,20 @@ msgstr "Dispositivi attivi che forniscono il servizio"
 #~ "Se il dispositivo non e più disponibile le associazioni dei tasti "
 #~ "verranno cancellati, altrimenti riavvia"
 
+#~ msgid "Preferences"
+#~ msgstr "Preferenze"
+
 #~ msgid "Behaviour"
 #~ msgstr "Comportamento"
+
+#~ msgid "Shortcuts"
+#~ msgstr "Scorciatoie"
 
 #~ msgid "About"
 #~ msgstr "Informazioni su mconnect"
 
-#, fuzzy
-#~ msgid "Send files..."
+#~ msgid "Send file..."
 #~ msgstr "Invia file"
 
 #~ msgid "Device Shortcuts"
 #~ msgstr "Scorciatoie dispositivi"
-
-#~ msgid "Preferences"
-#~ msgstr "Preferenze"

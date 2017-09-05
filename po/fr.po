@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the gnome-shell-extension-mconnect package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Simon Mellerin <simon.mellerin@ntymail.com>, 2017.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-04 23:07-0700\n"
-"PO-Revision-Date: 2017-08-23 10:02-0700\n"
-"Last-Translator: Simon MELLERIN <simon.mellerin@ntymail.com>\n"
-"Language-Team: - Simon MELLERIN <simon.mellerin@ntymail.com>\n"
-"Language: fr\n"
+"POT-Creation-Date: 2017-09-05 17:08+0200\n"
+"PO-Revision-Date: 2017-09-05 17:21+0200\n"
+"Language-Team: Simon Mellerin\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 2.0.1\n"
+"Last-Translator: Simon Mellerin <simon.mellerin@ntymail.com>\n"
+"Language: fr\n"
 
 #: src/extension.js:37
 msgid "OFFLINE"
@@ -50,13 +51,12 @@ msgid "Device is unpaired"
 msgstr "L'appareil n'est pas appairé"
 
 #: src/extension.js:498
-#, fuzzy
 msgid "Attempt Reconnection"
 msgstr "Reconnexion en cours"
 
 #: src/extension.js:501
 msgid "Attempting to reconnect..."
-msgstr "Tentative de reconnexion"
+msgstr "Tentative de reconnexion..."
 
 #: src/extension.js:507
 msgid "Device is disconnected"
@@ -112,76 +112,74 @@ msgstr "Faux"
 
 #: src/prefs.js:415
 msgid "Select a device"
-msgstr ""
+msgstr "Sélectionnez un appareil"
 
 #: src/prefs.js:609
 msgid "Open extension menu"
-msgstr ""
+msgstr "Ouvrir le menu Extension"
 
 #: src/prefs.js:611
 msgid "Open extension preferences"
-msgstr ""
+msgstr "Ouvrir les préférences de l'extension"
 
 #: src/prefs.js:612
-#, fuzzy
 msgid "Open service settings"
-msgstr "Paramètres du service"
+msgstr "Ouvrir les paramètres du service"
 
 #: src/prefs.js:671
 msgid "Open device menu"
-msgstr ""
+msgstr "Ouvrir le menu Appareil"
 
 #: src/prefs.js:676
 msgid "Pair/Reconnect"
-msgstr ""
+msgstr "Appairer/Reconnecter"
 
 #: src/prefs.js:680
 msgid "Remove"
-msgstr ""
+msgstr "Retirer"
 
 #: src/prefs.js:681
-#, fuzzy
 msgid "Remove the shortcuts for a defunct device."
-msgstr "Ouvrir les paramètres du service sélectionné"
+msgstr "Retirer le raccourci pour un appareil obsolète"
 
 #: src/prefs.js:773
 msgid "Keyboard Shortcut Unavailable"
-msgstr ""
+msgstr "Raccourcis clavier indisponible"
 
 #: src/prefs.js:774
 msgid ""
 "The requested keyboard shortcut is in use by another application and can't "
 "be overridden."
 msgstr ""
+"Ce raccourci clavier est déjà utilisé par une autre application et ne peut "
+"être écrasé"
 
 #. Preferences Page
 #: src/prefs.js:1022
 msgid "General"
-msgstr ""
+msgstr "Général"
 
 #: src/prefs.js:1024
 msgid "Appearance"
-msgstr ""
+msgstr "Apparence"
 
 #: src/prefs.js:1028
-#, fuzzy
 msgid "Files"
-msgstr "Envoyer des fichiers"
+msgstr "Fichiers"
 
 #. Keyboard Shortcuts Page
 #: src/prefs.js:1033
 msgid "Keyboard"
-msgstr ""
+msgstr "Clavier"
 
 #: src/prefs.js:1035
-#, fuzzy
 msgid "Keyboard Shortcuts"
-msgstr "Paramètres du service"
+msgstr "Raccourcis clavier"
 
 #. Advanced Page
 #: src/prefs.js:1041
 msgid "Advanced"
-msgstr ""
+msgstr "Avancé"
 
 #: src/prefs.js:1043
 msgid "Service"
@@ -200,9 +198,9 @@ msgid "Development"
 msgstr "Développement"
 
 #: src/share.js:44
-#, fuzzy, javascript-format
+#, javascript-format
 msgid "Send files to %s"
-msgstr "Envoyer des fichiers"
+msgstr "Envoie des fichiers vers %s"
 
 #: src/share.js:51
 msgid "Cancel"
@@ -220,7 +218,7 @@ msgstr "Partage de fichier MConnect"
 #, javascript-format
 msgid "Sending %d file"
 msgid_plural "Sending %d files"
-msgstr[0] "Envoi d'%d fichier"
+msgstr[0] "Envoi d'un fichier"
 msgstr[1] "Envoi de %d fichiers"
 
 #: src/sms.js:349
@@ -274,7 +272,7 @@ msgstr "Indicateur d'appareils"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
 msgid "Controls available via Indicators or the User Menu"
-msgstr "Contrôles disponibles par l'Indicateur ou par le Menu d'Utilisateur"
+msgstr "Contrôles disponibles par l'Indicateur ou par le Menu d'utilisateur"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:29
 msgid "Device Visibility"
@@ -285,21 +283,20 @@ msgid "Display devices in offline and unpaired states"
 msgstr "Faire apparaitre les appareils déconnectés ou non-appairés"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
-#, fuzzy
 msgid "Device Actions"
-msgstr "Montage automatique du téléphone"
+msgstr "Actions de l'appareil"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
 msgid "Configure shortcuts for device functions"
-msgstr ""
+msgstr "Configurer des raccourcis pour les fonctions de l'appareil"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
 msgid "Extension Actions"
-msgstr ""
+msgstr "Action de l'extention"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
 msgid "Configure shortcuts for extension functions"
-msgstr ""
+msgstr "Configurer des raccourcis pour les fonctions de l'extension"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
 msgid "Nautilus Integration"
@@ -307,7 +304,8 @@ msgstr "Intégration de Nautilus"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
 msgid "Send files from the file browser context menu"
-msgstr "Envoyer des fichiers par le menu contextuel du navigateur de fichiers"
+msgstr ""
+"Envoyer des fichiers par le menu contextuel du navigateur de fichiers"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
 msgid "Service Auto-Start"
@@ -324,10 +322,3 @@ msgstr "Service"
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:55
 msgid "The service providing devices."
 msgstr "Le service fournissant les appareils."
-
-#, fuzzy
-#~ msgid "Send files..."
-#~ msgstr "Envoie du fichier..."
-
-#~ msgid "Preferences"
-#~ msgstr "Préférences"
