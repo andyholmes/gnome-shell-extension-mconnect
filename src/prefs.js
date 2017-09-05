@@ -663,6 +663,7 @@ const KeybindingWidget = new Lang.Class({
         this.extView.add_accel(0, _("Open extension menu"), 0, 0);
         this.extView.add_accel(1, _("Discover Devices"), 0, 0);
         this.extView.add_accel(2, _("Open extension preferences"), 0, 0);
+        this.extView.add_accel(3, _("Open service settings"), 0, 0);
         this.grid.attach(this.extView, 0, 2, 2, 1);
         
         this.extView.accelCell.connect("accel-edited", (renderer, path, key, mods) => {
@@ -792,10 +793,10 @@ const KeybindingWidget = new Lang.Class({
     _check: function (binding) {
         // Check we aren't already using the binding
         for (let id in this.keyBox.profiles) {
-            let bindex = this.keyBox.profiles[prof].bindings.indexOf(binding);
+            let index = this.keyBox.profiles[id].bindings.indexOf(binding);
         
-            if (bindex > -1) {
-                this.keyBox.profiles[id].bindings[bindex] = "";
+            if (index > -1) {
+                this.keyBox.profiles[id].bindings[index] = "";
                 this.keyBox._set_profiles();
                 this.devView.load_profile(this._devKeys.bindings);
                 return true;
@@ -823,8 +824,8 @@ const KeybindingWidget = new Lang.Class({
                 message_type: Gtk.MessageType.WARNING,
                 buttons: Gtk.ButtonsType.CLOSE,
                 transient_for: this.get_toplevel(),
-                text: _("Keyboard Shortcut in use"),
-                secondary_text: _("This keyboard shortcut is in use by another application.")
+                text: _("Keyboard Shortcut Unavailable"),
+                secondary_text: _("The requested keyboard shortcut is in use by another application and can't be overridden.")
             });
             
             dialog.run();
@@ -844,7 +845,7 @@ const KeybindingWidget = new Lang.Class({
 });
 
 
-/** A composite widget for resembling A Gnome Control Center panel. */
+/** A composite widget resembling A Gnome Control Center panel. */
 const PrefsPage = new Lang.Class({
     Name: "PrefsPage",
     Extends: Gtk.ScrolledWindow,

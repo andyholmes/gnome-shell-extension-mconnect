@@ -83,17 +83,21 @@ const KeybindingManager = new Lang.Class({
                 accelerator: accelerator,
                 callback: callback
             });
+        } else {
+            log("failed to grab accelerator: "+ accelerator);
         }
         
         return action;
     },
 
     remove: function (action) {
-        let binding = this.bindings.get(action);
-        
-        global.display.ungrab_accelerator(action);
-        Main.wm.allowKeybinding(binding.name, Shell.ActionMode.NONE);
-        this.bindings.delete(action);
+        if (action !== 0) {
+            let binding = this.bindings.get(action);
+            
+            global.display.ungrab_accelerator(action);
+            Main.wm.allowKeybinding(binding.name, Shell.ActionMode.NONE);
+            this.bindings.delete(action);
+        }
     },
     
     removeAll: function () {
@@ -853,6 +857,15 @@ const SystemIndicator = new Lang.Class({
                 )
             );
         }
+        
+        if (bindings[3].length) {
+            this._keybindings.push(
+                this.keybindingManager.add(
+                    bindings[3],
+                    Lang.bind(this, this._backend.startSettings)
+                )
+            );
+        }
     },
     
     _deviceKeybindings: function (indicator) {
@@ -874,7 +887,7 @@ const SystemIndicator = new Lang.Class({
         if (bindings[0].length) {
             menu._keybindings.push(
                 this.keybindingManager.add(
-                    bindings[0], 
+                    bindings[0],
                     Lang.bind(this, this._openDeviceMenu, indicator)
                 )
             );
@@ -902,7 +915,7 @@ const SystemIndicator = new Lang.Class({
             menu._keybindings.push(
                 this.keybindingManager.add(
                     bindings[3],
-                    Lang.bind(menu, menu._browseAction, menu.browseButton)
+                    Lang.bind(this, this._browseDevice, indicator)
                 )
             );
         }
@@ -930,6 +943,25 @@ const SystemIndicator = new Lang.Class({
         if (this.manager) {
             this.manager.scan();
         }
+    },
+    
+    _browseDevice: function (indicator) {
+        let menu;
+        
+        if (Settings.get_boolean("device-indicators")) {
+            indicator.menu.toggle();
+            menu = indicator.deviceMenu;
+        } else {
+            this._openMenu();
+            for (let dbusPath in this._menus) {
+                if (this._menus[dbusPath].device.id === indicator.device.id) {
+                    menu = this._menus[dbusPath];
+                }
+            }
+        }
+        
+        menu.browseButton.checked = !menu.browseButton.checked;
+        menu.browseButton.emit("clicked", menu.browseButton);
     },
     
     _openDeviceMenu: function (indicator) {

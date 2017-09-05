@@ -35,7 +35,7 @@
       <description>Configure shortcuts for device functions</description>
     </key>
     <key name="extension-keybindings" type="as">
-      <default><![CDATA[['','','']]]></default>
+      <default><![CDATA[['','','','']]]></default>
       <summary>Extension Actions</summary>
       <description>Configure shortcuts for extension functions</description>
     </key>
