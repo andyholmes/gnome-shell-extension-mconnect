@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-04 23:07-0700\n"
+"POT-Creation-Date: 2017-09-07 11:45-0700\n"
 "PO-Revision-Date: 2017-08-20 10:56+0200\n"
 "Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
 "Language-Team: Jonatan Hatakeyama Zeidler\n"
@@ -26,21 +26,21 @@ msgstr "Nicht verbunden"
 msgid "UNPAIRED"
 msgstr "Nicht gekoppelt"
 
-#: src/extension.js:313 src/prefs.js:672
+#: src/extension.js:313 src/prefs.js:715
 #, fuzzy
 msgid "Send SMS"
 msgstr "Senden"
 
-#: src/extension.js:320 src/prefs.js:673
+#: src/extension.js:320 src/prefs.js:716
 #, fuzzy
 msgid "Locate Device"
 msgstr "Mobile Geräte"
 
-#: src/extension.js:328 src/prefs.js:674
+#: src/extension.js:328 src/prefs.js:717
 msgid "Browse Files"
 msgstr ""
 
-#: src/extension.js:335 src/prefs.js:675
+#: src/extension.js:335 src/prefs.js:718
 #, fuzzy
 msgid "Send Files"
 msgstr "Datei senden …"
@@ -87,7 +87,7 @@ msgstr "Einstellungen Mobile Geräte"
 msgid "Stop Discovering Devices"
 msgstr "Suche nach Geräten abbrechen"
 
-#: src/extension.js:782 src/prefs.js:610
+#: src/extension.js:782 src/prefs.js:653
 #, fuzzy
 msgid "Discover Devices"
 msgstr "Geräte suchen"
@@ -116,92 +116,92 @@ msgstr "Wahr"
 msgid "False"
 msgstr "Falsch"
 
-#: src/prefs.js:415
+#: src/prefs.js:439
 msgid "Select a device"
 msgstr ""
 
-#: src/prefs.js:609
+#: src/prefs.js:652
 msgid "Open extension menu"
 msgstr ""
 
-#: src/prefs.js:611
+#: src/prefs.js:654
 msgid "Open extension preferences"
 msgstr ""
 
-#: src/prefs.js:612
+#: src/prefs.js:655
 #, fuzzy
 msgid "Open service settings"
 msgstr "Einstellungen Dienst"
 
-#: src/prefs.js:671
+#: src/prefs.js:714
 msgid "Open device menu"
 msgstr ""
 
-#: src/prefs.js:676
+#: src/prefs.js:719
 msgid "Pair/Reconnect"
 msgstr ""
 
-#: src/prefs.js:680
+#: src/prefs.js:723
 msgid "Remove"
 msgstr ""
 
-#: src/prefs.js:681
+#: src/prefs.js:724
 #, fuzzy
 msgid "Remove the shortcuts for a defunct device."
 msgstr "Einstellungen des gewählten Dienstes öffnen"
 
-#: src/prefs.js:773
+#: src/prefs.js:816
 msgid "Keyboard Shortcut Unavailable"
 msgstr ""
 
-#: src/prefs.js:774
+#: src/prefs.js:817
 msgid ""
 "The requested keyboard shortcut is in use by another application and can't "
 "be overridden."
 msgstr ""
 
 #. Preferences Page
-#: src/prefs.js:1022
+#: src/prefs.js:1065
 msgid "General"
 msgstr ""
 
-#: src/prefs.js:1024
+#: src/prefs.js:1067
 msgid "Appearance"
 msgstr ""
 
-#: src/prefs.js:1028
+#: src/prefs.js:1071
 #, fuzzy
 msgid "Files"
 msgstr "Datei senden …"
 
 #. Keyboard Shortcuts Page
-#: src/prefs.js:1033
+#: src/prefs.js:1076
 msgid "Keyboard"
 msgstr ""
 
-#: src/prefs.js:1035
+#: src/prefs.js:1078
 #, fuzzy
 msgid "Keyboard Shortcuts"
 msgstr "Einstellungen Dienst"
 
 #. Advanced Page
-#: src/prefs.js:1041
+#: src/prefs.js:1084
 msgid "Advanced"
 msgstr ""
 
-#: src/prefs.js:1043
+#: src/prefs.js:1086
 msgid "Service"
 msgstr "Dienst"
 
-#: src/prefs.js:1058
+#: src/prefs.js:1101
 msgid "Service Settings"
 msgstr "Einstellungen Dienst"
 
-#: src/prefs.js:1059
+#: src/prefs.js:1102
 msgid "Open the settings for the current service"
 msgstr "Einstellungen des gewählten Dienstes öffnen"
 
-#: src/prefs.js:1063
+#: src/prefs.js:1106
 msgid "Development"
 msgstr "Entwicklung"
 
