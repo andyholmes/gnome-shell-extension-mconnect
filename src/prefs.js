@@ -399,21 +399,62 @@ const KeybindingProfileBox = new Lang.Class({
     _init: function () {
         this.parent();
         
+        this.manager = false;
         this.profiles = {};
         
-        // FIXME: move this, make it transient
+        // Select the backend service
         if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
-            this.manager = new Me.imports.mconnect.DeviceManager();
+            this._backend = MConnect;
         } else {
-            this.manager = new Me.imports.kdeconnect.DeviceManager();
+            this._backend = KDEConnect;
         }
+        
+        // Watch for Service Provider
+        this._watchdog = Gio.bus_watch_name(
+            Gio.BusType.SESSION,
+            this._backend.BUS_NAME,
+            Gio.BusNameWatcherFlags.NONE,
+            Lang.bind(this, this._serviceAppeared),
+            Lang.bind(this, this._serviceVanished)
+        );
+        
+        Settings.connect("changed::service-provider", () => {
+            Gio.bus_unwatch_name(this._watchdog);
+            
+            if (Settings.get_enum("service-provider") === ServiceProvider.MCONNECT) {
+                this._backend = MConnect;
+            } else {
+                this._backend = KDEConnect;
+            }
+            
+            this._watchdog = Gio.bus_watch_name(
+                Gio.BusType.SESSION,
+                this._backend.BUS_NAME,
+                Gio.BusNameWatcherFlags.NONE,
+                Lang.bind(this, this._serviceAppeared),
+                Lang.bind(this, this._serviceVanished)
+            );
+        });
+        
+        this.append("0", _("Select a device"));
+        this._refresh();
+    },
+    
+    _serviceAppeared: function (conn, name, name_owner, cb_data) {
+        this.manager = new this._backend.DeviceManager();
         
         this.manager.connect("device::added", (manager, dbusPath) => {
             this._refresh();
         });
         
-        this.append("0", _("Select a device"));
         this._refresh();
+    },
+    
+    _serviceVanished: function (conn, name, name_owner, cb_data) {
+        if (this.manager) {
+            this.manager.destroy();
+            this.manager = false;
+        }
     },
     
     _get_profiles: function () {
@@ -425,16 +466,18 @@ const KeybindingProfileBox = new Lang.Class({
             this.profiles[id].bindings = this.profiles[id].bindings.deep_unpack();
         }
         
-        for (let device of this.manager.devices.values()) {
-            // Add an empty keybinding profile for devices that don't have one
-            if (!this.profiles.hasOwnProperty(device.id)) {
-                this.profiles[device.id] = {
-                    name: device.name,
-                    bindings: ["", "", "", "", "", ""]
-                };
-            // Update device names for existing profiles
-            } else {
-                this.profiles[device.id].name = device.name;
+        if (this.manager) {
+            for (let device of this.manager.devices.values()) {
+                // Add an empty keybinding profile for new devices
+                if (!this.profiles.hasOwnProperty(device.id)) {
+                    this.profiles[device.id] = {
+                        name: device.name,
+                        bindings: ["", "", "", "", "", ""]
+                    };
+                // Update device names for existing profiles
+                } else {
+                    this.profiles[device.id].name = device.name;
+                }
             }
         }
         
