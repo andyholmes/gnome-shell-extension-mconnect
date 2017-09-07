@@ -14,7 +14,8 @@ URL = 'https://github.com/andyholmes/gnome-shell-extension-mconnect'
 Shell = [ '3.18', '3.18.1', '3.18.2', '3.18.3',
           '3.20', '3.20.1', '3.20.2', '3.20.3', '3.20.4',
           '3.22', '3.22.1', '3.22.2', '3.22.3',
-          '3.24', '3.24.1', '3.24.2', '3.24.3' ]
+          '3.24', '3.24.1', '3.24.2', '3.24.3',
+          '3.25.91' ]
 
 # A list of files to be copied to the extension directory without modification.
 Files = files(
