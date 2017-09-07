@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-07 11:45-0700\n"
-"PO-Revision-Date: 2017-08-20 10:56+0200\n"
+"POT-Creation-Date: 2017-09-07 22:03+0200\n"
+"PO-Revision-Date: 2017-09-07 22:10+0200\n"
 "Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
 "Language-Team: Jonatan Hatakeyama Zeidler\n"
 "Language: de\n"
@@ -27,27 +27,24 @@ msgid "UNPAIRED"
 msgstr "Nicht gekoppelt"
 
 #: src/extension.js:313 src/prefs.js:715
-#, fuzzy
 msgid "Send SMS"
-msgstr "Senden"
+msgstr "SMS senden"
 
 #: src/extension.js:320 src/prefs.js:716
-#, fuzzy
 msgid "Locate Device"
-msgstr "Mobile Geräte"
+msgstr "Geräte finden"
 
 #: src/extension.js:328 src/prefs.js:717
 msgid "Browse Files"
-msgstr ""
+msgstr "Dateien durchsuchen"
 
 #: src/extension.js:335 src/prefs.js:718
-#, fuzzy
 msgid "Send Files"
-msgstr "Datei senden …"
+msgstr "Dateien senden"
 
 #: src/extension.js:494
 msgid "Request Pair"
-msgstr ""
+msgstr "Kopplung anfordern"
 
 #: src/extension.js:495
 msgid "Device is unpaired"
@@ -55,16 +52,15 @@ msgstr "Gerät ist nicht gekoppelt"
 
 #: src/extension.js:498
 msgid "Attempt Reconnection"
-msgstr ""
+msgstr "Wiederverbinden versuchen"
 
 #: src/extension.js:501
 msgid "Attempting to reconnect..."
-msgstr ""
+msgstr "Wiederverbinden wird versucht …"
 
 #: src/extension.js:507
-#, fuzzy
 msgid "Device is disconnected"
-msgstr "Gerät ist nicht verbunden"
+msgstr "Gerät ist getrennt"
 
 #: src/extension.js:550
 msgid "Failed to mount device filesystem"
@@ -83,12 +79,10 @@ msgid "Mobile Settings"
 msgstr "Einstellungen Mobile Geräte"
 
 #: src/extension.js:780
-#, fuzzy
 msgid "Stop Discovering Devices"
-msgstr "Suche nach Geräten abbrechen"
+msgstr "Gerätesuche abbrechen"
 
 #: src/extension.js:782 src/prefs.js:653
-#, fuzzy
 msgid "Discover Devices"
 msgstr "Geräte suchen"
 
@@ -118,76 +112,74 @@ msgstr "Falsch"
 
 #: src/prefs.js:439
 msgid "Select a device"
-msgstr ""
+msgstr "Gerät auswählen"
 
 #: src/prefs.js:652
 msgid "Open extension menu"
-msgstr ""
+msgstr "Erweiterungsmenü öffnen"
 
 #: src/prefs.js:654
 msgid "Open extension preferences"
-msgstr ""
+msgstr "Erweiterungseinstellungen öffnen"
 
 #: src/prefs.js:655
-#, fuzzy
 msgid "Open service settings"
-msgstr "Einstellungen Dienst"
+msgstr "Dienst-Einstellungen öffnen"
 
 #: src/prefs.js:714
 msgid "Open device menu"
-msgstr ""
+msgstr "Gerätemenü öffnen"
 
 #: src/prefs.js:719
 msgid "Pair/Reconnect"
-msgstr ""
+msgstr "Koppeln/Wiederverbinden"
 
 #: src/prefs.js:723
 msgid "Remove"
-msgstr ""
+msgstr "Entfernen"
 
 #: src/prefs.js:724
-#, fuzzy
 msgid "Remove the shortcuts for a defunct device."
-msgstr "Einstellungen des gewählten Dienstes öffnen"
+msgstr "Tastenkürzel für ein entferntes Gerät löschen"
 
 #: src/prefs.js:816
 msgid "Keyboard Shortcut Unavailable"
-msgstr ""
+msgstr "Tastenkürzel nicht frei"
 
 #: src/prefs.js:817
 msgid ""
 "The requested keyboard shortcut is in use by another application and can't "
 "be overridden."
 msgstr ""
+"Das gewünschte Tastenkürzel wird durch eine andere Anwendung genutzt und "
+"kann nicht überschrieben werden."
 
 #. Preferences Page
 #: src/prefs.js:1065
 msgid "General"
-msgstr ""
+msgstr "Allgemein"
 
 #: src/prefs.js:1067
 msgid "Appearance"
-msgstr ""
+msgstr "Erscheinungsbild"
 
 #: src/prefs.js:1071
-#, fuzzy
 msgid "Files"
-msgstr "Datei senden …"
+msgstr "Dateien"
 
 #. Keyboard Shortcuts Page
 #: src/prefs.js:1076
 msgid "Keyboard"
-msgstr ""
+msgstr "Tastatur"
 
 #: src/prefs.js:1078
-#, fuzzy
 msgid "Keyboard Shortcuts"
-msgstr "Einstellungen Dienst"
+msgstr "Tastenkürzel"
 
 #. Advanced Page
 #: src/prefs.js:1084
 msgid "Advanced"
-msgstr ""
+msgstr "Erweitert"
 
 #: src/prefs.js:1086
 msgid "Service"
@@ -206,9 +198,9 @@ msgid "Development"
 msgstr "Entwicklung"
 
 #: src/share.js:44
-#, fuzzy, javascript-format
+#, javascript-format
 msgid "Send files to %s"
-msgstr "Datei senden …"
+msgstr "Dateien an %s senden"
 
 #: src/share.js:51
 msgid "Cancel"
@@ -223,11 +215,11 @@ msgid "MConnect File Share"
 msgstr "MConnect Dateitransfer"
 
 #: src/share.js:143
-#, fuzzy, javascript-format
+#, javascript-format
 msgid "Sending %d file"
 msgid_plural "Sending %d files"
-msgstr[0] "Datei senden …"
-msgstr[1] "Datei senden …"
+msgstr[0] "%d Datei wird gesendet"
+msgstr[1] "%d Dateien werden gesendet"
 
 #: src/sms.js:349
 msgid "Type a phone number"
@@ -248,7 +240,7 @@ msgstr "SMS-Nachricht eingeben"
 #. Log the sent message in the Conversation View and clear the entry
 #: src/sms.js:697
 msgid "You"
-msgstr ""
+msgstr "Du"
 
 #: src/sms.js:712
 msgid "MConnect SMS"
@@ -291,21 +283,20 @@ msgid "Display devices in offline and unpaired states"
 msgstr "Auch nicht verbundene oder gekoppelte Geräte anzeigen"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
-#, fuzzy
 msgid "Device Actions"
-msgstr "Geräte automatisch verbinden"
+msgstr "Geräteaktionen"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
 msgid "Configure shortcuts for device functions"
-msgstr ""
+msgstr "Tastenkürzel für Gerätefunktionen konfigurieren"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
 msgid "Extension Actions"
-msgstr ""
+msgstr "Erweiterungsaktionen"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
 msgid "Configure shortcuts for extension functions"
-msgstr ""
+msgstr "Tastenkürzel für Erweiterungsaktionen konfigurieren"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
 msgid "Nautilus Integration"
