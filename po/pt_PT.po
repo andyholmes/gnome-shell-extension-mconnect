@@ -48,7 +48,7 @@ msgstr "Pedir Emperelhamento"
 
 #: src/extension.js:495
 msgid "Device is unpaired"
-msgstr "Dispositivo está desemperalhado"
+msgstr "Dispositivo estÃ¡ desemperalhado"
 
 #: src/extension.js:498
 msgid "Attempt Reconnection"
@@ -60,7 +60,7 @@ msgstr "Reconectando..."
 
 #: src/extension.js:507
 msgid "Device is disconnected"
-msgstr "Dispositivo está desconectado"
+msgstr "Dispositivo estÃ¡ desconectado"
 
 #: src/extension.js:550
 msgid "Failed to mount device filesystem"
@@ -76,7 +76,7 @@ msgstr "Habilitar"
 
 #: src/extension.js:728
 msgid "Mobile Settings"
-msgstr "Configurações do Telemovel"
+msgstr "ConfiguraÃ§Ãµes do Telemovel"
 
 #: src/extension.js:780
 msgid "Stop Discovering Devices"
@@ -88,11 +88,11 @@ msgstr "Decobrir Despositivos"
 
 #: src/extension.js:1052
 msgid "Nautilus extensions changed"
-msgstr "Extensão Nautilus alterada"
+msgstr "ExtensÃ£o Nautilus alterada"
 
 #: src/extension.js:1053
 msgid "Restart Nautilus to apply changes"
-msgstr "Reiniciar o Nautilus e aplicar alterações"
+msgstr "Reiniciar o Nautilus e aplicar alteraÃ§Ãµes"
 
 #: src/extension.js:1058
 msgid "Restart"
@@ -116,15 +116,15 @@ msgstr "Selecionar um dispositivo"
 
 #: src/prefs.js:609
 msgid "Open extension menu"
-msgstr "Abrir menu da extensão"
+msgstr "Abrir menu da extensÃ£o"
 
 #: src/prefs.js:611
 msgid "Open extension preferences"
-msgstr "Abrir as definições da extensão"
+msgstr "Abrir as definiÃ§Ãµes da extensÃ£o"
 
 #: src/prefs.js:612
 msgid "Open service settings"
-msgstr "Abrir as definições dos serviços"
+msgstr "Abrir as definiÃ§Ãµes dos serviÃ§os"
 
 #: src/prefs.js:671
 msgid "Open device menu"
@@ -144,14 +144,14 @@ msgstr "Remova os atalhos para um dispositivo extinto."
 
 #: src/prefs.js:773
 msgid "Keyboard Shortcut Unavailable"
-msgstr "Atalhos do Teclado Indesponível"
+msgstr "Atalhos do Teclado IndesponÃ­vel"
 
 #: src/prefs.js:774
 msgid ""
 "The requested keyboard shortcut is in use by another application and can't "
 "be overridden."
-msgstr "O atalho de teclado solicitado está em uso por outro aplicativo e não pode"
-	"ser substituído."
+msgstr "O atalho de teclado solicitado estÃ¡ em uso por outro aplicativo e nÃ£o pode"
+	"ser substituÃ­do."
 
 #. Preferences Page
 #: src/prefs.js:1022
@@ -160,7 +160,7 @@ msgstr "Geral"
 
 #: src/prefs.js:1024
 msgid "Appearance"
-msgstr "Aparência"
+msgstr "AparÃªncia"
 
 #: src/prefs.js:1028
 msgid "Files"
@@ -178,19 +178,19 @@ msgstr "Atalhos do Teclado"
 #. Advanced Page
 #: src/prefs.js:1041
 msgid "Advanced"
-msgstr "Avançado"
+msgstr "AvanÃ§ado"
 
 #: src/prefs.js:1043
 msgid "Service"
-msgstr "Serviço"
+msgstr "ServiÃ§o"
 
 #: src/prefs.js:1058
 msgid "Service Settings"
-msgstr "Definiçoes do Serviço"
+msgstr "DefiniÃ§oes do ServiÃ§o"
 
 #: src/prefs.js:1059
 msgid "Open the settings for the current service"
-msgstr "Abrir as definiçoes para o atual serviço"
+msgstr "Abrir as definiÃ§oes para o atual serviÃ§o"
 
 #: src/prefs.js:1063
 msgid "Development"
@@ -222,15 +222,15 @@ msgstr[1] "Enviando %d ficheiros"
 
 #: src/sms.js:349
 msgid "Type a phone number"
-msgstr "Digite um número de telefone"
+msgstr "Digite um nÃºmero de telefone"
 
 #: src/sms.js:358
 msgid "Type a phone number or name"
-msgstr "Digite um número de telefone ou um nome"
+msgstr "Digite um nÃºmero de telefone ou um nome"
 
 #: src/sms.js:453
 msgid "Device is offline"
-msgstr "O Dispositivo está offline"
+msgstr "O Dispositivo estÃ¡ offline"
 
 #: src/sms.js:490
 msgid "Type an SMS message"
@@ -279,27 +279,27 @@ msgstr "Visibilidade do Dispositivo"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:30
 msgid "Display devices in offline and unpaired states"
-msgstr "Mostrar estado de dispositivos que estão offline e desemperelhados"
+msgstr "Mostrar estado de dispositivos que estÃ£o offline e desemperelhados"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
 msgid "Device Actions"
-msgstr "Ações do Dispositivo"
+msgstr "AÃ§Ãµes do Dispositivo"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
 msgid "Configure shortcuts for device functions"
-msgstr "Configurar atalhos para as funções das funções"
+msgstr "Configurar atalhos para as funÃ§Ãµes das funÃ§Ãµes"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
 msgid "Extension Actions"
-msgstr "Ações das Extensões"
+msgstr "AÃ§Ãµes das ExtensÃµes"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
 msgid "Configure shortcuts for extension functions"
-msgstr "Configurar atalhos para as funções da extenção"
+msgstr "Configurar atalhos para as funÃ§Ãµes da extenÃ§Ã£o"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
 msgid "Nautilus Integration"
-msgstr "Integração com Nautilus"
+msgstr "IntegraÃ§Ã£o com Nautilus"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
 msgid "Send files from the file browser context menu"
@@ -307,16 +307,16 @@ msgstr "Enviar ficheiros do menu de contexto do gestor de ficheiros"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
 msgid "Service Auto-Start"
-msgstr "Serviço de Auto-Arranque"
+msgstr "ServiÃ§o de Auto-Arranque"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
 msgid "Start the service automatically and restart if stopped"
-msgstr "Iniciar o serviço automaticamente e reiniciar se este parar"
+msgstr "Iniciar o serviÃ§o automaticamente e reiniciar se este parar"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
 msgid "Service Provider"
-msgstr "Provedor de serviços"
+msgstr "Provedor de serviÃ§os"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:55
 msgid "The service providing devices."
-msgstr "O serviço que dispinibiliza dispositivos."
+msgstr "O serviÃ§o que dispinibiliza dispositivos."
