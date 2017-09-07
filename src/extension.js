@@ -52,7 +52,7 @@ var ServiceProvider = {
  *     https://developer.gnome.org/meta/stable/meta-MetaKeybinding.html
  *
  */
-const KeybindingManager = new Lang.Class({
+var KeybindingManager = new Lang.Class({
     Name: "KeybindingManager",
 
     _init: function (devices) {
@@ -118,7 +118,7 @@ const KeybindingManager = new Lang.Class({
  * 
  * Adapted from: https://github.com/RaphaelRochet/applications-overview-tooltip
  */
-const ActionTooltip = new Lang.Class({
+var ActionTooltip = new Lang.Class({
     Name: "ActionTooltip",
     
     _init: function (title, parent) {
@@ -246,7 +246,7 @@ const ActionTooltip = new Lang.Class({
 
 
 /** An St.Button subclass for buttons with an image and an action */
-const ActionButton = new Lang.Class({
+var ActionButton = new Lang.Class({
     Name: "ActionButton",
     Extends: St.Button,
     
@@ -274,7 +274,7 @@ const ActionButton = new Lang.Class({
 
 
 /** A PopupMenu used as an information and control center for a device */
-const DeviceMenu = new Lang.Class({
+var DeviceMenu = new Lang.Class({
     Name: "DeviceMenu",
     Extends: PopupMenu.PopupMenuSection,
 
@@ -590,7 +590,7 @@ const DeviceMenu = new Lang.Class({
 
 
 /** An indicator representing a Device in the Status Area */
-const DeviceIndicator = new Lang.Class({
+var DeviceIndicator = new Lang.Class({
     Name: "DeviceIndicator",
     Extends: PanelMenu.Button,
     
@@ -667,7 +667,7 @@ const DeviceIndicator = new Lang.Class({
  * A System Indicator used as the hub for spawning device indicators and
  * indicating that the extension is active when there are none.
  */
-const SystemIndicator = new Lang.Class({
+var SystemIndicator = new Lang.Class({
     Name: "SystemIndicator",
     Extends: PanelMenu.SystemIndicator,
     

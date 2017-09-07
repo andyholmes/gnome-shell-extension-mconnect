@@ -58,7 +58,7 @@ const KDEConnect = imports.kdeconnect;
 const MConnect = imports.mconnect;
 const { initTranslations, Me, Resources, Settings } = imports.lib;
 
-const ServiceProvider = {
+var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
@@ -68,7 +68,7 @@ initTranslations();
 /** Phone Number types that support receiving texts */
 
 /** A Gtk.EntryCompletion subclass for Google Contacts */
-const ContactCompletion = new Lang.Class({
+var ContactCompletion = new Lang.Class({
     Name: "ContactCompletion",
     Extends: Gtk.EntryCompletion,
     Properties: {
@@ -339,7 +339,7 @@ const ContactCompletion = new Lang.Class({
 });
 
 /** A Gtk.Entry subclass for contact names and phone numbers */
-const ContactEntry = new Lang.Class({
+var ContactEntry = new Lang.Class({
     Name: "ContactEntry",
     Extends: Gtk.SearchEntry,
     
@@ -402,7 +402,7 @@ const ContactEntry = new Lang.Class({
 });
 
 /** SMS Window */
-const ApplicationWindow = new Lang.Class({
+var ApplicationWindow = new Lang.Class({
     Name: "ApplicationWindow",
     Extends: Gtk.ApplicationWindow,
     
@@ -699,7 +699,7 @@ const ApplicationWindow = new Lang.Class({
     }
 });
 
-const Application = new Lang.Class({
+var Application = new Lang.Class({
     Name: "Application",
     Extends: Gtk.Application,
 

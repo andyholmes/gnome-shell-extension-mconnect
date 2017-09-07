@@ -24,7 +24,7 @@ const MConnect = imports.mconnect;
 const KDEConnect = imports.kdeconnect;
 const { initTranslations, Settings } = imports.lib;
 
-const ServiceProvider = {
+var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
@@ -35,7 +35,7 @@ String.prototype.format = Format.format;
 
 
 /** A simple FileChooserDialog for sharing files */
-const ShareDialog = new Lang.Class({
+var ShareDialog = new Lang.Class({
     Name: "ShareDialog",
     Extends: Gtk.FileChooserDialog,
     
@@ -56,7 +56,7 @@ const ShareDialog = new Lang.Class({
 });
 
 
-const Application = new Lang.Class({
+var Application = new Lang.Class({
     Name: "Application",
     Extends: Gio.Application,
 

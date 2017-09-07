@@ -108,7 +108,7 @@ function startSettings() {
 }
 
 
-const ProxyBase = new Lang.Class({
+var ProxyBase = new Lang.Class({
     Name: "ProxyBase",
     Extends: Gio.DBusProxy,
     Signals: {
@@ -212,7 +212,7 @@ const ProxyBase = new Lang.Class({
 });
 
 /** A base class for backend Battery implementations */
-const Battery = new Lang.Class({
+var Battery = new Lang.Class({
     Name: "Battery",
     Extends: ProxyBase,
     Properties: {
@@ -255,7 +255,7 @@ const Battery = new Lang.Class({
 });
 
 /** A base class for backend Device implementations */
-const Device = new Lang.Class({
+var Device = new Lang.Class({
     Name: "Device",
     Extends: ProxyBase,
     Properties: {
@@ -425,7 +425,7 @@ const Device = new Lang.Class({
 
 
 // A DBus Interface wrapper for a device manager
-const DeviceManager = new Lang.Class({
+var DeviceManager = new Lang.Class({
     Name: "DeviceManager",
     Extends: ProxyBase,
     Properties: {

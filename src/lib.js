@@ -27,7 +27,7 @@ function getCurrentExtension() {
     };
 }
 
-const Me = getCurrentExtension();
+var Me = getCurrentExtension();
 
 /** Init GSettings for Me.metadata['gschema-id'] */
 let schemaSrc = Gio.SettingsSchemaSource.new_from_directory(
@@ -36,13 +36,13 @@ let schemaSrc = Gio.SettingsSchemaSource.new_from_directory(
     false
 );
 
-const Settings = new Gio.Settings({
+var Settings = new Gio.Settings({
     settings_schema: schemaSrc.lookup(Me.metadata['gschema-id'], true)
 });
-const Schema = Settings.settings_schema;
+var Schema = Settings.settings_schema;
 
 /** Init GResource for fallback icons */
-const Resources = Gio.resource_load(Me.path + "/org.gnome.shell.extensions.mconnect.gresource");
+var Resources = Gio.resource_load(Me.path + "/org.gnome.shell.extensions.mconnect.gresource");
 Resources._register();
 
 /** Initialize Gettext for metadata['gettext-domain'] */

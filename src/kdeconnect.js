@@ -289,7 +289,7 @@ function startSettings() {
 }
 
 
-const ProxyBase = new Lang.Class({
+var ProxyBase = new Lang.Class({
     Name: "KProxyBase",
     Extends: Gio.DBusProxy,
     Signals: {
@@ -394,7 +394,7 @@ const ProxyBase = new Lang.Class({
 
 
 /** A base class for backend Battery implementations */
-const Battery = new Lang.Class({
+var Battery = new Lang.Class({
     Name: "KBattery",
     Extends: ProxyBase,
     Properties: {
@@ -430,7 +430,7 @@ const Battery = new Lang.Class({
 });
 
 
-const Notification = new Lang.Class({
+var Notification = new Lang.Class({
     Name: "KNotification",
     Extends: ProxyBase,
     Properties: {
@@ -489,7 +489,7 @@ const Notification = new Lang.Class({
 
 
 /** A base class for backend Notification implementations */
-const Notifications = new Lang.Class({
+var Notifications = new Lang.Class({
     Name: "KNotifications",
     Extends: ProxyBase,
     Properties: {
@@ -536,7 +536,7 @@ const Notifications = new Lang.Class({
 
 
 /** A base class for backend Device implementations */
-const Device = new Lang.Class({
+var Device = new Lang.Class({
     Name: "KDevice",
     Extends: ProxyBase,
     Properties: {
@@ -793,7 +793,7 @@ const Device = new Lang.Class({
 
 
 // A DBus Interface wrapper for a device manager
-const DeviceManager = new Lang.Class({
+var DeviceManager = new Lang.Class({
     Name: "KDeviceManager",
     Extends: ProxyBase,
     Properties: {

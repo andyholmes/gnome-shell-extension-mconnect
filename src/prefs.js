@@ -15,14 +15,14 @@ const MConnect = Me.imports.mconnect;
 const KDEConnect = Me.imports.kdeconnect;
 const { initTranslations, Settings, Schema } = Me.imports.lib;
 
-const ServiceProvider = {
+var ServiceProvider = {
     MCONNECT: 0,
     KDECONNECT: 1
 };
 
 
 /** A Gtk.Switch subclass for boolean GSettings. */
-const BoolSetting = new Lang.Class({
+var BoolSetting = new Lang.Class({
     Name: "BoolSetting",
     Extends: Gtk.Switch,
     
@@ -39,7 +39,7 @@ const BoolSetting = new Lang.Class({
 });
 
 /** A Gtk.ComboBoxText subclass for GSetting choices and enumerations */
-const EnumSetting = new Lang.Class({
+var EnumSetting = new Lang.Class({
     Name: "EnumSetting",
     Extends: Gtk.ComboBoxText,
     
@@ -69,7 +69,7 @@ const EnumSetting = new Lang.Class({
 });
 
 /** A Gtk.MenuButton subclass for GSetting flags */
-const FlagsSetting = new Lang.Class({
+var FlagsSetting = new Lang.Class({
     Name: "FlagsSetting",
     Extends: Gtk.MenuButton,
     
@@ -128,7 +128,7 @@ const FlagsSetting = new Lang.Class({
 });
 
 /** A Gtk.Button/Popover subclass for GSetting nullable booleans (maybe) */
-const MaybeSetting = new Lang.Class({
+var MaybeSetting = new Lang.Class({
     Name: "MaybeSetting",
     Extends: Gtk.Button,
     
@@ -208,7 +208,7 @@ const MaybeSetting = new Lang.Class({
 });
 
 /** A Gtk.SpinButton subclass for unranged integer GSettings */
-const NumberSetting = new Lang.Class({
+var NumberSetting = new Lang.Class({
     Name: "NumberSetting",
     Extends: Gtk.SpinButton,
     
@@ -263,7 +263,7 @@ const NumberSetting = new Lang.Class({
 });
 
 /** A Gtk.Scale subclass for ranged integer GSettings */
-const RangeSetting = new Lang.Class({
+var RangeSetting = new Lang.Class({
     Name: "RangeSetting",
     Extends: Gtk.Scale,
     
@@ -298,7 +298,7 @@ const RangeSetting = new Lang.Class({
 });
 
 /** A Gtk.Entry subclass for string GSettings */
-const StringSetting = new Lang.Class({
+var StringSetting = new Lang.Class({
     Name: "StringSetting",
     Extends: Gtk.Entry,
     
@@ -318,7 +318,7 @@ const StringSetting = new Lang.Class({
 });
 
 /** A Gtk.Entry subclass for all other GSettings */
-const OtherSetting = new Lang.Class({
+var OtherSetting = new Lang.Class({
     Name: "OtherSetting",
     Extends: Gtk.Entry,
     
@@ -361,7 +361,7 @@ const OtherSetting = new Lang.Class({
 
 
 /** Gtk.Button subclass for launching dialogs or external programs */
-const ButtonSetting = new Lang.Class({
+var ButtonSetting = new Lang.Class({
     Name: "ButtonSetting",
     Extends: Gtk.Button,
     
@@ -392,7 +392,7 @@ const ButtonSetting = new Lang.Class({
  * A custom Gtk.ComboBox for selecting and initializing keybinding profiles for
  * devices.
  */
-const KeybindingProfileBox = new Lang.Class({
+var KeybindingProfileBox = new Lang.Class({
     Name: "KeybindingProfileBox",
     Extends: Gtk.ComboBoxText,
     
@@ -523,7 +523,7 @@ const KeybindingProfileBox = new Lang.Class({
 /**
  * A Custom Gtk.TreeView for displaying and modifying keybinding profiles
  */
-const KeybindingView = new Lang.Class({
+var KeybindingView = new Lang.Class({
     Name: "KeybindingView",
     Extends: Gtk.TreeView,
     
@@ -594,7 +594,7 @@ const KeybindingView = new Lang.Class({
  * A composite widget that combines KeybindingProfileBox and KeybindingView
  * into a single settings panel for managing device keybinding profiles.
  */
-const KeybindingWidget = new Lang.Class({
+var KeybindingWidget = new Lang.Class({
     Name: "KeybindingWidget",
     Extends: Gtk.ListBoxRow,
     
@@ -835,7 +835,7 @@ const KeybindingWidget = new Lang.Class({
 
 
 /** A composite widget resembling A Gnome Control Center panel. */
-const PrefsPage = new Lang.Class({
+var PrefsPage = new Lang.Class({
     Name: "PrefsPage",
     Extends: Gtk.ScrolledWindow,
     
@@ -1023,7 +1023,7 @@ const PrefsPage = new Lang.Class({
 
 
 /** A GtkStack subclass with a pre-attached GtkStackSwitcher */
-const PrefsWidget = new Lang.Class({
+var PrefsWidget = new Lang.Class({
     Name: "PrefsWidget",
     Extends: Gtk.Stack,
     
