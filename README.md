@@ -40,7 +40,7 @@ MConnect and dependencies for optional features, please see the
   * [Auto-Mount](../../wiki/Preferences#device-auto-mount) (***Preference***)
 
 * Send files to devices
-  * [Nautilus Integration](../../wiki#Nautilus-Integration) (***Optional***)
+  * [Nautilus Integration](../../wiki/Nautilus-Integration) (***Optional***)
 
 * Monitor battery level and charging state
 
