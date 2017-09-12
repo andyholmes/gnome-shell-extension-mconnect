@@ -872,21 +872,31 @@ var DeviceManager = new Lang.Class({
     scan: function (requestId="manager", timeout=15) {
         if (this._scans.has(requestId)) {
             this._call("releaseDiscoveryMode", false, requestId);
-            GLib.source_remove(this._scans.get(requestId));
+            
+            if (this._scans.get(requestId) > 0) {
+                GLib.source_remove(this._scans.get(requestId));
+            }
+            
             this._scans.delete(requestId)
             this.notify("scanning");
             return false;
         } else {
             this._call("acquireDiscoveryMode", false, requestId);
             this._call("forceOnNetworkChange", false);
-            this._scans.set(
-                requestId,
-                Mainloop.timeout_add_seconds(
-                    timeout, 
-                    Lang.bind(this, this.scan, requestId),
-                    GLib.PRIORITY_DEFAULT
-                )
-            );
+            
+            if (timeout > 0) {
+                this._scans.set(
+                    requestId,
+                    Mainloop.timeout_add_seconds(
+                        timeout, 
+                        Lang.bind(this, this.scan, requestId),
+                        GLib.PRIORITY_DEFAULT
+                    )
+                );
+            } else {
+                this._scans.set(requestId, timeout);
+            }
+            
             this.notify("scanning");
             return true;
         }

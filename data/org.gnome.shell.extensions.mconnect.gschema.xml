@@ -44,6 +44,11 @@
       <summary>Nautilus Integration</summary>
       <description>Send files from the file browser context menu</description>
     </key>
+    <key name="persistent-discovery" type="b">
+      <default>false</default>
+      <summary>Persistent Discovery</summary>
+      <description>Constantly probe the network for devices</description>
+    </key>
     <key name="service-autostart" type="b">
       <default>false</default>
       <summary>Service Auto-Start</summary>
@@ -52,7 +57,7 @@
     <key name="service-provider" enum="org.gnome.shell.extensions.mconnect.ServiceProvider">
       <default>'KDECONNECT'</default>
       <summary>Service Provider</summary>
-      <description>The service providing devices.</description>
+      <description>The service providing devices</description>
     </key>
   </schema>
 </schemalist>

@@ -1086,6 +1086,7 @@ function buildPrefsWidget() {
     let serviceSection = advancedPage.add_section(_("Service"));
     advancedPage.add_setting(serviceSection, "service-provider");
     advancedPage.add_setting(serviceSection, "service-autostart");
+    advancedPage.add_setting(serviceSection, "persistent-discovery");
     let serviceSettings = new ButtonSetting({
         icon_name: "preferences-system-symbolic",
         callback: (button) => {
