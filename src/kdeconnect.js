@@ -268,12 +268,7 @@ TelephonyNode.nodes.forEach((nodeInfo) => { nodeInfo.cache_build(); });
 // Start the service backend
 function startService() {
     try {
-        // kdeconnectd isn't in PATH (at least on Ubuntu)
-        let [res, out] = GLib.spawn_command_line_sync(
-            "locate -br '^kdeconnectd$'"
-        );
-        
-        GLib.spawn_command_line_async(out.toString() + " -platform offscreen");
+        GLib.spawn_command_line_async("kdeconnect-cli --refresh");
     } catch (e) {
         log("Error spawning KDEConnect daemon: " + e);
     }
