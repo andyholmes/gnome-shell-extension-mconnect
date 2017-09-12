@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-07 22:03+0200\n"
+"POT-Creation-Date: 2017-09-12 03:03-0700\n"
 "PO-Revision-Date: 2017-09-07 22:10+0200\n"
 "Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
 "Language-Team: Jonatan Hatakeyama Zeidler\n"
@@ -86,15 +86,15 @@ msgstr "Gerätesuche abbrechen"
 msgid "Discover Devices"
 msgstr "Geräte suchen"
 
-#: src/extension.js:1052
+#: src/extension.js:1070
 msgid "Nautilus extensions changed"
 msgstr "Nautilus-Erweiterungen wurden geändert"
 
-#: src/extension.js:1053
+#: src/extension.js:1071
 msgid "Restart Nautilus to apply changes"
 msgstr "Nautilus neustarten, um Änderungen zu übernehmen"
 
-#: src/extension.js:1058
+#: src/extension.js:1076
 msgid "Restart"
 msgstr "Neustart"
 
@@ -185,15 +185,15 @@ msgstr "Erweitert"
 msgid "Service"
 msgstr "Dienst"
 
-#: src/prefs.js:1101
+#: src/prefs.js:1102
 msgid "Service Settings"
 msgstr "Einstellungen Dienst"
 
-#: src/prefs.js:1102
+#: src/prefs.js:1103
 msgid "Open the settings for the current service"
 msgstr "Einstellungen des gewählten Dienstes öffnen"
 
-#: src/prefs.js:1106
+#: src/prefs.js:1107
 msgid "Development"
 msgstr "Entwicklung"
 
@@ -307,19 +307,28 @@ msgid "Send files from the file browser context menu"
 msgstr "Dateien vom Dateibrowser-Kontextmenü aus senden"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
+msgid "Persistent Discovery"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
+msgid "Constantly probe the network for devices"
+msgstr ""
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
 msgid "Service Auto-Start"
 msgstr "Dienst-Autostart"
 
-#: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:55
 msgid "Start the service automatically and restart if stopped"
 msgstr "Dienst automatisch starten und neustarten, falls gestoppt"
 
-#: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:59
 msgid "Service Provider"
 msgstr "Dienst"
 
-#: data/org.gnome.shell.extensions.mconnect.gschema.xml:55
-msgid "The service providing devices."
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
+#, fuzzy
+msgid "The service providing devices"
 msgstr "Der Hintergrunddienst, der Geräteverbindungen bereitstellt."
 
 #, fuzzy
