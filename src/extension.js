@@ -308,7 +308,7 @@ var DeviceMenu = new Lang.Class({
         this.addMenuItem(this.pluginBar);
         
         this.smsButton = new ActionButton({
-            icon_name: "mail-send-symbolic",
+            icon_name: "sms-symbolic",
             callback: Lang.bind(this, this._smsAction),
             tooltip_text: _("Send SMS")
         });

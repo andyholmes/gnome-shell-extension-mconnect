@@ -12,11 +12,13 @@
     <file alias="tablet-connected.svg" compressed="true" preprocess="xml-stripblanks">tablet-connected.svg</file>
     <file alias="tablet-disconnected.svg" compressed="true" preprocess="xml-stripblanks">tablet-disconnected.svg</file>
     <file alias="tablet-trusted.svg" compressed="true" preprocess="xml-stripblanks">tablet-trusted.svg</file>
-    <!-- Phone Number Type Icons c/o Google -->
+    <!-- SMS Application Icons c/o Google -->
     <file alias="phone-number-default.svg" compressed="true" preprocess="xml-stripblanks">phone-number-default.svg</file>
     <file alias="phone-number-home.svg" compressed="true" preprocess="xml-stripblanks">phone-number-home.svg</file>
     <file alias="phone-number-mobile.svg" compressed="true" preprocess="xml-stripblanks">phone-number-mobile.svg</file>
     <file alias="phone-number-work.svg" compressed="true" preprocess="xml-stripblanks">phone-number-work.svg</file>
-    <file alias="send-sms.svg" compressed="true" preprocess="xml-stripblanks">send-sms.svg</file>
+    <file alias="sms-send.svg" compressed="true" preprocess="xml-stripblanks">sms-send.svg</file>
+    <!-- Device Menu Icons -->
+    <file alias="sms-symbolic.svg" compressed="true" preprocess="xml-stripblanks">sms-symbolic.svg</file>
   </gresource>
 </gresources>

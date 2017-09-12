@@ -488,8 +488,7 @@ var ApplicationWindow = new Lang.Class({
         this.messageEntry = new Gtk.Entry({
             hexpand: true,
             placeholder_text: _("Type an SMS message"),
-            //secondary_icon_name: "mail-reply-sender-symbolic",
-            secondary_icon_name: "send-sms",
+            secondary_icon_name: "sms-send",
             secondary_icon_activatable: true,
             secondary_icon_sensitive: false
         });
