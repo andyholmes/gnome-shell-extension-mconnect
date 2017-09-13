@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-12 18:06-0700\n"
+"POT-Creation-Date: 2017-09-12 21:27-0700\n"
 "PO-Revision-Date: 2017-09-05 14:01+0200\n"
 "Last-Translator: Andreas Cattelan <ilmondodiwit@gmail.com>\n"
 "Language-Team: Andreas Cattelan\n"
@@ -238,11 +238,11 @@ msgid "Type an SMS message"
 msgstr "Scrivi un messaggio SMS"
 
 #. Log the sent message in the Conversation View and clear the entry
-#: src/sms.js:696
+#: src/sms.js:698
 msgid "You"
 msgstr "Tu"
 
-#: src/sms.js:711
+#: src/sms.js:713
 msgid "MConnect SMS"
 msgstr "MConnect SMS"
 
