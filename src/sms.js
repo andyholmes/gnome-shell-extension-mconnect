@@ -570,6 +570,7 @@ var ApplicationWindow = new Lang.Class({
             if (recipients.has(sender)) {
                 log("Matched incoming sender");
                 this._log_message(sender, message);
+                this.urgency_hint = true;
                 note.dismiss();
             // Might be just a number, strip both and check
             } else {
@@ -582,6 +583,7 @@ var ApplicationWindow = new Lang.Class({
                     if (local_num === remote_num) {
                         log("Matched incoming number");
                         this._log_message(name, message);
+                        this.urgency_hint = true;
                         note.dismiss();
                     }
                 }
