@@ -48,7 +48,7 @@ msgstr "Richiedi accoppiamento"
 
 #: src/extension.js:495
 msgid "Device is unpaired"
-msgstr "Dispositivo non é collegato"
+msgstr "Il dispositivo non è collegato"
 
 #: src/extension.js:498
 msgid "Attempt Reconnection"
@@ -56,15 +56,15 @@ msgstr "Prova ricollegamento"
 
 #: src/extension.js:501
 msgid "Attempting to reconnect..."
-msgstr "Provo ricollegamento..."
+msgstr "Ricollegamento in corso..."
 
 #: src/extension.js:507
 msgid "Device is disconnected"
-msgstr "Dispositivo e disconnesso"
+msgstr "Il dispositivo è disconnesso"
 
 #: src/extension.js:550
 msgid "Failed to mount device filesystem"
-msgstr "Impossibile collegare "
+msgstr "Impossibile montare il filesystem del dispositivo"
 
 #: src/extension.js:704
 msgid "Mobile Devices"
@@ -76,27 +76,27 @@ msgstr "Attiva"
 
 #: src/extension.js:728
 msgid "Mobile Settings"
-msgstr "impostazioni mobili"
+msgstr "Impostazioni"
 
 #: src/extension.js:780
 msgid "Stop Discovering Devices"
-msgstr "interrompi ricerca dispositivi"
+msgstr "Interrompi ricerca dispositivi"
 
 #: src/extension.js:782 src/prefs.js:653
 msgid "Discover Devices"
-msgstr "ricerca dispositivi"
+msgstr "Ricerca dispositivi"
 
 #: src/extension.js:1070
 msgid "Nautilus extensions changed"
-msgstr "estensioni Nautilus cambiati"
+msgstr "Estensioni Nautilus cambiate"
 
 #: src/extension.js:1071
 msgid "Restart Nautilus to apply changes"
-msgstr "Riavvia Nautilus per la applicazione dei cambiamenti"
+msgstr "Riavvia Nautilus per l'applicazione dei cambiamenti"
 
 #: src/extension.js:1076
 msgid "Restart"
-msgstr "Riavvio"
+msgstr "Riavvia"
 
 #: src/prefs.js:155
 msgid "Nothing"
@@ -116,7 +116,7 @@ msgstr "Seleziona un dispositivo"
 
 #: src/prefs.js:652
 msgid "Open extension menu"
-msgstr "Apri menu estensioni"
+msgstr "Apri menù estensioni"
 
 #: src/prefs.js:654
 msgid "Open extension preferences"
@@ -128,11 +128,11 @@ msgstr "Apri impostazioni servizi"
 
 #: src/prefs.js:714
 msgid "Open device menu"
-msgstr "Apri menu del dispositivo"
+msgstr "Apri menù del dispositivo"
 
 #: src/prefs.js:719
 msgid "Pair/Reconnect"
-msgstr "Accoppiamento/ricollegamento"
+msgstr "Accoppia/riconnetti"
 
 #: src/prefs.js:723
 msgid "Remove"
@@ -151,8 +151,8 @@ msgid ""
 "The requested keyboard shortcut is in use by another application and can't "
 "be overridden."
 msgstr ""
-"La scorciatoia richiesta e utilizzato da un altra applicazione e non può "
-"essere soprascritta."
+"La scorciatoia richiesta è utilizzata da un'altra applicazione e non può "
+"essere sovrascritta."
 
 #. Preferences Page
 #: src/prefs.js:1065
@@ -179,7 +179,7 @@ msgstr "Scorciatoie tastiera"
 #. Advanced Page
 #: src/prefs.js:1084
 msgid "Advanced"
-msgstr "avanzati"
+msgstr "Avanzate"
 
 #: src/prefs.js:1086
 msgid "Service"
@@ -212,30 +212,30 @@ msgstr "Invia"
 
 #: src/share.js:69
 msgid "MConnect File Share"
-msgstr "MConnect condivisione file"
+msgstr "MConnect Condivisione file"
 
 #: src/share.js:143
 #, javascript-format
 msgid "Sending %d file"
 msgid_plural "Sending %d files"
-msgstr[0] "Invio %d file"
-msgstr[1] "Invio %d files"
+msgstr[0] "Invio %d file in corso"
+msgstr[1] "Invio %d file in corso"
 
 #: src/sms.js:349
 msgid "Type a phone number"
-msgstr "Digita un numero telefonico"
+msgstr "Digita un numero di telefono"
 
 #: src/sms.js:358
 msgid "Type a phone number or name"
-msgstr "Digita un numero telefonico o nome"
+msgstr "Digita un numero di telefono o nome"
 
 #: src/sms.js:453
 msgid "Device is offline"
-msgstr "Dispositivo non é in linea"
+msgstr "Il dispositivo non è in linea"
 
 #: src/sms.js:490
 msgid "Type an SMS message"
-msgstr "Scrivi un messaggio SMS"
+msgstr "Scrivi un SMS"
 
 #. Log the sent message in the Conversation View and clear the entry
 #: src/sms.js:698
@@ -260,16 +260,17 @@ msgstr "Attiva le modalità e la registrazione debug"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:19
 msgid "Device Auto-Mount"
-msgstr "Auto-mount dipsoitivo"
+msgstr "Monta automaticamente dispositivo"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:20
 msgid "Automatically mount devices that support it"
-msgstr "Monta automaticamente dispositivi  che supportano il servizio"
+msgstr "Monta automaticamente i dispositivi che supportano il servizio"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:24
 msgid "Device Indicators"
 msgstr "Indicatore dispositivi"
 
+# TODO: To be controlled
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
 msgid "Controls available via Indicators or the User Menu"
 msgstr "Controlla la disponibilità via Indicators o il menu utente"
@@ -296,7 +297,7 @@ msgstr "Azioni estensione"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
 msgid "Configure shortcuts for extension functions"
-msgstr "Configura scorciatoie per funzioni della estensione"
+msgstr "Configura scorciatoie per funzioni dell'estensione"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
 msgid "Nautilus Integration"
@@ -304,23 +305,23 @@ msgstr "Integrazione Nautilus"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
 msgid "Send files from the file browser context menu"
-msgstr "Invia file direttamente dal menu di contesto di Nautilus"
+msgstr "Invia file direttamente dal menù di contesto di Nautilus"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
 msgid "Persistent Discovery"
-msgstr ""
+msgstr "Ricerca permanente"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
 msgid "Constantly probe the network for devices"
-msgstr ""
+msgstr "Analizza continuamente la rete alla ricerca di altri dispositivi"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
 msgid "Service Auto-Start"
-msgstr "Servizion Auto-Start"
+msgstr "Servizio di autoavvio"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:55
 msgid "Start the service automatically and restart if stopped"
-msgstr "Avvia il servizio automaticamente e riavvia se fermato "
+msgstr "Avvia il servizio automaticamente e riavvia se fermato"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:59
 msgid "Service Provider"
@@ -332,7 +333,7 @@ msgid "The service providing devices"
 msgstr "Dispositivi attivi che forniscono il servizio"
 
 #~ msgid "Website"
-#~ msgstr "Pagina web"
+#~ msgstr "Sito web"
 
 #~ msgid "© 2017 Andy Holmes"
 #~ msgstr "© 2017 Andy Holmes"
@@ -341,8 +342,8 @@ msgstr "Dispositivi attivi che forniscono il servizio"
 #~ "If the device no longer available the keybindings will be deleted, "
 #~ "otherwise reset."
 #~ msgstr ""
-#~ "Se il dispositivo non e più disponibile le associazioni dei tasti "
-#~ "verranno cancellati, altrimenti riavvia"
+#~ "Se il dispositivo non è più disponibile le associazioni dei tasti "
+#~ "verranno cancellate, altrimenti riavvia."
 
 #~ msgid "Preferences"
 #~ msgstr "Preferenze"
@@ -354,10 +355,10 @@ msgstr "Dispositivi attivi che forniscono il servizio"
 #~ msgstr "Scorciatoie"
 
 #~ msgid "About"
-#~ msgstr "Informazioni su mconnect"
+#~ msgstr "Informazioni"
 
 #~ msgid "Send file..."
-#~ msgstr "Invia file"
+#~ msgstr "Invia file..."
 
 #~ msgid "Device Shortcuts"
 #~ msgstr "Scorciatoie dispositivi"
