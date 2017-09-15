@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-15 10:36-0700\n"
-"PO-Revision-Date: 2017-09-06 21:55+0200\n"
+"PO-Revision-Date: 2017-09-15 21:04+0200\n"
 "Last-Translator: Heimen Stoffels <vistausss@outlook.com>\n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -64,7 +64,7 @@ msgstr "Apparaat is afgekoppeld"
 
 #: src/extension.js:550
 msgid "Failed to mount device filesystem"
-msgstr "Aankoppeling van bestandssysteem van apparaat is mislukt"
+msgstr "Aankoppelen van bestandssysteem van apparaat is mislukt"
 
 #: src/extension.js:704
 msgid "Mobile Devices"
@@ -292,11 +292,11 @@ msgstr "Sneltoetsen instellen voor apparaatfuncties"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
 msgid "Extension Actions"
-msgstr "Uitbreidingsacties"
+msgstr "Uitbreiding-acties"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
 msgid "Configure shortcuts for extension functions"
-msgstr "Sneltoetsen instellingen voor uitbreidingsfuncties"
+msgstr "Sneltoetsen instellingen voor uitbreiding-functies"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
 msgid "Nautilus Integration"
@@ -309,11 +309,11 @@ msgstr ""
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
 msgid "Persistent Discovery"
-msgstr ""
+msgstr "Voortdurend blijven zoeken"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
 msgid "Constantly probe the network for devices"
-msgstr ""
+msgstr "Continue op het netwerk zoeken naar apparaten"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
 msgid "Service Auto-Start"
@@ -328,6 +328,5 @@ msgid "Service Provider"
 msgstr "Dienstprovider"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
-#, fuzzy
 msgid "The service providing devices"
-msgstr "De dienst die in apparaten voorziet."
+msgstr "De dienst die in apparaten voorziet"
