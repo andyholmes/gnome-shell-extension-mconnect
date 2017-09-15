@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-15 10:36-0700\n"
-"PO-Revision-Date: 2017-09-07 22:10+0200\n"
+"POT-Creation-Date: 2017-09-15 21:34+0200\n"
+"PO-Revision-Date: 2017-09-15 21:36+0200\n"
 "Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
 "Language-Team: Jonatan Hatakeyama Zeidler\n"
 "Language: de\n"
@@ -140,7 +140,7 @@ msgstr "Entfernen"
 
 #: src/prefs.js:724
 msgid "Remove the shortcuts for a defunct device."
-msgstr "Tastenkürzel für ein entferntes Gerät löschen"
+msgstr "Tastenkürzel für ein entferntes Gerät löschen."
 
 #: src/prefs.js:816
 msgid "Keyboard Shortcut Unavailable"
@@ -308,11 +308,11 @@ msgstr "Dateien vom Dateibrowser-Kontextmenü aus senden"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
 msgid "Persistent Discovery"
-msgstr ""
+msgstr "Persistentes Verzeichnis"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
 msgid "Constantly probe the network for devices"
-msgstr ""
+msgstr "Kontinuierlich nach Geräten suchen"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
 msgid "Service Auto-Start"
@@ -327,9 +327,8 @@ msgid "Service Provider"
 msgstr "Dienst"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
-#, fuzzy
 msgid "The service providing devices"
-msgstr "Der Hintergrunddienst, der Geräteverbindungen bereitstellt."
+msgstr "Der Hintergrunddienst, der die Geräteverbindungen bereitstellt"
 
 #, fuzzy
 #~ msgid "Send files..."
