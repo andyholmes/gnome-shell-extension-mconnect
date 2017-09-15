@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-14 22:11-0300\n"
-"PO-Revision-Date: 2017-09-14 22:53-0300\n"
+"PO-Revision-Date: 2017-09-14 23:06-0300\n"
 "Last-Translator: Luis Fernando Planella Gonzalez <luisfpg@gmail.com>\n"
 "Language-Team: \n"
 "Language: pt_BR\n"
@@ -32,7 +32,7 @@ msgstr "Enviar SMS"
 
 #: src/extension.js:320 src/prefs.js:716
 msgid "Locate Device"
-msgstr "Localizar despositivo"
+msgstr "Localizar dispositivo"
 
 #: src/extension.js:328 src/prefs.js:717
 msgid "Browse Files"
