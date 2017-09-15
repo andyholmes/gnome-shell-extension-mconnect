@@ -878,72 +878,70 @@ var SystemIndicator = new Lang.Class({
     
     _deviceKeybindings: function (indicator) {
         let menu = indicator.deviceMenu;
+        let profiles = Settings.get_value("device-keybindings").deep_unpack();
         
         for (let binding of menu._keybindings) {
             this.keybindingManager.remove(binding);
         }
         menu._keybindings = [];
-    
-        let profiles = Settings.get_value("device-keybindings").deep_unpack();
-        let bindings, profile;
         
         if (profiles.hasOwnProperty(menu.device.id)) {
-            profile = profiles[menu.device.id].deep_unpack();
-            bindings = profile.bindings.deep_unpack();
-        }
+            let profile = profiles[menu.device.id].deep_unpack();
+            let bindings = profile.bindings.deep_unpack();
         
-        if (bindings[0].length) {
-            menu._keybindings.push(
-                this.keybindingManager.add(
-                    bindings[0],
-                    Lang.bind(this, this._openDeviceMenu, indicator)
-                )
-            );
-        }
-        
-        if (bindings[1].length) {
-            menu._keybindings.push(
-                this.keybindingManager.add(
-                    bindings[1], 
-                    Lang.bind(menu, menu._smsAction)
-                )
-            );
-        }
-        
-        if (bindings[2].length) {
-            menu._keybindings.push(
-                this.keybindingManager.add(
-                    bindings[2], 
-                    Lang.bind(menu, menu._findAction)
-                )
-            );
-        }
-        
-        if (bindings[3].length) {
-            menu._keybindings.push(
-                this.keybindingManager.add(
-                    bindings[3],
-                    Lang.bind(this, this._browseDevice, indicator)
-                )
-            );
-        }
-        
-        if (bindings[4].length) {
-            menu._keybindings.push(
-                this.keybindingManager.add(
-                    bindings[4],
-                    Lang.bind(menu, menu._shareAction)
-                )
-            );
-        }
-        
-        if (bindings[5].length) {
-            menu._keybindings.push(
-                this.keybindingManager.add(
-                    bindings[5],
-                    Lang.bind(menu, menu._statusAction)
-                )
-            );
+            if (bindings[0].length) {
+                menu._keybindings.push(
+                    this.keybindingManager.add(
+                        bindings[0],
+                        Lang.bind(this, this._openDeviceMenu, indicator)
+                    )
+                );
+            }
+            
+            if (bindings[1].length) {
+                menu._keybindings.push(
+                    this.keybindingManager.add(
+                        bindings[1], 
+                        Lang.bind(menu, menu._smsAction)
+                    )
+                );
+            }
+            
+            if (bindings[2].length) {
+                menu._keybindings.push(
+                    this.keybindingManager.add(
+                        bindings[2], 
+                        Lang.bind(menu, menu._findAction)
+                    )
+                );
+            }
+            
+            if (bindings[3].length) {
+                menu._keybindings.push(
+                    this.keybindingManager.add(
+                        bindings[3],
+                        Lang.bind(this, this._browseDevice, indicator)
+                    )
+                );
+            }
+            
+            if (bindings[4].length) {
+                menu._keybindings.push(
+                    this.keybindingManager.add(
+                        bindings[4],
+                        Lang.bind(menu, menu._shareAction)
+                    )
+                );
+            }
+            
+            if (bindings[5].length) {
+                menu._keybindings.push(
+                    this.keybindingManager.add(
+                        bindings[5],
+                        Lang.bind(menu, menu._statusAction)
+                    )
+                );
+            }
         }
     },
     
