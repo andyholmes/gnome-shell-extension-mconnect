@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-12 21:27-0700\n"
+"POT-Creation-Date: 2017-09-15 10:36-0700\n"
 "PO-Revision-Date: 2017-09-05 14:01+0200\n"
 "Last-Translator: Andreas Cattelan <ilmondodiwit@gmail.com>\n"
 "Language-Team: Andreas Cattelan\n"
@@ -86,15 +86,15 @@ msgstr "Interrompi ricerca dispositivi"
 msgid "Discover Devices"
 msgstr "Ricerca dispositivi"
 
-#: src/extension.js:1070
+#: src/extension.js:1068
 msgid "Nautilus extensions changed"
 msgstr "Estensioni Nautilus cambiate"
 
-#: src/extension.js:1071
+#: src/extension.js:1069
 msgid "Restart Nautilus to apply changes"
 msgstr "Riavvia Nautilus per l'applicazione dei cambiamenti"
 
-#: src/extension.js:1076
+#: src/extension.js:1074
 msgid "Restart"
 msgstr "Riavvia"
 
