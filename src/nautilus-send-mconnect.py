@@ -16,7 +16,6 @@ import gettext
 import locale
 import os.path
 import subprocess
-import urllib
 
 _ = gettext.gettext
 
@@ -28,9 +27,6 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
     """A context menu for sending files via the MConnect/KDE Connect."""
 
     def __init__(self):
-        pass
-
-    def init_gettext(self):
         """Initialize translations"""
         
         try:
@@ -67,9 +63,6 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
         
         subprocess.Popen(args)
 
-    def get_background_items(provider, window, current_folder):
-        pass
-
     def get_file_items(self, window, files):
         """Return a list of select files to be sent"""
         
@@ -87,9 +80,6 @@ class MConnectShareExtension(GObject.GObject, Nautilus.MenuProvider):
         for uri in files:
             if uri.get_uri_scheme() != 'file' or uri.is_directory():
                 return
-        
-        # Do this elsewhere?
-        self.init_gettext()
         
         # Context Menu Item
         menu = Nautilus.MenuItem(
