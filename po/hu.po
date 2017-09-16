@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-15 10:36-0700\n"
+"POT-Creation-Date: 2017-09-16 15:41-0700\n"
 "PO-Revision-Date: 2017-09-06 16:01+0200\n"
 "Last-Translator: Báthory Péter <bathory86p@gmail.com>\n"
 "Language-Team: \n"
@@ -246,7 +246,7 @@ msgstr "Ön"
 msgid "MConnect SMS"
 msgstr "MConnect SMS"
 
-#: src/nautilus-send-mconnect.py:97
+#: src/nautilus-send-mconnect.py:87
 msgid "Send To Mobile Device"
 msgstr "Küldés mobil eszközre"
 

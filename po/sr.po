@@ -7,17 +7,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-12 21:27-0700\n"
+"POT-Creation-Date: 2017-09-16 15:41-0700\n"
 "PO-Revision-Date: 2017-09-16 13:04+0200\n"
+"Last-Translator: \n"
 "Language-Team: \n"
+"Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Poedit 2.0.3\n"
-"Last-Translator: \n"
-"Language: sr\n"
 
 #: src/extension.js:37
 msgid "OFFLINE"
@@ -87,15 +87,15 @@ msgstr "Прекини откривање уређаја"
 msgid "Discover Devices"
 msgstr "Откривање уређаја"
 
-#: src/extension.js:1070
+#: src/extension.js:1068
 msgid "Nautilus extensions changed"
 msgstr "Проширење Наутилуса је измењено"
 
-#: src/extension.js:1071
+#: src/extension.js:1069
 msgid "Restart Nautilus to apply changes"
 msgstr "Поново покрените Наутилус да би применили измене"
 
-#: src/extension.js:1076
+#: src/extension.js:1074
 msgid "Restart"
 msgstr "Поново покрени"
 
@@ -152,8 +152,8 @@ msgid ""
 "The requested keyboard shortcut is in use by another application and can't "
 "be overridden."
 msgstr ""
-"Захтевана пречица тастатуре се већ користи у другом програму и не може "
-"бити премошћена."
+"Захтевана пречица тастатуре се већ користи у другом програму и не може бити "
+"премошћена."
 
 #. Preferences Page
 #: src/prefs.js:1065
@@ -248,7 +248,7 @@ msgstr "Ви"
 msgid "MConnect SMS"
 msgstr "Мконект СМС"
 
-#: src/nautilus-send-mconnect.py:97
+#: src/nautilus-send-mconnect.py:87
 msgid "Send To Mobile Device"
 msgstr "Слање на мобилни уређај"
 
