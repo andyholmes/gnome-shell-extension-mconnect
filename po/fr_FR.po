@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-16 15:41-0700\n"
-"PO-Revision-Date: 2017-09-05 17:21+0200\n"
+"PO-Revision-Date: 2017-09-18 10:50+0200\n"
 "Last-Translator: Simon Mellerin <simon.mellerin@ntymail.com>\n"
 "Language-Team: Simon Mellerin\n"
 "Language: fr\n"
@@ -76,7 +76,7 @@ msgstr "Activer"
 
 #: src/extension.js:728
 msgid "Mobile Settings"
-msgstr "Paramètres du téléphone"
+msgstr "Paramètres MConnect"
 
 #: src/extension.js:780
 msgid "Stop Discovering Devices"
@@ -308,11 +308,11 @@ msgstr "Envoyer des fichiers par le menu contextuel du navigateur de fichiers"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
 msgid "Persistent Discovery"
-msgstr ""
+msgstr "Découverte persistante"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
 msgid "Constantly probe the network for devices"
-msgstr ""
+msgstr "Rechercher continuellement des appareils sur le réseau"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
 msgid "Service Auto-Start"
@@ -327,6 +327,5 @@ msgid "Service Provider"
 msgstr "Service"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
-#, fuzzy
 msgid "The service providing devices"
-msgstr "Le service fournissant les appareils."
+msgstr "Service connectant les appareils"
