@@ -675,7 +675,7 @@ var KeybindingWidget = new Lang.Class({
             let [success, iter] = this.extView.model.get_iter_from_string(path);
             
             if (success) {
-                let index = this.devView.model.get_value(iter, 0);
+                let index = this.extView.model.get_value(iter, 0);
                 this.extView.model.set(iter, [2, 3], [0, 0]);
                 this._extKeys[index] = "";
                 Settings.set_strv("extension-keybindings", this._extKeys);
