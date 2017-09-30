@@ -1,15 +1,16 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) 2017 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the gnome-shell-extension-mconnect package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Andreas Cattelan <ilmondodiwit@gmail.com>, 2017
+# Michael Moroni <michaelmoroni@disroot.org>, 2017
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-16 15:41-0700\n"
-"PO-Revision-Date: 2017-09-05 14:01+0200\n"
-"Last-Translator: Andreas Cattelan <ilmondodiwit@gmail.com>\n"
+"PO-Revision-Date: 2017-09-30 18:42+0200\n"
+"Last-Translator: Michael Moroni, <michaelmoroni@disroot.org>\n"
 "Language-Team: Andreas Cattelan\n"
 "Language: it_IT\n"
 "MIME-Version: 1.0\n"
@@ -270,10 +271,9 @@ msgstr "Monta automaticamente i dispositivi che supportano il servizio"
 msgid "Device Indicators"
 msgstr "Indicatore dispositivi"
 
-# TODO: To be controlled
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
 msgid "Controls available via Indicators or the User Menu"
-msgstr "Controlla la disponibilità via Indicators o il menu utente"
+msgstr "Controlli disponibili tra gli indicatori o nel menu utente"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:29
 msgid "Device Visibility"
@@ -328,9 +328,8 @@ msgid "Service Provider"
 msgstr "Dispositivi in servizio"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
-#, fuzzy
 msgid "The service providing devices"
-msgstr "Dispositivi attivi che forniscono il servizio"
+msgstr "Servizi che soddisfano i dispositivi"
 
 #~ msgid "Website"
 #~ msgstr "Sito web"
