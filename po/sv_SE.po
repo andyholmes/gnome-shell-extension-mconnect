@@ -1,0 +1,330 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-shell-extension-mconnect package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-shell-extension-mconnect\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-10-04 14:39+0200\n"
+"PO-Revision-Date: 2017-10-04 15:36+0200\n"
+"Last-Translator: Niklas Mellegård <niklas.mellegard@gmail.com>\n"
+"Language-Team: \n"
+"Language: sv_SE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.0.1\n"
+
+#: src/extension.js:37
+msgid "OFFLINE"
+msgstr "FRÅNKOPPLAD"
+
+#: src/extension.js:38
+msgid "UNPAIRED"
+msgstr "EJ PARKOPPLAD"
+
+#: src/extension.js:313 src/prefs.js:715
+msgid "Send SMS"
+msgstr "Skicka SMS"
+
+#: src/extension.js:320 src/prefs.js:716
+msgid "Locate Device"
+msgstr "Hitta enhet"
+
+#: src/extension.js:328 src/prefs.js:717
+msgid "Browse Files"
+msgstr "Bläddra filer"
+
+#: src/extension.js:335 src/prefs.js:718
+msgid "Send Files"
+msgstr "Skicka filer"
+
+#: src/extension.js:494
+msgid "Request Pair"
+msgstr "Begär parkoppling"
+
+#: src/extension.js:495
+msgid "Device is unpaired"
+msgstr "Enheten är ej parkopplad"
+
+#: src/extension.js:498
+msgid "Attempt Reconnection"
+msgstr "Försök återansluta"
+
+#: src/extension.js:501
+msgid "Attempting to reconnect..."
+msgstr "Försöker återansluta..."
+
+#: src/extension.js:507
+msgid "Device is disconnected"
+msgstr "Enheten är frånkopplad"
+
+#: src/extension.js:550
+msgid "Failed to mount device filesystem"
+msgstr "Kunde inte montera enhetens filsystem"
+
+#: src/extension.js:704
+msgid "Mobile Devices"
+msgstr "Mobila enheter"
+
+#: src/extension.js:722
+msgid "Enable"
+msgstr "Aktiverad"
+
+#: src/extension.js:728
+msgid "Mobile Settings"
+msgstr "Mobila inställningar"
+
+#: src/extension.js:780
+msgid "Stop Discovering Devices"
+msgstr "Avbryt sökning efter enheter"
+
+#: src/extension.js:782 src/prefs.js:653
+msgid "Discover Devices"
+msgstr "Söker enheter"
+
+#: src/extension.js:1068
+msgid "Nautilus extensions changed"
+msgstr "Nautilusfunktioner ändrade"
+
+#: src/extension.js:1069
+msgid "Restart Nautilus to apply changes"
+msgstr "Starta om Nautilus för att tillämpa ändringarna"
+
+#: src/extension.js:1074
+msgid "Restart"
+msgstr "Starta om"
+
+#: src/prefs.js:155
+msgid "Nothing"
+msgstr "Inget"
+
+#: src/prefs.js:168
+msgid "True"
+msgstr "Sant"
+
+#: src/prefs.js:181
+msgid "False"
+msgstr "Falskt"
+
+#: src/prefs.js:439
+msgid "Select a device"
+msgstr "Välj en enhet"
+
+#: src/prefs.js:652
+msgid "Open extension menu"
+msgstr "Öppna menyn för extra funktioner"
+
+#: src/prefs.js:654
+msgid "Open extension preferences"
+msgstr "Öppna inställningar för extrafunktioner"
+
+#: src/prefs.js:655
+msgid "Open service settings"
+msgstr "Öppna tjänsteinställningar"
+
+#: src/prefs.js:714
+msgid "Open device menu"
+msgstr "Öppna enhetsmenyn"
+
+#: src/prefs.js:719
+msgid "Pair/Reconnect"
+msgstr "Parkoppla/Återanslut"
+
+#: src/prefs.js:723
+msgid "Remove"
+msgstr "Ta bort"
+
+#: src/prefs.js:724
+msgid "Remove the shortcuts for a defunct device."
+msgstr "Ta bort genvägen för en borttagen enhet."
+
+#: src/prefs.js:816
+msgid "Keyboard Shortcut Unavailable"
+msgstr "Kortkommandot är inte tillängligt"
+
+#: src/prefs.js:817
+msgid ""
+"The requested keyboard shortcut is in use by another application and can't "
+"be overridden."
+msgstr ""
+"Kortkommandot används av en annan applikation och kan inte åsidosättas."
+
+#. Preferences Page
+#: src/prefs.js:1065
+msgid "General"
+msgstr "Allmänt"
+
+#: src/prefs.js:1067
+msgid "Appearance"
+msgstr "Utseende"
+
+#: src/prefs.js:1071
+msgid "Files"
+msgstr "Filer"
+
+#. Keyboard Shortcuts Page
+#: src/prefs.js:1076
+msgid "Keyboard"
+msgstr "Tangentbord"
+
+#: src/prefs.js:1078
+msgid "Keyboard Shortcuts"
+msgstr "Kortkommandon"
+
+#. Advanced Page
+#: src/prefs.js:1084
+msgid "Advanced"
+msgstr "Avancerat"
+
+#: src/prefs.js:1086
+msgid "Service"
+msgstr "Tjänst"
+
+#: src/prefs.js:1102
+msgid "Service Settings"
+msgstr "Tjänsteinställningar"
+
+#: src/prefs.js:1103
+msgid "Open the settings for the current service"
+msgstr "Öppna inställningar för aktuell tjänst"
+
+#: src/prefs.js:1107
+msgid "Development"
+msgstr "Utveckling"
+
+#: src/share.js:44
+#, javascript-format
+msgid "Send files to %s"
+msgstr "Skicka filer till %s"
+
+#: src/share.js:51
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: src/share.js:52
+msgid "Send"
+msgstr "Skicka"
+
+#: src/share.js:69
+msgid "MConnect File Share"
+msgstr "MConnect fildelning"
+
+#: src/share.js:143
+#, javascript-format
+msgid "Sending %d file"
+msgid_plural "Sending %d files"
+msgstr[0] "Skickar %d fil"
+msgstr[1] "Skickar %d filer"
+
+#: src/sms.js:349
+msgid "Type a phone number"
+msgstr "Ange telefonnummer"
+
+#: src/sms.js:358
+msgid "Type a phone number or name"
+msgstr "Ange telefonnummer eller namn"
+
+#: src/sms.js:453
+msgid "Device is offline"
+msgstr "Enheten är frånkopplad"
+
+#: src/sms.js:490
+msgid "Type an SMS message"
+msgstr "Skriv ett SMS-meddelande"
+
+#. Log the sent message in the Conversation View and clear the entry
+#: src/sms.js:698
+msgid "You"
+msgstr "Du"
+
+#: src/sms.js:713
+msgid "MConnect SMS"
+msgstr "MConnect SMS"
+
+#: src/nautilus-send-mconnect.py:87
+msgid "Send To Mobile Device"
+msgstr "Skicka till mobil enhet"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:14
+msgid "Debug mode"
+msgstr "Felsökningsläge"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:15
+msgid "Enable debug features and logging"
+msgstr "Sätt på felsökningfunktioner och loggning"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:19
+msgid "Device Auto-Mount"
+msgstr "Automatisk montering av enheter"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:20
+msgid "Automatically mount devices that support it"
+msgstr "Automatisk montering av enheter som stödjer det"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:24
+msgid "Device Indicators"
+msgstr "Enhetsindikatorer"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:25
+msgid "Controls available via Indicators or the User Menu"
+msgstr "Styr om enhetsindikatorn ska vara tillgänglig"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:29
+msgid "Device Visibility"
+msgstr "Visa enheter"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:30
+msgid "Display devices in offline and unpaired states"
+msgstr "Visa även enheter som är frånkopplade och ej parkopplade"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
+msgid "Device Actions"
+msgstr "Enhetsoperationer"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:35
+msgid "Configure shortcuts for device functions"
+msgstr "Ställ in kortkommandon för ehnhetsoperationer"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:39
+msgid "Extension Actions"
+msgstr "Operationer för extrafunktioner"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:40
+msgid "Configure shortcuts for extension functions"
+msgstr "Kortkommandon för extrafunktioner"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:44
+msgid "Nautilus Integration"
+msgstr "Integration med Nautilus"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:45
+msgid "Send files from the file browser context menu"
+msgstr "Skicka filer från filhanterarens popup-meny"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
+msgid "Persistent Discovery"
+msgstr "Kontinuerlig enhetssökning"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
+msgid "Constantly probe the network for devices"
+msgstr "Sök kontinuerligt efter enheter på nätverket"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
+msgid "Service Auto-Start"
+msgstr "Auto-starta tjänsten"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:55
+msgid "Start the service automatically and restart if stopped"
+msgstr "Starta tjänsten automatiskt, och start automatisk om ifall den stannar"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:59
+msgid "Service Provider"
+msgstr "Tjänsteleverantör"
+
+#: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
+msgid "The service providing devices"
+msgstr "Enhetstjänsten"
