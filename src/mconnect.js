@@ -346,22 +346,14 @@ var Device = new Lang.Class({
     // Methods
     mount: function () { throw Error("Not Implemented"); },
     pair: function () {
-        this._manager._call(
-            "AllowDevice",
-            new GLib.Variant("(s)", [this.gObjectPath]),
-            true
-        );
+        this._manager._call("AllowDevice", true, this.gObjectPath);
     },
     ping: function () { throw Error("Not Implemented"); },
     ring: function () { throw Error("Not Implemented"); },
     sms: function (number, message) { throw Error("Not Implemented"); },
     shareURI: function (uri) { throw Error("Not Implemented"); },
     unpair: function () {
-        this._manager._call(
-            "DisallowDevice",
-            new GLib.Variant("(s)", [this.gObjectPath]),
-            true
-        );
+        this._manager._call("DisallowDevice", true, this.gObjectPath);
     },
     
     //
