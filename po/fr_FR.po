@@ -64,7 +64,7 @@ msgstr "Le périphérique est déconnecté"
 
 #: src/extension.js:550
 msgid "Failed to mount device filesystem"
-msgstr "Echec lors du montage du système de fichier de l'appareil"
+msgstr "Échec lors du montage du système de fichier de l'appareil"
 
 #: src/extension.js:704
 msgid "Mobile Devices"
@@ -280,7 +280,7 @@ msgstr "Visibilité de l'appareil"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:30
 msgid "Display devices in offline and unpaired states"
-msgstr "Faire apparaitre les appareils déconnectés ou non-appairés"
+msgstr "Faire apparaître les appareils déconnectés ou non-appairés"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:34
 msgid "Device Actions"
@@ -324,7 +324,7 @@ msgstr "Démarrer le service automatiquement et le redémarrer s'il est arrété
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:59
 msgid "Service Provider"
-msgstr "Service"
+msgstr "Fournisseur de service"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
 msgid "The service providing devices"
