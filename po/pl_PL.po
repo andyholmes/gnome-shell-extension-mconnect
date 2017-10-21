@@ -267,7 +267,7 @@ msgstr "Automatyczne montowanie urządzenia"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:20
 msgid "Automatically mount devices that support it"
-msgstr "Automatyczne montowanie urządzeń, które wspierąją tą funkcję"
+msgstr "Automatycznie montowanie urządzeń, które wspierąją tą funkcję"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:24
 msgid "Device Indicators"
@@ -321,7 +321,7 @@ msgstr "Stale sprawdzaj sieć w poszukiwaniu urządzeń"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:54
 msgid "Service Auto-Start"
-msgstr "Automatycze uruchamianie usługi"
+msgstr "Automatyczy uruchamianie usługi"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:55
 msgid "Start the service automatically and restart if stopped"
