@@ -101,6 +101,8 @@ const DeviceNode = new Gio.DBusNodeInfo.new_for_xml('\
     </signal> \
     <signal name="reachableStatusChanged"> \
     </signal> \
+    <signal name="reachableChanged"> \
+    </signal> \
     <signal name="trustedChanged"> \
       <arg name="trusted" type="b" direction="out"/> \
     </signal> \
@@ -614,6 +616,12 @@ var Device = new Lang.Class({
                 this.notify("name");
             } else if (name === "pluginsChanged") {
                 this._reloadPlugins();
+            // KDE Connect 1.2+
+            } else if (name === "reachableChanged") {
+                this.set_cached_property("isReachable",
+                    new GLib.Variant("b", !this.reachable)
+                );
+                this.notify("reachable");
             } else if (name === "reachableStatusChanged") {
                 this.set_cached_property("isReachable",
                     new GLib.Variant("b", !this.reachable)
