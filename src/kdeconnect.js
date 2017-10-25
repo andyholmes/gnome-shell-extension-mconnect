@@ -102,6 +102,7 @@ const DeviceNode = new Gio.DBusNodeInfo.new_for_xml('\
     <signal name="reachableStatusChanged"> \
     </signal> \
     <signal name="reachableChanged"> \
+      <arg name="reachable" type="b" direction="out"/> \
     </signal> \
     <signal name="trustedChanged"> \
       <arg name="trusted" type="b" direction="out"/> \
