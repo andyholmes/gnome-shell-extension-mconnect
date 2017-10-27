@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: gnome-shell-extension-mconnect\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-16 15:41-0700\n"
-"PO-Revision-Date: 2017-09-13 15:53+0200\n"
+"PO-Revision-Date: 2017-10-27 20:59+0200\n"
 "Last-Translator: Piotr Komur <pkomur@gmail.com>\n"
 "Language-Team: \n"
 "Language: pl_PL\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 2.0.1\n"
+"X-Generator: Poedit 2.0.4\n"
 
 #: src/extension.js:37
 msgid "OFFLINE"
@@ -78,7 +78,7 @@ msgstr "Włączone"
 
 #: src/extension.js:728
 msgid "Mobile Settings"
-msgstr "Preferencje urządzenia mobilnego"
+msgstr "Preferencje"
 
 #: src/extension.js:780
 msgid "Stop Discovering Devices"
@@ -142,7 +142,7 @@ msgstr "Usuń"
 
 #: src/prefs.js:724
 msgid "Remove the shortcuts for a defunct device."
-msgstr "Usuń skróty rozparowanego urządzenia"
+msgstr "Usuń skróty rozparowanego urządzenia."
 
 #: src/prefs.js:816
 msgid "Keyboard Shortcut Unavailable"
@@ -154,7 +154,7 @@ msgid ""
 "be overridden."
 msgstr ""
 "Wybrany skrót klawiszowy jest użyty przez inną aplikację i nie może być "
-"nadpisany"
+"nadpisany."
 
 #. Preferences Page
 #: src/prefs.js:1065
@@ -310,12 +310,10 @@ msgid "Send files from the file browser context menu"
 msgstr "Wyślij pliki z menu kontekstowego menedżera plików"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:49
-#, fuzzy
 msgid "Persistent Discovery"
 msgstr "Ciągłe wykrywanie"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:50
-#, fuzzy
 msgid "Constantly probe the network for devices"
 msgstr "Stale sprawdzaj sieć w poszukiwaniu urządzeń"
 
@@ -332,6 +330,5 @@ msgid "Service Provider"
 msgstr "Dostawca usługi"
 
 #: data/org.gnome.shell.extensions.mconnect.gschema.xml:60
-#, fuzzy
 msgid "The service providing devices"
 msgstr "Dostawca usługi dla urządzeń mobilnych"
