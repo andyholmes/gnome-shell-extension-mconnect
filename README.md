@@ -2,6 +2,26 @@
 
 ![SMS window, Nautilus integration, Device Indicator & Menu][screenshot]
 
+# NOTICE
+
+I have all but abandoned working on this extension, in favour of my newer
+extension [GSConnect][gsconnect] which is a complete implementation of the
+KDE Connect protocol that doesn't rely on the KDE Connect server or MConnect
+server. This is for the following reasons:
+
+* This was originally intended to be a MConnect-only extension, however the
+developer is busy with other projects and it remains largely incomplete.
+* Interacting with the KDE Connect server over DBus is very restrictive and
+makes many features hacky and other impossible to implement or fix.
+* Trying to support two different backends (properly) requires almost as much
+work as writing one.
+* I grew tired of having ~500MB of KDE dependencies installed for a tiny program
+
+I use GSConnect full-time without problems, however it only officially supports
+Gnome Shell 3.24+ and has not been reviewed on the extension website yet. Thanks
+for your understanding and support in developing this extension, and hopefully
+the next.
+
 ## Overview
 
 This extension integrates KDE Connect and/or MConnect into Gnome Shell.
@@ -87,6 +107,7 @@ The screenshot of the extension features the [Vimix Dark Laptop][vimix] Gtk &
 Gnome Shell theme with the [Numix Circle][numix] icon theme.
 
 [screenshot]: https://raw.githubusercontent.com/andyholmes/gnome-shell-extension-mconnect/master/extra/screenshot.png
+[gsconnect]: https://github.com/andyholmes/gnome-shell-extension-gsconnect
 [kde-connect]: https://community.kde.org/KDEConnect
 [android-app]: https://play.google.com/store/apps/details?id=org.kde.kdeconnect_tp
 [mconnect]: https://github.com/bboozzoo/mconnect
