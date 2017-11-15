@@ -1,7 +1,3 @@
-# KDE Connect/MConnect integration for Gnome Shell
-
-![SMS window, Nautilus integration, Device Indicator & Menu][screenshot]
-
 # NOTICE
 
 I have all but abandoned working on this extension, in favour of my newer
